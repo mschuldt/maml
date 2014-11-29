@@ -1,5 +1,6 @@
 
 #define arduino 0
+#define SERIAL_INTR_PIN 0
 #define DEBUG 0
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,11 +30,19 @@ typedef struct lambda{
   void* code;
 }lambda;
 
+void serial_in();
 
 // 'setup' and 'loop' are used so that this code will
 // work with the standard Arduino IDE as well
 
 void setup(void){
+  ///// setup serial
+#if arduino 
+  pinMode(2, INPUT);
+  digitalWrite(2, LOW);
+  Serial.begin(9600);
+  attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
+#endif
 }
 
 void loop (){
@@ -200,3 +209,42 @@ int main(){
 }
 #endif
 
+#if arduino
+volatile boolean receiving_serial = false;
+
+void serial_in(){ //serial ISR (interrupt service routine)
+  int reading_str = false;
+  
+  if (receiving_serial) return;
+  receiving_serial = true;
+  //for serial to work, we need to re-enable interrupts
+  interrupts();
+  
+  while (1){//until terminator is seen
+    while (!Serial.available()){
+      //wait.
+    }
+    char data = Serial.read();
+    if (reading_str){
+      if (data){
+        //TODO: add to str array
+      }else{
+        //TODO: add null terminator
+        //send string somewhere?
+        reading_str = false;
+      }
+    }else{
+      switch (data){
+      case OP_STR:
+        reading_str = true;
+        break;
+      case OP_END:
+        return;
+      default: //bytecode
+        //TODO:
+      }
+    }
+  }
+  receiving_serial = false;
+}
+#endif
