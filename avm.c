@@ -30,8 +30,14 @@ typedef struct lambda{
 }lambda;
 
 
-int main (void){
-  
+// 'setup' and 'loop' are used so that this code will
+// work with the standard Arduino IDE as well
+
+void setup(void){
+}
+
+void loop (){
+    
   /* printf("sizeof(int) = %d\n", sizeof(int)); */
   /* printf("sizeof(int) = %d\n", sizeof(long)); */
   /* printf("sizeof(int) = %d\n", sizeof(int*)); */
@@ -105,12 +111,12 @@ int main (void){
 
   //prints translated code
   /*
-  void** tmp = code;
-  for (int i=0;*tmp; i++){
+    void** tmp = code;
+    for (int i=0;*tmp; i++){
     printf("%d: %p\n",i, *tmp);
     tmp++;
-  }
-  printf("-done-\n");
+    }
+    printf("-done-\n");
   */
 
   NEXT(code);
@@ -154,7 +160,7 @@ int main (void){
   goto exit;
 #else  
   printf("Exiting.\n");
-  return 1;
+  return;
 #endif
   
  print_int:
@@ -184,3 +190,13 @@ int main (void){
   Serial.println("Exiting");
 #endif
 }
+
+#if arduino
+#else
+int main(){
+  setup();
+  loop(); //never returns
+  return 0;
+}
+#endif
+
