@@ -1,0 +1,159 @@
+#compiles functions with 'arduino' decorator to bytecode
+
+verbose = True
+compile_decorator = 'arduino'
+
+from maml_ast import make_ast
+from maml_opcodes import *
+from maml_env import env
+from functools import reduce
+from operator import add
+
+# Because python has no equivalent to a switch statement
+# we use a dictionary to achieve constant time lookups
+# and use the following convention to keep ourselves sane:
+# 
+# for the AST node X:
+#   * node['type'] == 'X'
+#   * the function _gen_X(ast,btc,env) returns bytecode for X,
+#     these functions call `gen_bytecode' recursively
+#   * the dictionary `_bytecode_switch_table' has entries
+#     in the format: 'X' : _gen_X
+#   * the function check_X(ast) verifies syntax
+#   * the corresponding opcode is OP_X
+#   * maml_ast.py defines a function X (capitalized)
+#     that returns the AST node in dictionary format.
+#     Functions in maml_ast.py that are not capitalized
+#     generate AST nodes whose bytecode is generated
+#     by another nodes generation function
+#     (ex: '_gen_function' consumes the 'arguments' ast node,
+#          so there is no _gen_arguments function)
+
+# _gen_X function parameters:
+#   AST is the ast node
+#   BTC is the bytecode array
+#   ENV keeps track of variable index mappings and types
+def _gen_str(ast, btc, env):
+    if not check_str(ast): return
+    btc.extend([OP_STR, ast['s']])
+    
+def _gen_num(ast, btc, env):
+    if not check_num(ast): return
+    btc.extend([OP_NUM, ast['n']])
+
+def _gen_name(ast, btc, env):
+    if not check_name(ast): return
+    btc.extend([OP_NAME, env.name_index(ast['id'])])
+
+def _gen_assign(ast, btc, env):
+    if not check_assign(ast): return
+    #TODO: check that target is declared
+    
+    target = ast['targets'][0] #no support for unpacking
+    value = gen_bytecode(ast['value'])
+    btc.extend(value + [OP_ASSIGN, env.name_get_create(target)])
+
+def _gen_call(ast, btc, env):
+    not_implemented_error(ast)
+def _gen_expr(ast, btc, env):
+    not_implemented_error(ast)
+def _gen_function(ast, btc, env):
+    not_implemented_error(ast)
+def _gen_binop(ast, btc, env):
+    not_implemented_error(ast)
+def _gen_return(ast, btc, env):
+    not_implemented_error(ast)
+
+_bytecode_switch_table = {'str': _gen_str,
+                          'num': _gen_num,
+                          'name' :_gen_name,
+                          'assign': _gen_assign,
+                          'call' :_gen_call,
+                          'expr': _gen_expr,
+                          'function': _gen_function,
+                          'binop': _gen_binop,
+                          'return': _gen_return}
+
+def gen_bytecode(ast, btc=None, env=None):
+    global _error
+    if not btc: btc = []
+    if not env: env = make_new_env()
+    fn = _bytecode_switch_table.get(ast['type'])
+    if fn:
+        fn(ast, btc, env)
+        return btc
+    else:
+        _error = True
+        print("Error -- gen_bytecode(): unknown AST node type: '{}'"
+              .format(ast['type']));
+        
+def make_new_env():
+    return env()
+
+################################################################################
+# ast checking functions
+def check_function(ast):
+    """verifies syntatic correctness of function node"""
+    assert_type(ast, "function")
+    #TODO:
+    #check decorators
+    #check args    
+    return True
+
+def check_str(ast):
+    assert_type(ast, "str")
+    #TODO:
+    return True
+
+def check_num(ast):
+    assert_type(ast, "num")
+    #TODO:
+    return True
+    
+def check_assign(ast):
+    assert_type(ast, "assign")
+    targets = ast['targets']
+    if len(targets) > 1:
+        #example: 'a,b=x'
+        syntax_error(ast, "unpacking is not supported")
+        return False
+    if targets[0]['type'] == 'starred':
+        #example: '*a=x'
+        syntax_error(ast, "starred assignment is not supported")
+        return False
+    return True
+    
+################################################################################
+# error reporting functions
+
+def assert_type(ast, typ):
+        pass #TODO
+
+def syntax_error(ast, message):
+    global _error
+    _error = True
+    print("SYNTAX ERROR[{}:{}]: {}"
+          .format(ast['lineno'], ast['col_offset'], message))
+    
+def not_implemented_error(ast):
+    global _error
+    _error = True
+    print("ERROR[{}:{}]: node type '{}' is not implemented"
+          .format(ast['lineno'], ast['col_offset'], ast['type']))
+
+    
+################################################################################
+
+def compile(code : str) -> list:
+    global _error
+    ast = make_ast(code)
+    #print(ast)
+    _error = False
+    bytecode = reduce(add, map(gen_bytecode, ast));
+    if _error:
+        exit(1)
+    #TODO: CHECK TYPES
+    #COMPILE
+
+    return bytecode
+    

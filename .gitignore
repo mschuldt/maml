@@ -1,0 +1,3 @@
+avm
+*.o
+__pycache__
