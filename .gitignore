@@ -2,3 +2,5 @@ avm
 *.o
 __pycache__
 _bc.txt
+.emacs.desktop
+.emacs.desktop.lock
