@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #compiles functions with 'arduino' decorator to bytecode
 
 verbose = True
@@ -8,6 +10,7 @@ from maml_opcodes import *
 from maml_env import env
 from functools import reduce
 from operator import add
+from sys import argv
 
 # Because python has no equivalent to a switch statement
 # we use a dictionary to achieve constant time lookups
@@ -156,4 +159,18 @@ def compile(code : str) -> list:
     #COMPILE
 
     return bytecode
+
     
+if __name__ == '__main__':
+    if len(argv) != 2:
+        print('Usage:')
+        print('  ./maml.py <filename>.py')
+        exit(1)
+    filename = argv[1]
+    try:
+        f = open(filename, 'r')
+    except IOError:
+        print('Error: where is "{}"?'.format(filename))
+        exit(1)
+    print(compile(f.read()))
+    exit(0)
