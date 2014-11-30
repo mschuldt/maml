@@ -118,6 +118,14 @@ def Compare (left, ops, comparators, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset}
 
+def BinOp(left, op, right, lineno=None, col_offset=None):
+    return {'type': 'binop',
+            'left': left,
+            'op': op,
+            'right': right,
+            'lineno': lineno,
+            'col_offset': col_offset}
+    
 def Add():      return "+"
 def Mult():     return "*"
 def Sub():      return "-"

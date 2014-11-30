@@ -15,7 +15,7 @@ from sys import argv
 # Because python has no equivalent to a switch statement
 # we use a dictionary to achieve constant time lookups
 # and use the following convention to keep ourselves sane:
-# 
+#
 # for the AST node X:
 #   * node['type'] == 'X'
 #   * the function _gen_X(ast,btc,env) returns bytecode for X,
@@ -36,10 +36,11 @@ from sys import argv
 #   AST is the ast node
 #   BTC is the bytecode array
 #   ENV keeps track of variable index mappings and types
+
 def _gen_str(ast, btc, env):
     if not check_str(ast): return
     btc.extend([OP_STR, ast['s']])
-    
+
 def _gen_num(ast, btc, env):
     if not check_num(ast): return
     btc.extend([OP_NUM, ast['n']])
@@ -51,31 +52,51 @@ def _gen_name(ast, btc, env):
 def _gen_assign(ast, btc, env):
     if not check_assign(ast): return
     #TODO: check that target is declared
-    
+
     target = ast['targets'][0] #no support for unpacking
-    value = gen_bytecode(ast['value'])
-    btc.extend(value + [OP_ASSIGN, env.name_get_create(target)])
+    #value = gen_bytecode(ast['value'])
+    gen_bytecode(ast['value'], btc, env)
+    btc.extend([OP_ASSIGN, env.name_get_create(target)])
+
+def _gen_expr(ast, btc, env):
+    #if not check_expr(ast): return
+    gen_bytecode(ast['value'], btc, env)
+
+
+def _gen_binop(ast, btc, env):
+    if not check_binop(ast): return
+    gen_bytecode(ast['left'], btc, env);
+    gen_bytecode(ast['right'], btc, env);
+    btc.append(bin_ops[ast['op']])
 
 def _gen_call(ast, btc, env):
     not_implemented_error(ast)
-def _gen_expr(ast, btc, env):
-    not_implemented_error(ast)
 def _gen_function(ast, btc, env):
-    not_implemented_error(ast)
-def _gen_binop(ast, btc, env):
     not_implemented_error(ast)
 def _gen_return(ast, btc, env):
     not_implemented_error(ast)
 
 _bytecode_switch_table = {'str': _gen_str,
                           'num': _gen_num,
-                          'name' :_gen_name,
+                          'name' : _gen_name,
                           'assign': _gen_assign,
-                          'call' :_gen_call,
+                          'call' : _gen_call,
                           'expr': _gen_expr,
                           'function': _gen_function,
                           'binop': _gen_binop,
+                          'expr': _gen_expr,
                           'return': _gen_return}
+
+bin_ops = {"+": OP_ADD,
+           "*": OP_MULT,
+           "-": OP_SUB,
+           "/": OP_DIV,
+           "//": OP_FDIV,
+           "**": OP_EXPT,
+           "^": OP_L_XOR,
+           "|": OP_L_OR,
+           "&": OP_L_AND,
+           "%": OP_MOD}
 
 def gen_bytecode(ast, btc=None, env=None):
     global _error
@@ -89,7 +110,7 @@ def gen_bytecode(ast, btc=None, env=None):
         _error = True
         print("Error -- gen_bytecode(): unknown AST node type: '{}'"
               .format(ast['type']));
-        
+
 def make_new_env():
     return env()
 
@@ -100,7 +121,7 @@ def check_function(ast):
     assert_type(ast, "function")
     #TODO:
     #check decorators
-    #check args    
+    #check args
     return True
 
 def check_str(ast):
@@ -112,7 +133,11 @@ def check_num(ast):
     assert_type(ast, "num")
     #TODO:
     return True
-    
+
+def check_name(ast):
+    assert_type(ast, "name")
+    return True
+
 def check_assign(ast):
     assert_type(ast, "assign")
     targets = ast['targets']
@@ -125,7 +150,14 @@ def check_assign(ast):
         syntax_error(ast, "starred assignment is not supported")
         return False
     return True
-    
+
+def check_binop(ast):
+    assert_type(ast, "binop")
+    if ast['op'] in bin_ops:
+        return True
+    #check 'left' and 'right' properties
+    return False
+
 ################################################################################
 # error reporting functions
 
@@ -137,14 +169,14 @@ def syntax_error(ast, message):
     _error = True
     print("SYNTAX ERROR[{}:{}]: {}"
           .format(ast['lineno'], ast['col_offset'], message))
-    
+
 def not_implemented_error(ast):
     global _error
     _error = True
     print("ERROR[{}:{}]: node type '{}' is not implemented"
           .format(ast['lineno'], ast['col_offset'], ast['type']))
 
-    
+
 ################################################################################
 
 def compile(code : str) -> list:
@@ -160,7 +192,7 @@ def compile(code : str) -> list:
 
     return bytecode
 
-    
+
 if __name__ == '__main__':
     if len(argv) != 2:
         print('Usage:')
