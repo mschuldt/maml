@@ -39,7 +39,7 @@ def Assign(targets, value, lineno=None, col_offset=None):
             'col_offset': col_offset}
     
 def Num(n, lineno=None, col_offset=None):
-    return {'type': 'num',
+    return {'type': ('int' if type(n) is int else 'float'),
             'n' : n,
             'lineno': lineno,
             'col_offset': col_offset}
