@@ -206,7 +206,8 @@ if __name__ == '__main__':
     #__import__(modulename)
     exec(code)
 
-    exit(0)
+    #if we exit here, it creates an error if we use the interactive (-i) flag
+    #exit(0)
     
 else:
     print("Error: invalid usage")
