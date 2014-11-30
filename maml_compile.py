@@ -79,8 +79,8 @@ _bytecode_switch_table = {'str': _gen_str,
 
 def gen_bytecode(ast, btc=None, env=None):
     global _error
-    if not btc: btc = []
-    if not env: env = make_new_env()
+    if btc is None: btc = []
+    if env is None: env = make_new_env()
     fn = _bytecode_switch_table.get(ast['type'])
     if fn:
         fn(ast, btc, env)
