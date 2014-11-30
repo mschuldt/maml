@@ -4,6 +4,8 @@ NUM_TERMINATOR = 'x'
 BYTECODE_IN_FILE = '_bc.txt'
 
 from maml_opcodes import *
+from signal import SIGIO as VM_SIGNAL
+from os import kill
 
 class Maml_serial:
     "Automatically find and maintain a connection to an Arduino over serial"
@@ -11,7 +13,7 @@ class Maml_serial:
         self.speed = speed
         self.port = port
         self.desktop = False
-
+        self.vm_pid = None
 
     def send_codeblock(self, block):
         "send BLOCK to vm on arduino or desktop"
@@ -30,7 +32,13 @@ class Maml_serial:
         "send fully expanded BYTECODE"
         if self.desktop:
             self._write_to_file(bytecode)
-            #TODO: signal vm with SIGIO
+            if self.vm_pid:
+                    #TODO: do some checking to make sure that
+                    #      the vm process is actually running
+                    kill(self.vm_pid, VM_SIGNAL)
+            else:
+                print("ERROR: Where should I send the code? I have no pid")
+
         else:
             pass #TODO: send to arduino over serial
 

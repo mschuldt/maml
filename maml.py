@@ -115,6 +115,11 @@ class Arduino:
         self.desktop = desktop_p
         self.serial.desktop = desktop_p
 
+    def set_vm_pid(self, pid):
+        """set the pid of the vm processes (only used when self.desktop == True)
+        Hopefully this manual step is temporary"""
+        self.serial.vm_pid = pid
+
     def send(self, code):
         "compile and send CODE to the arduino"
         #NOTE: when sending functions is implemented the protocol
@@ -128,7 +133,6 @@ class Arduino:
         else:
             print("ERROR: attempt to send invalid code object")
             exit(1)
-
 
     def inject(self, code):
         "evaluate CODE (once) immediately. Does not insert into main loop"
@@ -159,7 +163,7 @@ class Arduino:
 
 def update_compiled_code(code):
     "update the compiled blocks and functions in _compiled_code"
-    print("update_compiled_code({})'".format(filename))
+    #print("update_compiled_code({})'".format(filename))
 
     for ast in make_ast(code):
         if ast['type'] == 'function':
@@ -167,7 +171,7 @@ def update_compiled_code(code):
             if len(decorators) == 1:
                 name = decorators[0]['id']
                 if name == _block_decorator:
-                    print("compiling block '{}'".format(ast['name']))
+                    #print("compiling block '{}'".format(ast['name']))
                     _compiled_code[ast['name']] = compile_ast(ast['body'])
                 elif name == _function_decorator:
                     pass #TODO
@@ -199,8 +203,7 @@ if __name__ == '__main__':
     #first update the compiled code pieces in _compiled_code,
     #then evaluate the file
     update_compiled_code(code)
-    print("::_compiled_code = ", _compiled_code)
-    
+
     # importing as a module does not work because variables like
     # '_compiled_code' are reset
     #__import__(modulename)
@@ -208,7 +211,7 @@ if __name__ == '__main__':
 
     #if we exit here, it creates an error if we use the interactive (-i) flag
     #exit(0)
-    
+
 else:
     print("Error: invalid usage")
     print("  Instead of doing 'import maml' in NAME.py")
