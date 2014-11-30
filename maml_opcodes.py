@@ -1,3 +1,5 @@
+#TODO: have this file write a .c file that will be included from avm.c
+
 def i():
     n = 0
     def ii():
