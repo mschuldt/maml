@@ -1,3 +1,4 @@
 avm
 *.o
 __pycache__
+_bc.txt
