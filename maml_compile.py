@@ -41,9 +41,12 @@ def _gen_str(ast, btc, env):
     if not check_str(ast): return
     btc.extend([SOP_STR, ast['s']])
 
-def _gen_num(ast, btc, env):
-    if not check_num(ast): return
-    btc.extend([SOP_NUM, ast['n']])
+def _gen_int(ast, btc, env):
+    if not check_int(ast): return
+    btc.extend([SOP_INT, ast['n']])
+
+def _gen_float(ast, btc, env):
+    not_implemented_error(ast)
 
 def _gen_name(ast, btc, env):
     if not check_name(ast): return
@@ -77,7 +80,8 @@ def _gen_return(ast, btc, env):
     not_implemented_error(ast)
 
 _bytecode_switch_table = {'str': _gen_str,
-                          'num': _gen_num,
+                          'int': _gen_int,
+                          'float': _gen_float,
                           'name' : _gen_name,
                           'assign': _gen_assign,
                           'call' : _gen_call,
@@ -129,10 +133,13 @@ def check_str(ast):
     #TODO:
     return True
 
-def check_num(ast):
-    assert_type(ast, "num")
-    #TODO:
-    return True
+def check_int(ast):
+    assert_type(ast, "int")
+    return type(ast['n']) is int
+
+def check_float(ast):
+    assert_type(ast, "float")
+    return type(ast['n']) is float
 
 def check_name(ast):
     assert_type(ast, "name")
@@ -190,7 +197,7 @@ def compile_str(code : str) -> list:
     #TODO: CHECK TYPES
     #COMPILE
     return bytecode
-    
+
 #TODO: instead of handling errors like gcc, just terminate after the first one
 def compile_ast(ast : list) -> list:
     global _error
@@ -200,7 +207,7 @@ def compile_ast(ast : list) -> list:
         exit(1)
     #TODO: CHECK TYPES
     #COMPILE
-    return bytecode    
+    return bytecode
 
 
 if __name__ == '__main__':

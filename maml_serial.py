@@ -49,7 +49,7 @@ def expand_bytecode(bc):
     while i < length:
         c = bc[i]
         long_code.append(chr(c))
-        if c == SOP_NUM:
+        if c == SOP_INT:
             i += 1
             long_code.extend(list(str(bc[i])) + [NUM_TERMINATOR])
         elif c == SOP_STR:
