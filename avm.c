@@ -2,7 +2,7 @@
 
 #define arduino 0
 #define SERIAL_INTR_PIN 0
-#define DEBUG 1
+#define DEBUG 0
 
 //NOTE: If this are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
 #endif
 
 #define NEXT(code) goto *(*code++)
@@ -190,6 +191,13 @@ void loop (){
   D("add\n");
   //*((int*)code[0]) = (a + b);
   stack[top-1] = (void*)((int)stack[top] + (int)stack[--top]);
+
+  ///FOR TESTING. Because we have no other way to print yet
+  printf("%d\n", ((int*)stack[top]));
+  top--;
+  sleep(1);
+  ////////////////////
+
   NEXT(code);
 
  end_of_block:
