@@ -196,7 +196,7 @@ def compile(code : str) -> list:
 if __name__ == '__main__':
     if len(argv) != 2:
         print('Usage:')
-        print('  ./maml.py <filename>.py')
+        print('  ./maml-compile.py <filename>.py')
         exit(1)
     filename = argv[1]
     try:
