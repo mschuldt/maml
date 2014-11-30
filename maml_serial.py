@@ -19,7 +19,7 @@ class Maml_serial:
         bc = block.bytecode
         length = len(bc)
         exp = expand_bytecode(bc);
-        exp = list(str(length+1)) + [NUM_TERMINATOR] + exp + [OP_NEXT_BLOCK]
+        exp = list(str(length+1)) + [NUM_TERMINATOR] + exp + [chr(OP_NEXT_BLOCK)]
         self._send(exp)
 
     def send_function(self, fn):
@@ -48,7 +48,7 @@ def expand_bytecode(bc):
     length = len(bc)
     while i < length:
         c = bc[i]
-        long_code.append(c)
+        long_code.append(chr(c))
         if c == OP_NUM:
             i += 1
             long_code.extend(list(str(bc[i])) + [NUM_TERMINATOR])
