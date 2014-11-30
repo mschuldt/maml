@@ -4,6 +4,7 @@
 #define SERIAL_INTR_PIN 0
 #define DEBUG 0
 
+//NOTE: If this are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
 #define NUM_TERMINATOR 'x'
 
