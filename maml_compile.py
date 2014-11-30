@@ -179,7 +179,7 @@ def not_implemented_error(ast):
 
 ################################################################################
 
-def compile(code : str) -> list:
+def compile_str(code : str) -> list:
     global _error
     ast = make_ast(code)
     #print(ast)
@@ -189,8 +189,18 @@ def compile(code : str) -> list:
         exit(1)
     #TODO: CHECK TYPES
     #COMPILE
-
     return bytecode
+    
+#TODO: instead of handling errors like gcc, just terminate after the first one
+def compile_ast(ast : list) -> list:
+    global _error
+    _error = False
+    bytecode = reduce(add, map(gen_bytecode, ast));
+    if _error:
+        exit(1)
+    #TODO: CHECK TYPES
+    #COMPILE
+    return bytecode    
 
 
 if __name__ == '__main__':
@@ -204,5 +214,5 @@ if __name__ == '__main__':
     except IOError:
         print('Error: where is "{}"?'.format(filename))
         exit(1)
-    print(compile(f.read()))
+    print(compile_str(f.read()))
     exit(0)
