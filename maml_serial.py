@@ -19,8 +19,8 @@ class Maml_serial:
         bc = block.bytecode
         length = len(bc)
         exp = expand_bytecode(bc);
-        exp = list(str(length+1)) + [NUM_TERMINATOR] + exp + [chr(OP_NEXT_BLOCK)]
-        self._send(exp)
+        exp = list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] +exp
+        self._send(exp + [chr(SOP_END), chr(SOP_END)])#end block and end file
 
     def send_function(self, fn):
         #TODO
@@ -39,6 +39,7 @@ class Maml_serial:
         f = open(BYTECODE_IN_FILE, 'w')
         for c in bytecode:
             f.write(str(c)+'\n');
+        print("wrote file '{}'".format(BYTECODE_IN_FILE))
         f.close()
 
 def expand_bytecode(bc):

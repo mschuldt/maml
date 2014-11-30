@@ -2,7 +2,7 @@
 
 #define arduino 0
 #define SERIAL_INTR_PIN 0
-#define DEBUG 0
+#define DEBUG 1
 
 //NOTE: If this are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
@@ -300,21 +300,15 @@ signal(SIGIO, serial_in);
   int total = 0;
   int i = 0;//index of next bytecode in 'code_array'
   codeblock* newblock = NULL;
+  lambda* newlambda = NULL;
 
   while (1){//until terminator is seen
-
     if (total == 0){
       //the first number specifies how many bytecodes are left
       total = READ_INT();
       if (total == 0){
         return;
       }
-      //For now we are just creating and appending a new block every time
-      //TODO: the next code should specify creation/replacement of a block
-      //      or just its index number with the creation/replacement implied
-      newblock = malloc(sizeof(codeblock));
-      init_codeblock(newblock, total);
-      code_array = newblock->code;
       continue;
     }
 
@@ -348,14 +342,36 @@ signal(SIGIO, serial_in);
 #define POP stack[top--]
 #define PUSH(x) stack[++top] = (x)
 
-    char op = CHAR_TO_INT(data);
+    //#char op = CHAR_TO_INT(data);
+    char op = data;
 
-    if (i == total && op != OP_END){
+    if (i == total && op != SOP_END){
       printf("ERROR: file has more bytecodes then header specified\n");
+      exit(1);
+    }
+    if (!newlambda && !newblock
+        && ! (op == SOP_START_CODEBLOCK)
+        && ! (op == SOP_START_FUNCTION)
+        && ! (op == SOP_END)){
+      printf("ERROR: block or lambda has not been specified\n");
       exit(1);
     }
 
     switch (op){
+    case SOP_START_CODEBLOCK:
+      //For now we are just creating and appending a new block every time
+      //TODO: the next code should specify creation/replacement of a block
+      //      or just its index number with the creation/replacement implied
+      if (newlambda){
+        //TODO: (error)
+      }
+      newblock = malloc(sizeof(codeblock));
+      init_codeblock(newblock, total);
+      code_array = newblock->code;
+      break;
+    case SOP_START_FUNCTION:
+      //TODO
+      break;
     case SOP_INT:
       NL;
       code_array[i++] = (void*) l_load_const;
@@ -382,11 +398,15 @@ signal(SIGIO, serial_in);
         //printf("appending new codeblock\n");
         code_array[i] = l_end_of_block;
         append_codeblock(newblock);
+        newblock = code_array = NULL;
+      }else if (newlambda){
+        //TODO:
+      }else{
+        return; //end of file
       }
-      return;
     default: //bytecode
       //TODO:
-      printf("default");
+      printf("ERROR: unrecognized bytecode: '%d'\n", op);
     }
   }
 #if arduino

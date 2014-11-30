@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-#compiles functions with 'arduino' decorator to bytecode
+#TODO: need to calculate the max stack size used by a block of code
+#     and have avm.c adjust the stacksize as needed ast start of
+#     block execution.
 
 verbose = True
 compile_decorator = 'arduino'
