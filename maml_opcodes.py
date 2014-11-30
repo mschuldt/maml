@@ -8,16 +8,14 @@ def i():
 i = i()
 
 #opcodes are numbered from 1
-OP_STR        = i()
-OP_NUM        = i()
+
 OP_NAME       = i()
 OP_ASSIGN     = i()
 OP_CALL       = i()
-OP_EXPR       = i()
+#OP_EXPR       = i()
 OP_FUNCTION   = i()
 OP_RETURN     = i()
-OP_PRINT      = i() #should be a function instead
-OP_BINOP      = i()
+#OP_BINOP      = i()
 #bin ops
 OP_ADD        = i()
 OP_MULT       = i()
@@ -30,6 +28,16 @@ OP_L_OR       = i()
 OP_L_AND      = i()
 OP_MOD        = i()
 
-OP_NEXT_BLOCK = i()
+#opcodes for serial protocol
+SOP_INT             = i()
+SOP_FLOAT           = i()
+SOP_STR             = i()
+SOP_START_CODEBLOCK = i()
+SOP_START_FUNCTION  = i()
+SOP_END             = i()
 
+OP_PRINT_INT = i() #temporary
+
+#OP_LOAD_CONST         NOTE: this opcode is created in avm.c after bytecodes
+#                             are transferred
 del i

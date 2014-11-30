@@ -24,18 +24,35 @@
 #define D(...)
 #endif
 
-#define OP_INT 1
-#define OP_STR 2
+#define OP_NAME             1
+#define OP_ASSIGN           2
+#define OP_CALL             3
+#define OP_FUNCTION         4
+#define OP_RETURN           5
+//bin ops
+#define OP_ADD              6
+#define OP_MULT             7
+#define OP_SUB              8
+#define OP_DIV              9
+#define OP_FDIV             10
+#define OP_EXPT             11
+#define OP_L_XOR            12
+#define OP_L_OR             13
+#define OP_L_AND            14
+#define OP_MOD              15
 
-#define OP_ADD 3 //a:int, b:int, target
+//opcodes for serial protocol
+#define SOP_INT             16
+#define SOP_FLOAT           17
+#define SOP_STR             18
+#define SOP_START_CODEBLOCK 19
+#define SOP_START_FUNCTION  10
+#define SOP_END             21
 
-#define OP_RET 4
-#define OP_PRINT_INT 5 //source:int
+#define OP_PRINT_INT        22  //tmp
+#define OP_LOAD_CONST       23 //must be last. only exists in this file.
 
-#define OP_END 6
-#define OP_END_OF_BLOCK 7
-
-#define OP_LOAD_CONST 8
+////////////////////////////////////////////////////////////////////////////////
 
 #define true 1
 #define false 0
@@ -339,7 +356,7 @@ signal(SIGIO, serial_in);
     }
 
     switch (op){
-    case OP_INT:
+    case SOP_INT:
       NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_INT();
@@ -348,7 +365,7 @@ signal(SIGIO, serial_in);
       NL;
       code_array[i++] = l_add;
       break;
-    case OP_RET:
+    case OP_RETURN:
       NL;
       code_array[i++] = l_ret;
       break;
@@ -356,11 +373,11 @@ signal(SIGIO, serial_in);
       NL;
       code_array[i++] = l_print_int;
       break;
-    case OP_STR:
+    case SOP_STR:
       NL;
       reading_str = true;
       break;
-    case OP_END:
+    case SOP_END:
       if (newblock){
         //printf("appending new codeblock\n");
         code_array[i] = l_end_of_block;

@@ -39,11 +39,11 @@ from sys import argv
 
 def _gen_str(ast, btc, env):
     if not check_str(ast): return
-    btc.extend([OP_STR, ast['s']])
+    btc.extend([SOP_STR, ast['s']])
 
 def _gen_num(ast, btc, env):
     if not check_num(ast): return
-    btc.extend([OP_NUM, ast['n']])
+    btc.extend([SOP_NUM, ast['n']])
 
 def _gen_name(ast, btc, env):
     if not check_name(ast): return
