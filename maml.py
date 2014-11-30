@@ -78,7 +78,7 @@ def block(fn):
     else:
         _blocks[block_name] = codeblock = A_block(code)
 
-    _arduino.send(codeblock)
+    #_arduino.send(codeblock)
 
     #by returning the codeblock, we bind it to the value of `block_name'
     return codeblock
@@ -96,9 +96,7 @@ def function(fn):
     else:
         _functions[fn_name] = codeblock = Function(code)
 
-    #automatically send function?
-    # doing so is inconsistent - codeblocks are not automatically sent
-    _arduino.send(codeblock)
+    #_arduino.send(codeblock)
 
     #by returning the codeblock, we bind it to the value of `block_name'
     return codeblock
