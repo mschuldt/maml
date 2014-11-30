@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import ast
 import sys
 
@@ -160,7 +162,35 @@ def Tuple(elts, ctx, lineno=None, col_offset=None):
             'ctx' : ctx,
             'lineno': lineno,
             'col_offset': col_offset}
+
+def Attribute(value, attr, ctx, lineno=None, col_offset=None):
+    return {'type' : 'attribute',
+            'value': value,
+            'attr': attr,
+            'ctx': ctx,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
+
+def Import(names, lineno=None, col_offset=None):
+    return {'type': 'import',
+            'names': names,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
+def ImportFrom(module, names, level, lineno=None, col_offset=None):
+    return {'type': 'importfrom',
+            'module': module,
+            'names': names,
+            'level': level,
+            'lineno': lineno,
+            'col_offset': col_offset}
     
+def alias(name, asname):
+    return {'type': 'alias',
+            'name': name,
+            'asname': asname}
+
 def make_ast(code):
     return eval(ast.dump(ast.parse(code),include_attributes=True))
 

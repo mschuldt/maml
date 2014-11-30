@@ -43,7 +43,7 @@ class FunctionByteCode():
     
 class A_block:
     def __init__(self, code):
-        self.bytecode = code.bytecode
+        self.bytecode = code
         #these attributes are set when this block is sent to the Arduino
         self.block_index = None
         self.in_arduino = False
@@ -71,7 +71,7 @@ def block(fn):
     if codeblock:
         codeblock.update_code(code)
     else:
-        _blocks[block_name] = codeblock = CodeBlock(code)
+        _blocks[block_name] = codeblock = A_block(code)
 
     _arduino.send(codeblock)
     
