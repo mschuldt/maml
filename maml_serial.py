@@ -1,11 +1,14 @@
 
+VM_PROCESS_NAME = 'avm'
 #NOTE: If this are changed, their value in avm.c must be also changed.
 NUM_TERMINATOR = 'x'
 BYTECODE_IN_FILE = '_bc.txt'
 
+
 from maml_opcodes import *
 from signal import SIGIO as VM_SIGNAL
 from os import kill
+import subprocess
 
 class Maml_serial:
     "Automatically find and maintain a connection to an Arduino over serial"
@@ -31,14 +34,15 @@ class Maml_serial:
     def _send(self, bytecode):
         "send fully expanded BYTECODE"
         if self.desktop:
+            if not self.vm_pid:
+                self.vm_pid = find_vm_pid();
+                if not self.vm_pid:
+                    return False #find_vm_pid prints the error message
+            #TODO: check that vm is still alive
             self._write_to_file(bytecode)
-            if self.vm_pid:
-                    #TODO: do some checking to make sure that
-                    #      the vm process is actually running
-                    kill(self.vm_pid, VM_SIGNAL)
-            else:
-                print("ERROR: Where should I send the code? I have no pid")
-
+            print("sending vm interrupt...")
+            kill(self.vm_pid, VM_SIGNAL)
+            return True
         else:
             pass #TODO: send to arduino over serial
 
@@ -66,3 +70,26 @@ def expand_bytecode(bc):
             long_code.extend(list(bc[i]) + [0])
         i += 1
     return long_code
+
+def find_vm_pid():
+    p = subprocess.Popen(['ps -C '+ VM_PROCESS_NAME], stdout=subprocess.PIPE, shell=True)
+    out, err = p.communicate()
+    vm_pid = None
+    found = 0
+
+    for line in out.splitlines():
+        pieces = str(line).split()
+        if len(pieces) < 3: continue
+        pid, *rest, name = pieces
+        if VM_PROCESS_NAME == name.strip(" '"):
+            found += 1
+            vm_pid = pid
+
+    if found == 1:
+        return int(vm_pid[2:])
+
+    if found > 1:
+        print("Error: found multiple '{}' PIDs, terminate all but one vm")
+    else:
+        print("Error: failed to find vm pid")
+    return None
