@@ -39,7 +39,6 @@ def another_block():
 
 # alternatively we could send the blocks here and
 # non-interactively call "./maml.py test.py"
-# (but not yet, the PID issue has yet to be resolved)
 #
 #arduino.send(test_block)
 #arduino.send(another_block)

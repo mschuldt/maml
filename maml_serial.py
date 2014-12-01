@@ -9,6 +9,7 @@ from maml_opcodes import *
 from signal import SIGIO as VM_SIGNAL
 from os import kill
 import subprocess
+from time import sleep
 
 class Maml_serial:
     "Automatically find and maintain a connection to an Arduino over serial"
@@ -39,6 +40,15 @@ class Maml_serial:
                 if not self.vm_pid:
                     return False #find_vm_pid prints the error message
             #TODO: check that vm is still alive
+            while True:
+                f = open("{}.lock".format(self.vm_pid), 'r')
+                if f.read(1) == '0':
+                    break;
+                print("VM is locked")
+                #TODO: after some number of iterations, report failure
+                f.close()
+                sleep(0.2)
+
             self._write_to_file(bytecode)
             print("sending vm interrupt...")
             kill(self.vm_pid, VM_SIGNAL)

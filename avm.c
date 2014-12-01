@@ -111,6 +111,10 @@ void serial_in();
 
 void loop();
 
+#if !arduino
+char* lockfile;
+#endif
+
 void setup(void){
   blockchain = NULL;
   blockchain_end = NULL;
@@ -122,7 +126,14 @@ void setup(void){
   Serial.begin(9600);
   attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
 #else // setup signal interrupt
+  lockfile = malloc(sizeof(char)*15);
+  sprintf(lockfile, "%d.lock", getpid());
+  FILE *fp = fopen(lockfile, "w");
+  fprintf(fp, "0");
+  fclose(fp);
+
   signal(SIGIO, serial_in);
+  //TODO: catch kill signal and remove lock file
 #endif
 
   loop();// variables are initialized the first time loop is called
@@ -279,7 +290,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
 #define READ_INT()   //TODO
 #define NL //nothing
 #else
-signal(SIGIO, serial_in);
+  //set lock file so that other processes will not interrupt this one
+  //while it reads in the new bytecode (ugly things happen in that case)
+  FILE *fp = fopen(lockfile, "w");
+  fprintf(fp, "1");
+  fclose(fp);
+  //reset signal handler (it gets unset everytime for some reason)
+  signal(SIGIO, serial_in);
 #define READ_INT() ((void*) read_int(fp))
 #define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
 #endif
@@ -296,7 +313,7 @@ signal(SIGIO, serial_in);
   interrupts();
 #else
   char ch;
-  FILE *fp = fopen(BYTECODE_IN_FILE, "r");
+  fp = fopen(BYTECODE_IN_FILE, "r");
   if (!fp){
     printf("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
     exit(1);//TODO: should return
@@ -410,6 +427,9 @@ signal(SIGIO, serial_in);
       }else if (newlambda){
         //TODO:
       }else{
+        fp = fopen(lockfile, "w");
+        fprintf(fp, "0");
+        fclose(fp);
         return; //end of file
       }
     default: //bytecode
