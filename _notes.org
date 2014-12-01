@@ -1,0 +1,210 @@
+* type declarations
+
+x = [str]
+
+** proposed type declaration grammar
+
+TYPE_DECL -> x = TYPE
+TYPE -> T | [ T ]
+ T -> int | str | float | func |
+ 
+** other possible type declaration syntax:
+
+  x <= [str]
+  x <- [str]
+  x = [str]
+  "x : [str]"
+  x.type = [str]
+  [str](x)
+
+* arduino vm
+** variable lookup
+
+global variables are stored in a global array
+functions have their own array for local vars
+
+the variable name mapping is not stored on the
+Arduino, only the indexes are send with the byte codes.
+The name->index mapping is stored in the compiler environment.
+
+** programming model
+
+stack based
+with registers
+codeblocks
+?
+* setting up the Arduino board
+** hardware
+*** connecting the rx pin to an interrupt pin
+TODO
+
+* questions/problems
+
+** how to send code over serial to arduino?
+
+ is there an interrupt for the serial?
+ polling?
+  how? insert bytecodes that check if serial is available
+    problem: impossible to check on consistent interval
+             loops may check more often
+
+
+solution: ==> use separate interrupt
+
+how sending data to arduino over serial works:
+  when data is sent to the arduino over serial it triggers an interrupt
+  that will read that data into an internal buffer. the method
+  Serial.available() checks if data is in that buffer.
+
+we will attach a separate interrupt function to the rx pin (used by the serial)
+when data is sent it will also trigger this function, which will wait
+for the data to be fully read into the arduino, then it send it to the vm
+ ?will it store it all first, or send it incrementally?
+   ==>incrementally
+   
+** how to store the bytecode internally?
+
+bytecodes are kept in arrays that are stored in a linked list - blockchain
+
+** should code blocks and function be automatically sent when defined?
+
+==>no
+
+* codeblocks
+
+ codeblocks are blocks of bytecode created in python and injected
+ into the arduino main loop. By default they are appended but can
+ also be inserted in any order. codeblocks can be moved or deleted.
+ The mainloop will repeatedly execute the codeblock in order.
+
+** limitations
+
+All syntactic structures must be contained entirely in a single codeblock
+
+** changing codeblocks
+
+Codeblock code can be changed but it will cause the entire block to be
+recompiled and resent to the Arduino.
+
+** why codeblocks?
+
+codeblocks provide an easy way to selectively, enable, disable, and move
+sections of code. sections of code can be changed without having to retransmit
+everything. They allow us to avoid having to resize arrays or shift bytecodes.
+
+* compiler environment
+
+arduino vm state is partially duplicated in python in order
+to incrementally generate fast bytecode.
+
+mapping variable names to array indexes
+
+* possible points of confusion
+
+syntax is a subset of python but the semantics are different
+  => to make things easier, we have clear error messages for
+     unsupported syntax, but users will still have to learn the
+     semantics. Semantics are as close to C.
+
+** defining codeblocks
+
+defining a codeblock:
+   @block
+   def name():
+     ...
+
+does not create a function even though function syntax is used
+
+=> Why use function syntax then?
+   because we need a way of picking out the code to be compiled to bytecode from
+   the ast, the decorator provides an easy way to find it.
+   
+* challenging parts
+TODO
+
+* order of implementation
+
+- simple vm + compiler running on desktop
+  can execute x = 1 + 3; print(x)
+  - ast
+  - compiler
+  - codeblocks
+- add serial communication, run on Arduino
+- then add more vm features:
+  - more bin-ops
+  - if conditions
+  - while loops
+  - functions
+  - strings
+  - arrays
+  - structs
+ ...
+more robust serial object (automatic connection, reconnection)
+calling native functions
+writing c primitives
+adding/inserting/removing code blocks from mainloop
+
+* syntax
+
+# define a codeblock
+@block
+def name():
+  pin(19, ON)
+  delay(1)
+
+# define an arduino function
+@function
+def block():
+  serial_write('hi')
+
+# send a codeblock
+arduino.send(name)
+# insert, disable, delete codeblock
+arduino.insert(name, 1)
+arduino.disable(name)
+arduino.delete(name)
+# move a codeblock
+arduino.move(name,2)
+# if a codeblock already exists in the mainloop, arduino.insert will move it
+# ==> Or should it duplicate it?
+
+
+* interactivity
+
+the problem:
+  the source code is needed to get the AST so just having a normal
+  REPL does not work(only the bytecode is available at this stage)
+
+possible solution:
+ have the decorators retrieve previously compiled bytecode
+ functions/codeblocks are compiled before hand and saved in a global dict.
+ non-interactively:
+   before python file is evaluated, extract relevant ASTs and generate
+   bytecode from them, place it in a file that is imported by the main maml file
+   =>OR have maml.py read the file and generate bytecodes - don't save to file
+ interactively:
+   before new code is sent, ASTs are extracted from whole file and
+   bytecodes are updated, only send if ast ast has changed
+
+ for getting and setting variable:
+   this can be done interactively via the Arduino.get and Arduino.set methods.
+
+* creating standalone arduino applications (no PC communication)
+
+This is done in the same way as an application that has PC communication
+except at the end of the program there is no kind event loop, after
+the code is sent to the Arduino it can be removed from the usb.
+When creating such applications using a single codeblock should
+be preferred.
+
+#TODO: If we tell the vm that no more code will be sent, maybe it can
+       free up some extra space
+
+* serial protocol
+* adding new features
+** new AST nodes
+** new bytecodes
+** new vm cases
+* todo
+- Automatically find the pid of the avm process
+- Automatically find the Arduino serial port
