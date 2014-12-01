@@ -1,4 +1,6 @@
-//(local-set-key "q" (lambda () (interactive) (insert "q")))
+// AVM - Arduino Virtual Machine
+
+//TODO: threaded code should be optional
 
 #define arduino 0
 #define SERIAL_INTR_PIN 0
@@ -9,6 +11,8 @@
 #define NUM_TERMINATOR 'x'
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#include "opcodes.h"
 
 #if ! arduino
 #include <stdio.h>
@@ -24,34 +28,6 @@
 #else
 #define D(...)
 #endif
-
-#define OP_NAME             1
-#define OP_ASSIGN           2
-#define OP_CALL             3
-#define OP_FUNCTION         4
-#define OP_RETURN           5
-//bin ops
-#define OP_ADD              6
-#define OP_MULT             7
-#define OP_SUB              8
-#define OP_DIV              9
-#define OP_FDIV             10
-#define OP_EXPT             11
-#define OP_L_XOR            12
-#define OP_L_OR             13
-#define OP_L_AND            14
-#define OP_MOD              15
-
-//opcodes for serial protocol
-#define SOP_INT             16
-#define SOP_FLOAT           17
-#define SOP_STR             18
-#define SOP_START_CODEBLOCK 19
-#define SOP_START_FUNCTION  10
-#define SOP_END             21
-
-#define OP_PRINT_INT        22  //tmp
-#define OP_LOAD_CONST       23 //must be last. only exists in this file.
 
 ////////////////////////////////////////////////////////////////////////////////
 
