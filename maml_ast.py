@@ -68,6 +68,11 @@ def Call(func, args, keywords, starargs, kwargs, lineno=None, col_offset=None):
             'kwargs':kwargs,
             'col_offset': col_offset}
 
+def keyword(arg, value):
+    return {'type': keyword,
+            'arg': arg,
+            'value':value}
+
 def Expr(value, lineno=None, col_offset=None):
     return {'type' : 'expr',
             'value': value,
