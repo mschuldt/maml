@@ -3,15 +3,8 @@
 # In first terminal start the vm:
 #    ./avm
 #
-# In second terminal, get the pid of the avm process:
-#    ps -C avm
-#
 # Now interactively evaluate this file
 #    python3 -i maml.py test.py
-#
-# The arduino object needs to know the id of the avm process,
-# so at the python prompt type:
-#   arduino.set_vm_pid(<PID from step 2>)
 #
 # The compiled codeblocks can now be sent to the avm process.
 # at the python prompt type (one at a time so you can see how it behaves):
@@ -33,7 +26,7 @@
 
 print("loading test.py")
 
-arduino = Arduino(True)
+arduino = Arduino(desktop=True)
 
 @block
 def test_block():
