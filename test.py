@@ -3,10 +3,10 @@
 # In first terminal start the vm:
 #    ./avm
 #
-# Now interactively evaluate this file
+# in second terminal, interactively evaluate this file:
 #    python3 -i maml.py test.py
 #
-# The compiled codeblocks can now be sent to the avm process.
+# The compiled codeblocks can now be sent to the vm process.
 # at the python prompt type (one at a time so you can see how it behaves):
 #    arduino.send(test_block)
 #    arduino.send(another_block)
