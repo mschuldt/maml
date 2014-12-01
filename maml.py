@@ -102,7 +102,7 @@ def function(fn):
     return codeblock
 
 class Arduino:
-    def __init__(self, desktop_p):
+    def __init__(self, desktop=False):
         global _arduino
         if _arduino:
             print("WARNING: multiple Arduino boards are not supported")
@@ -112,8 +112,8 @@ class Arduino:
         #initialize serial
         self.serial_hook = []
         self.serial = Maml_serial()
-        self.desktop = desktop_p
-        self.serial.desktop = desktop_p
+        self.desktop = desktop
+        self.serial.desktop = desktop
 
     def set_vm_pid(self, pid):
         """set the pid of the vm processes (only used when self.desktop == True)
