@@ -40,20 +40,24 @@ from sys import argv
 #   ENV keeps track of variable index mappings and types
 
 _bytecode_switch_table = {}
+_ast_check_switch_table = {}
 
 def node(name):
     def decorator(fn):
         _bytecode_switch_table[name] = fn
     return decorator
+    
+def check(name):
+    def decorator(fn):
+        _ast_check_switch_table[name] = fn
+    return decorator    
 
 @node('str')
 def _(ast, btc, env):
-    if not check_str(ast): return
     btc.extend([SOP_STR, ast['s']])
 
 @node('int')
 def _(ast, btc, env):
-    if not check_int(ast): return
     btc.extend([SOP_INT, ast['n']])
 
 @node('float')    
@@ -62,12 +66,10 @@ def _(ast, btc, env):
 
 @node('name')    
 def _(ast, btc, env):
-    if not check_name(ast): return
     btc.extend([OP_NAME, env.name_index(ast['id'])])
 
 @node('assign') 
 def _(ast, btc, env):
-    if not check_assign(ast): return
     #TODO: check that target is declared
 
     target = ast['targets'][0] #no support for unpacking
@@ -82,7 +84,6 @@ def _(ast, btc, env):
 
 @node('binop')
 def _(ast, btc, env):
-    if not check_binop(ast): return
     gen_bytecode(ast['left'], btc, env);
     gen_bytecode(ast['right'], btc, env);
     btc.append(bin_ops[ast['op']])
@@ -114,6 +115,13 @@ def gen_bytecode(ast, btc=None, env=None):
     global _error
     if btc is None: btc = []
     if env is None: env = make_new_env()
+    check_fn = _ast_check_switch_table.get(ast['type'])
+    if check_fn:
+        check_fn(ast) #the check function is responsible for
+                      #error message and exiting
+    else:
+        print("Warning: node '{}' has no checking function".format(ast['type']))
+        
     fn = _bytecode_switch_table.get(ast['type'])
     if fn:
         fn(ast, btc, env)
@@ -128,32 +136,38 @@ def make_new_env():
 
 ################################################################################
 # ast checking functions
-def check_function(ast):
+@check('function')
+def _(ast):
     """verifies syntatic correctness of function node"""
     assert_type(ast, "function")
     #TODO:
     #check decorators
     #check args
     return True
-
-def check_str(ast):
+    
+@check('str')    
+def _(ast):
     assert_type(ast, "str")
     #TODO:
     return True
-
-def check_int(ast):
+    
+@check('int')
+def _(ast):
     assert_type(ast, "int")
     return type(ast['n']) is int
-
-def check_float(ast):
+    
+@check('float')
+def _(ast):
     assert_type(ast, "float")
     return type(ast['n']) is float
-
-def check_name(ast):
+    
+@check('name')
+def _(ast):
     assert_type(ast, "name")
     return True
-
-def check_assign(ast):
+    
+@check('assign')
+def _(ast):
     assert_type(ast, "assign")
     targets = ast['targets']
     if len(targets) > 1:
@@ -165,8 +179,9 @@ def check_assign(ast):
         syntax_error(ast, "starred assignment is not supported")
         return False
     return True
-
-def check_binop(ast):
+    
+@check('binop')
+def _(ast):
     assert_type(ast, "binop")
     if ast['op'] in bin_ops:
         return True
