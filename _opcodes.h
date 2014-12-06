@@ -1,7 +1,7 @@
 /***** This file is auto-generated, do not modify. *****/
 
-#ifndef OPCODES_H
-#define OPCODES_H
+#ifndef _OPCODES_H
+#define _OPCODES_H
 
 #define OP_NAME 1
 #define OP_ASSIGN 2

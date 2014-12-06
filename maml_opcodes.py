@@ -3,7 +3,7 @@
 # To re-generate the C opcode file, run:
 #    ./maml_opcodes.py
 
-C_OPCODE_FILE = "opcodes.h"
+C_OPCODE_FILE = "_opcodes.h"
 ################################################################################
 
 opcodes = []
