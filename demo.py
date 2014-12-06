@@ -4,7 +4,7 @@
 #    ./avm
 #
 # in second terminal, interactively evaluate this file:
-#    python3 -i maml.py test.py
+#    python3 -i maml.py demo.py
 #
 # The compiled codeblocks can now be sent to the vm process.
 # at the python prompt type (one at a time so you can see how it behaves):
@@ -24,7 +24,7 @@
 # blockchain. This behavior is temporary (hopefully), a codeblock should
 # replace another codeblock with the same name.
 
-print("loading test.py")
+print("loading demo.py")
 
 arduino = Arduino(desktop=True)
 
@@ -43,4 +43,4 @@ def another_block():
 #arduino.send(test_block)
 #arduino.send(another_block)
 
-print("done loading test.py")
+print("done loading demo.py")
