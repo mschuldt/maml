@@ -39,22 +39,34 @@ from sys import argv
 #   BTC is the bytecode array
 #   ENV keeps track of variable index mappings and types
 
-def _gen_str(ast, btc, env):
+_bytecode_switch_table = {}
+
+def node(name):
+    def decorator(fn):
+        _bytecode_switch_table[name] = fn
+    return decorator
+
+@node('str')
+def _(ast, btc, env):
     if not check_str(ast): return
     btc.extend([SOP_STR, ast['s']])
 
-def _gen_int(ast, btc, env):
+@node('int')
+def _(ast, btc, env):
     if not check_int(ast): return
     btc.extend([SOP_INT, ast['n']])
 
-def _gen_float(ast, btc, env):
+@node('float')    
+def _(ast, btc, env):
     not_implemented_error(ast)
 
-def _gen_name(ast, btc, env):
+@node('name')    
+def _(ast, btc, env):
     if not check_name(ast): return
     btc.extend([OP_NAME, env.name_index(ast['id'])])
 
-def _gen_assign(ast, btc, env):
+@node('assign') 
+def _(ast, btc, env):
     if not check_assign(ast): return
     #TODO: check that target is declared
 
@@ -63,35 +75,29 @@ def _gen_assign(ast, btc, env):
     gen_bytecode(ast['value'], btc, env)
     btc.extend([OP_ASSIGN, env.name_get_create(target)])
 
-def _gen_expr(ast, btc, env):
+@node('expr')    
+def _(ast, btc, env):
     #if not check_expr(ast): return
     gen_bytecode(ast['value'], btc, env)
 
-
-def _gen_binop(ast, btc, env):
+@node('binop')
+def _(ast, btc, env):
     if not check_binop(ast): return
     gen_bytecode(ast['left'], btc, env);
     gen_bytecode(ast['right'], btc, env);
     btc.append(bin_ops[ast['op']])
 
-def _gen_call(ast, btc, env):
+@node('call')    
+def _(ast, btc, env):
     not_implemented_error(ast)
-def _gen_function(ast, btc, env):
+    
+@node('function')    
+def _(ast, btc, env):
     not_implemented_error(ast)
-def _gen_return(ast, btc, env):
+    
+@node('return')    
+def _(ast, btc, env):
     not_implemented_error(ast)
-
-_bytecode_switch_table = {'str': _gen_str,
-                          'int': _gen_int,
-                          'float': _gen_float,
-                          'name' : _gen_name,
-                          'assign': _gen_assign,
-                          'call' : _gen_call,
-                          'expr': _gen_expr,
-                          'function': _gen_function,
-                          'binop': _gen_binop,
-                          'expr': _gen_expr,
-                          'return': _gen_return}
 
 bin_ops = {"+": OP_ADD,
            "*": OP_MULT,
