@@ -14,30 +14,24 @@ from functools import reduce
 from operator import add
 from sys import argv
 
-# Because python has no equivalent to a switch statement
-# we use a dictionary to achieve constant time lookups
-# and use the following convention to keep ourselves sane:
-#
-# for the AST node X:
+# for the AST node with type X:
 #   * node['type'] == 'X'
-#   * the function _gen_X(ast,btc,env) returns bytecode for X,
-#     these functions call `gen_bytecode' recursively
-#   * the dictionary `_bytecode_switch_table' has entries
-#     in the format: 'X' : _gen_X
-#   * the function check_X(ast) verifies syntax
-#   * the corresponding opcode is OP_X
+#   * The code generation function is defined as
+#        @node('X')
+#        def _(ast, btc, env):
+#           ...
+#   * The ast node checking function is defined as
+#        @check('X')
+#        def _(ast):
+#           ...
+#   * The corresponding opcode is OP_X
 #   * maml_ast.py defines a function X (capitalized)
 #     that returns the AST node in dictionary format.
 #     Functions in maml_ast.py that are not capitalized
 #     generate AST nodes whose bytecode is generated
 #     by another nodes generation function
-#     (ex: '_gen_function' consumes the 'arguments' ast node,
-#          so there is no _gen_arguments function)
-
-# _gen_X function parameters:
-#   AST is the ast node
-#   BTC is the bytecode array
-#   ENV keeps track of variable index mappings and types
+#     (ex: 'function' node consumes the 'arguments' node,
+#          so there is no @node('arguments') function)
 
 _bytecode_switch_table = {}
 _ast_check_switch_table = {}
@@ -51,6 +45,15 @@ def check(name):
     def decorator(fn):
         _ast_check_switch_table[name] = fn
     return decorator    
+
+
+################################################################################
+# bytecode generation
+
+# parameters:
+#   AST is the ast node
+#   BTC is the bytecode array
+#   ENV keeps track of variable index mappings and types
 
 @node('str')
 def _(ast, btc, env):
@@ -136,6 +139,11 @@ def make_new_env():
 
 ################################################################################
 # ast checking functions
+
+# TODO: the checks that just verify type should be removed
+#       actually all ast type checks are pointless
+#       as these functions will only get called with correct node types
+
 @check('function')
 def _(ast):
     """verifies syntatic correctness of function node"""
