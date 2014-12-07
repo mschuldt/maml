@@ -69,9 +69,12 @@ def _(ast, btc, env, top):
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
+#TODO: 'name' and 'assign' still need to be tested with local names
 @node('name')
 def _(ast, btc, env, top):
-    btc.extend([OP_NAME, env.name_index(ast['id'])])
+    globalp, index = env.get_load_index(ast['id'])
+    op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
+    btc.extend([op, index])
 
 @node('assign')
 def _(ast, btc, env, top):
