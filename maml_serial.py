@@ -88,7 +88,7 @@ def find_vm_pid():
     found = 0
 
     for line in out.splitlines():
-        pieces = str(line).split()
+        pieces = str(line).strip("'b").split()
         if len(pieces) < 3: continue
         pid, *rest, name = pieces
         if VM_PROCESS_NAME == name.strip(" '"):
@@ -96,7 +96,7 @@ def find_vm_pid():
             vm_pid = pid
 
     if found == 1:
-        return int(vm_pid[2:])
+        return int(vm_pid)
 
     if found > 1:
         print("Error: found multiple '{}' PIDs, terminate all but one vm")
