@@ -99,7 +99,8 @@ def find_vm_pid():
         return int(vm_pid)
 
     if found > 1:
-        print("Error: found multiple '{}' PIDs, terminate all but one vm")
+        print("Error: found multiple '{}' PIDs, terminate all but one vm"
+              .format(VM_PROCESS_NAME))
     else:
         print("Error: failed to find vm pid")
     return None
