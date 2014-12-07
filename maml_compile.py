@@ -19,7 +19,7 @@ from _prim import primitives
 #   * node['type'] == 'X'
 #   * The code generation function is defined as
 #        @node('X')
-#        def _(ast, btc, env):
+#        def _(ast, btc, env, top):
 #           ...
 #   * The ast node checking function is defined as
 #        @check('X')
@@ -55,45 +55,47 @@ def check(name):
 #   AST is the ast node
 #   BTC is the bytecode array
 #   ENV keeps track of variable index mappings and types
+#   TOP is this a top level node?
 
 @node('str')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     btc.extend([SOP_STR, ast['s']])
 
 @node('int')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     btc.extend([SOP_INT, ast['n']])
 
 @node('float')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     not_implemented_error(ast)
 
 @node('name')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     btc.extend([OP_NAME, env.name_index(ast['id'])])
 
 @node('assign')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     #TODO: check that target is declared
 
     target = ast['targets'][0] #no support for unpacking
     #value = gen_bytecode(ast['value'])
-    gen_bytecode(ast['value'], btc, env)
+    gen_bytecode(ast['value'], btc, env, False)
     btc.extend([OP_ASSIGN, env.name_get_create(target)])
 
+#TODO: eliminate this type in maml_ast.py ?
 @node('expr')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     #if not check_expr(ast): return
-    gen_bytecode(ast['value'], btc, env)
+    gen_bytecode(ast['value'], btc, env, top)
 
 @node('binop')
-def _(ast, btc, env):
-    gen_bytecode(ast['left'], btc, env);
-    gen_bytecode(ast['right'], btc, env);
+def _(ast, btc, env, top):
+    gen_bytecode(ast['left'], btc, env, False);
+    gen_bytecode(ast['right'], btc, env, False);
     btc.append(bin_ops[ast['op']])
 
 @node('call')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     """bytecode format:
     arg1 arg2 ... argn OP_PRIM_CALL function_pointer"
 serial format:
@@ -102,7 +104,7 @@ where:
 func_index = index of function_pointer in the array 'primitives'"""
     nargs = len(ast['args'])
     for arg in ast['args']:
-        gen_bytecode(arg, btc, env)
+        gen_bytecode(arg, btc, env, False)
     index = primitives.get(ast['func']['id'], None)
     if index is not None: # calling a primative
         #we have to use SOP_INT here so that the bytecode expansion
@@ -115,11 +117,11 @@ func_index = index of function_pointer in the array 'primitives'"""
 
 
 @node('function')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     not_implemented_error(ast)
 
 @node('return')
-def _(ast, btc, env):
+def _(ast, btc, env, top):
     not_implemented_error(ast)
 
 bin_ops = {"+": OP_ADD,
@@ -133,7 +135,7 @@ bin_ops = {"+": OP_ADD,
            "&": OP_L_AND,
            "%": OP_MOD}
 
-def gen_bytecode(ast, btc=None, env=None):
+def gen_bytecode(ast, btc=None, env=None, top=True):
     global _error
     if btc is None: btc = []
     if env is None: env = make_new_env()
@@ -146,7 +148,7 @@ def gen_bytecode(ast, btc=None, env=None):
 
     fn = _bytecode_switch_table.get(ast['type'])
     if fn:
-        fn(ast, btc, env)
+        fn(ast, btc, env, top)
         return btc
     else:
         _error = True
