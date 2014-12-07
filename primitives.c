@@ -18,7 +18,8 @@ void delay(int ms){
 
 //TODO: way of defining function from standard lib as primitives
 _PRIMITIVE_
-int quit(int code){
+int die(code){
+  remove(lockfile);
   printf("bye.\n");
   exit(code);
 }

@@ -126,7 +126,7 @@ void setup(void){
 #if arduino
   //TODO
 #else
-  printf("Ready.\n----------\n");
+  printf("Ready.\n\n");
 #endif
 }
 
@@ -488,14 +488,12 @@ void serial_in(){ //serial ISR (interrupt service routine)
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
       //now read in function pointer
       int index = READ_INT();
-      printf("index = %d\n", index);
       if (index < 0 || index >= n_primitives){
         printf("Error: invalid index for primitives array. max: %d, got %d\n",
                index, n_primitives);
         exit(1);
       }
       code_array[i++] = primitives[index];
-      printf("sop_prim_call done\n");
       break;
     case OP_ADD:
       NL;

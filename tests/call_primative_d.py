@@ -10,6 +10,6 @@ def test():
     test_add4(1+1, 2, 3, 4)
     test_add5(1+1, 2, 3, 4, 5)
     test_add6(1+1, 2, 3, 4, 5, 6)
-    quit(0)
+    die(0)
     
 arduino.send(test)
