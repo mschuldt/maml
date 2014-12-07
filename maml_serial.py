@@ -6,6 +6,9 @@ BYTECODE_IN_FILE = '_bc.txt'
 
 
 from maml_opcodes import *
+if debug:
+    print("Error serializing: in maml_opcodes.py, debug must be False")
+    exit(1)
 from signal import SIGIO as VM_SIGNAL
 from os import kill
 import subprocess
