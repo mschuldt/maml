@@ -74,7 +74,7 @@ def _(ast, btc, env, top):
 def _(ast, btc, env, top):
     globalp, index = env.get_load_index(ast['id'])
     op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
-    btc.extend([op, index])
+    btc.extend([op, SOP_INT, index])
 
 @node('assign')
 def _(ast, btc, env, top):
@@ -85,7 +85,7 @@ def _(ast, btc, env, top):
     gen_bytecode(ast['value'], btc, env, False)
     globalp, index = env.get_store_index(target['id'])
     op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
-    btc.extend([op, index])
+    btc.extend([op, SOP_INT, index])
 
 #TODO: eliminate this type in maml_ast.py ?
 @node('expr')
