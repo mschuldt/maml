@@ -209,39 +209,42 @@ void loop (){
  call_prim_0: //stack:   <function pointer> TOP
   //TODO: need to push return value onto the stack if not top level
   D("call_0\n");
-  r_ret = ((void* (*)(void))(*code))();
+  stack[++top] = ((void* (*)(void))(*code))();
   NEXT(code);
  call_prim_1:// stack: <arg> <function pointer> TOP
   D("call_1\n");
-  r_ret = ((void* (*)(void*))(*code++))(stack[top--]);
+  stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_2: // stack: <arg1> <arg2> <function pointer> TOP
-  //// define _ and A ////////////////////////////////////////////
+  //// define _ and S////////////////////////////////////////////
 #define _ void*
-#define A stack[top--]
-  //TODO: fix: the args are being passed in reverse order
+#define S(i) stack[top+i]
   D("call_2\n");
-  r_ret = ((_ (*)(_, _))(*code++))(A, A);
+  stack[--top] = ((_ (*)(_, _))(*code++))(S(0), S(1));
   NEXT(code);
  call_prim_3: // stack: <arg1> <arg2> <arg3> <function pointer> TOP
   D("call_3\n");
-  r_ret = ((_ (*)(_, _, _))(*code++))(A, A, A);
+  top -= 2;
+  stack[top] = ((_ (*)(_, _, _))(*code++))(S(0),S(1), S(2));
   NEXT(code);
  call_prim_4:
   D("call_4\n");
-  r_ret = ((_ (*)(_, _, _, _))(*code++))(A, A, A, A);
+  top -= 3;
+  stack[top] = ((_ (*)(_, _, _, _))(*code++))(S(0),S(1),S(2),S(3));
   NEXT(code);
  call_prim_5:
   D("call_5\n");
-  r_ret = ((_ (*)(_, _, _, _, _))(*code++))(A, A, A, A, A);
+  top -= 4;
+  stack[top] = ((_ (*)(_, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4));
   NEXT(code);
  call_prim_6:
   D("call_6\n");
-  r_ret = ((_ (*)(_, _, _, _, _, _))(*code++))(A, A, A, A, A, A);
+  top -= 5;
+  stack[top] = ((_ (*)(_, _, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4),S(5));
   NEXT(code);
 #undef _
-#undef A
-  //// undef _ and A ////////////////////////////////////////////
+#undef S
+  //// undef _ and S ////////////////////////////////////////////
  add:
   D("add\n");
   //*((int*)code[0]) = (a + b);
