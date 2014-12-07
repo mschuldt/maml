@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 import ast
-import sys
-
-filename = "test.py"
-
+from sys import argv
 
 def Module(body):
     return body
@@ -200,4 +197,14 @@ def make_ast(code):
     return eval(ast.dump(ast.parse(code),include_attributes=True))
 
 if __name__ == "__main__":
-    print(make_ast(open(filename,'r').read()))
+    if len(argv) != 2:
+        print('Usage:')
+        print('  ./maml_ast.py <filename>.py')
+        exit(1)
+    filename = argv[1]
+    try:
+        f = open(filename, 'r')
+    except IOError:
+        print('Error: where is "{}"?'.format(filename))
+        exit(1)
+    print(make_ast(f.read()))
