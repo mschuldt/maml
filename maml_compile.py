@@ -109,7 +109,8 @@ func_index = index of function_pointer in the array 'primitives'"""
         #can expand the numbers
         btc.extend([SOP_PRIM_CALL, SOP_INT, nargs, SOP_INT, index])
     else: #calling a user defined function
-        print("Error -- not implemented: calling non-primitives");
+        print("Error -- not implemented: calling non-primitives ('{}')"
+              .format(ast['func']['id']));
         exit(1)
 
 
