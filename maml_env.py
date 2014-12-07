@@ -44,7 +44,7 @@ class env:
         if self.parent:
             return self.parent.get_load_index(name)
         #else: no index found
-        print("Error: name '{}' is not defined")
+        print("Error: name '{}' is not defined".format(name))
         exit(1) #TODO: just terminate compilation, not the whole program
 
     def declare_global(self, name):
