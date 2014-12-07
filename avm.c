@@ -537,6 +537,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
         fclose(fp);
         return; //end of file
       }
+      break;
     default: //bytecode
       //TODO:
       printf("ERROR: unrecognized bytecode: '%d'\n", op);
