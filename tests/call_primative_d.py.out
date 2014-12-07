@@ -2,12 +2,12 @@ Initializing avm...
 Ready.
 
 ERROR: unrecognized bytecode: '23'
-==> 5
-==> 11
-==> 6
-==> 3
-==> 7
-==> 11
-==> 16
-==> 22
+5
+11
+6
+3
+7
+11
+16
+22
 bye.

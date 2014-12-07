@@ -4,7 +4,7 @@ void delay(int seconds);
 
 _PRIMITIVE_
 int print_i(int n){
-  printf("==> %d\n", n);
+  printf("%d\n", n);
 }
 
 _PRIMITIVE_
