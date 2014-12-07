@@ -21,6 +21,7 @@ class env:
         else:
             #TODO: check if index is greater then globals variable array on
             #      arduino, send signal/codes to grow it if needed
+            #print("declared '{}'".format(name))
             index = self.n_names
             self.names[name] = index
             self.n_names += 1
