@@ -261,7 +261,10 @@ def compile_str(code : str) -> list:
     ast = make_ast(code)
     #print(ast)
     _error = False
-    bytecode = reduce(add, map(gen_bytecode, ast));
+    env = make_new_env()
+    bytecode = []
+    for a in ast:
+        gen_bytecode(a, bytecode, env)
     if _error:
         exit(1)
     #TODO: CHECK TYPES
@@ -272,7 +275,10 @@ def compile_str(code : str) -> list:
 def compile_ast(ast : list) -> list:
     global _error
     _error = False
-    bytecode = reduce(add, map(gen_bytecode, ast));
+    env = make_new_env()
+    bytecode = []
+    for a in ast:
+        gen_bytecode(a, bytecode, env)
     if _error:
         exit(1)
     #TODO: CHECK TYPES
