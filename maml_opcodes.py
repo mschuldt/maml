@@ -18,7 +18,8 @@ def OP(name):
 
 OP_NAME             = OP("OP_NAME")
 OP_ASSIGN           = OP("OP_ASSIGN")
-OP_CALL             = OP("OP_CALL")
+OP_PRIM_CALL        = OP("OP_PRIM_CALL")
+OP_USER_CALL        = OP("OP_USER_CALL")
 OP_FUNCTION         = OP("OP_FUNCTION")
 OP_RETURN           = OP("OP_RETURN")
 #bin ops
@@ -39,6 +40,7 @@ SOP_FLOAT           = OP("SOP_FLOAT")
 SOP_STR             = OP("SOP_STR")
 SOP_START_CODEBLOCK = OP("SOP_START_CODEBLOCK")
 SOP_START_FUNC      = OP("SOP_START_FUNCTION")
+SOP_PRIM_CALL       = OP("SOP_PRIM_CALL")
 SOP_END             = OP("SOP_END")
 
 OP_PRINT_INT        = OP("OP_PRINT_INT")
@@ -65,3 +67,4 @@ else:
     del i
     del OP
     del opcodes
+

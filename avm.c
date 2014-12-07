@@ -6,7 +6,7 @@
 #define SERIAL_INTR_PIN 0
 #define DEBUG 0
 
-//NOTE: If this are changed, their value in maml_serial.py must be also changed.
+//NOTE: If these are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
 #define NUM_TERMINATOR 'x'
 
@@ -91,12 +91,20 @@ void loop();
 char* lockfile;
 #endif
 
+//if these names are changed, also change them in process_primitives.el
+void** primitives; //this is filled by auto-generated code in _prim.c
+int n_primitives;
+#include "primitives.c"
+
 void setup(void){
+#include "_prim.c"
+
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
 
 #if arduino // setup serial
+
   pinMode(2, INPUT);
   digitalWrite(2, LOW);
   Serial.begin(9600);
@@ -131,6 +139,13 @@ void* l_add;
 void* l_ret;
 void* l_print_int;
 void* l_end_of_block;
+void* l_call_prim_0;
+void* l_call_prim_1;
+void* l_call_prim_2;
+void* l_call_prim_3;
+void* l_call_prim_4;
+void* l_call_prim_5;
+void* l_call_prim_6;
 
 static int int_regs[8];
 static char* char_regs[8];
@@ -143,6 +158,13 @@ void loop (){
     l_ret = &&ret;
     l_print_int = &&print_int;
     l_end_of_block = &&end_of_block;
+    l_call_prim_0 = &&call_prim_0;
+    l_call_prim_1 = &&call_prim_1;
+    l_call_prim_2 = &&call_prim_2;
+    l_call_prim_3 = &&call_prim_3;
+    l_call_prim_4 = &&call_prim_4;
+    l_call_prim_5 = &&call_prim_5;
+    l_call_prim_6 = &&call_prim_6;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -173,6 +195,7 @@ void loop (){
   }
   printf("=====\n");
   */
+  void* r_ret;
 
   NEXT(code);
 
@@ -181,15 +204,51 @@ void loop (){
   stack[++top] = *code;
   code++;
   NEXT(code);
+ call_prim_0: //stack:   <function pointer> TOP
+  //TODO: need to push return value onto the stack if not top level
+  D("call_0\n");
+  r_ret = ((void* (*)(void))(*code))();
+  NEXT(code);
+ call_prim_1:// stack: <arg> <function pointer> TOP
+  D("call_1\n");
+  r_ret = ((void* (*)(void*))(*code++))(stack[top--]);
+  NEXT(code);
+ call_prim_2: // stack: <arg1> <arg2> <function pointer> TOP
+  //// define _ and A ////////////////////////////////////////////
+#define _ void*
+#define A stack[top--]
+  //TODO: fix: the args are being passed in reverse order
+  D("call_2\n");
+  r_ret = ((_ (*)(_, _))(*code++))(A, A);
+  NEXT(code);
+ call_prim_3: // stack: <arg1> <arg2> <arg3> <function pointer> TOP
+  D("call_3\n");
+  r_ret = ((_ (*)(_, _, _))(*code++))(A, A, A);
+  NEXT(code);
+ call_prim_4:
+  D("call_4\n");
+  r_ret = ((_ (*)(_, _, _, _))(*code++))(A, A, A, A);
+  NEXT(code);
+ call_prim_5:
+  D("call_5\n");
+  r_ret = ((_ (*)(_, _, _, _, _))(*code++))(A, A, A, A, A);
+  NEXT(code);
+ call_prim_6:
+  D("call_6\n");
+  r_ret = ((_ (*)(_, _, _, _, _, _))(*code++))(A, A, A, A, A, A);
+  NEXT(code);
+#undef _
+#undef A
+  //// undef _ and A ////////////////////////////////////////////
  add:
   D("add\n");
   //*((int*)code[0]) = (a + b);
   stack[top-1] = (void*)((int)stack[top] + (int)stack[--top]);
 
   ///FOR TESTING. Because we have no other way to print yet
-  printf("%d\n", ((int*)stack[top]));
-  top--;
-  sleep(1);
+  /* printf("%d\n", ((int*)stack[top])); */
+  /* top--; */
+  /* sleep(1); */
   ////////////////////
 
   NEXT(code);
@@ -248,6 +307,16 @@ volatile boolean receiving_serial = false;
    once to read bytecodes in from a file. Bytecodes are communicated
    using a persistent file for debugging purposes.
 */
+#if arduino
+#define SKIP(ch, msg) if (fgetc(fp) != ch){     \
+    //TODO
+}
+#else
+#define SKIP(ch, msg) if (fgetc(fp) != ch){             \
+    printf("Error: expected char '%c'"msg"\n", ch);     \
+    exit(1);                                            \
+  }
+#endif
 
 //TODO: equivalent functions for Arduino
 int read_int(FILE* fp){
@@ -256,10 +325,9 @@ int read_int(FILE* fp){
   char ch;
   while ((ch = fgetc(fp)) != NUM_TERMINATOR){
     integer[i++] = ch;
-    if (fgetc(fp) != '\n'){
-      printf("ERROR: (read_int) expected newline after digit\n");
-    }
+    SKIP('\n', "(read_int)");
   }
+  SKIP('\n', "(read_int)");
   integer[i] = '\0';
   return atoi(integer);
 }
@@ -384,6 +452,50 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_INT();
+      break;
+    case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
+      NL;
+      // get the primitives function pointer
+      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
+      void* tmp;
+      // get the address for the label that calls with that # args
+      switch ((int)READ_INT()){
+        //TODO: put all l_call_prim_N into an array and index that
+        //      then we can free that array if all code is sent
+      case 0:
+        tmp = l_call_prim_0; break;
+      case 1:
+        tmp = l_call_prim_1; break;
+      case 2:
+        tmp = l_call_prim_2; break;
+      case 3:
+        tmp = l_call_prim_3; break;
+      case 4:
+        tmp = l_call_prim_4; break;
+      case 5:
+        tmp = l_call_prim_5; break;
+      case 6:
+        tmp = l_call_prim_6; break;
+      default:
+#if arduino
+        //TODO
+#else
+        printf("ERROR: (current) max args to primitive is 6\n");
+        exit(1);
+#endif
+      }
+      code_array[i++] = tmp;
+      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
+      //now read in function pointer
+      int index = READ_INT();
+      printf("index = %d\n", index);
+      if (index < 0 || index >= n_primitives){
+        printf("Error: invalid index for primitives array. max: %d, got %d\n",
+               index, n_primitives);
+        exit(1);
+      }
+      code_array[i++] = primitives[index];
+      printf("sop_prim_call done\n");
       break;
     case OP_ADD:
       NL;
