@@ -80,7 +80,9 @@ def _(ast, btc, env, top):
     target = ast['targets'][0] #no support for unpacking
     #value = gen_bytecode(ast['value'])
     gen_bytecode(ast['value'], btc, env, False)
-    btc.extend([OP_ASSIGN, env.name_get_create(target)])
+    globalp, index = env.get_store_index(target['id'])
+    op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
+    btc.extend([op, index])
 
 #TODO: eliminate this type in maml_ast.py ?
 @node('expr')
