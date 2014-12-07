@@ -13,6 +13,7 @@ from maml_env import env
 from functools import reduce
 from operator import add
 from sys import argv
+from _prim import primitives
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
@@ -40,11 +41,11 @@ def node(name):
     def decorator(fn):
         _bytecode_switch_table[name] = fn
     return decorator
-    
+
 def check(name):
     def decorator(fn):
         _ast_check_switch_table[name] = fn
-    return decorator    
+    return decorator
 
 
 ################################################################################
@@ -63,15 +64,15 @@ def _(ast, btc, env):
 def _(ast, btc, env):
     btc.extend([SOP_INT, ast['n']])
 
-@node('float')    
+@node('float')
 def _(ast, btc, env):
     not_implemented_error(ast)
 
-@node('name')    
+@node('name')
 def _(ast, btc, env):
     btc.extend([OP_NAME, env.name_index(ast['id'])])
 
-@node('assign') 
+@node('assign')
 def _(ast, btc, env):
     #TODO: check that target is declared
 
@@ -80,7 +81,7 @@ def _(ast, btc, env):
     gen_bytecode(ast['value'], btc, env)
     btc.extend([OP_ASSIGN, env.name_get_create(target)])
 
-@node('expr')    
+@node('expr')
 def _(ast, btc, env):
     #if not check_expr(ast): return
     gen_bytecode(ast['value'], btc, env)
@@ -91,15 +92,32 @@ def _(ast, btc, env):
     gen_bytecode(ast['right'], btc, env);
     btc.append(bin_ops[ast['op']])
 
-@node('call')    
+@node('call')
+def _(ast, btc, env):
+    """bytecode format:
+    arg1 arg2 ... argn OP_PRIM_CALL function_pointer"
+serial format:
+    SOP_PRIM  num_arguments func_index
+where:
+func_index = index of function_pointer in the array 'primitives'"""
+    nargs = len(ast['args'])
+    for arg in ast['args']:
+        gen_bytecode(arg, btc, env)
+    index = primitives.get(ast['func']['id'], None)
+    if index is not None: # calling a primative
+        #we have to use SOP_INT here so that the bytecode expansion
+        #can expand the numbers
+        btc.extend([SOP_PRIM_CALL, SOP_INT, nargs, SOP_INT, index])
+    else: #calling a user defined function
+        print("Error -- not implemented: calling non-primitives");
+        exit(1)
+
+
+@node('function')
 def _(ast, btc, env):
     not_implemented_error(ast)
-    
-@node('function')    
-def _(ast, btc, env):
-    not_implemented_error(ast)
-    
-@node('return')    
+
+@node('return')
 def _(ast, btc, env):
     not_implemented_error(ast)
 
@@ -124,7 +142,7 @@ def gen_bytecode(ast, btc=None, env=None):
                       #error message and exiting
     else:
         print("Warning: node '{}' has no checking function".format(ast['type']))
-        
+
     fn = _bytecode_switch_table.get(ast['type'])
     if fn:
         fn(ast, btc, env)
@@ -152,28 +170,28 @@ def _(ast):
     #check decorators
     #check args
     return True
-    
-@check('str')    
+
+@check('str')
 def _(ast):
     assert_type(ast, "str")
     #TODO:
     return True
-    
+
 @check('int')
 def _(ast):
     assert_type(ast, "int")
     return type(ast['n']) is int
-    
+
 @check('float')
 def _(ast):
     assert_type(ast, "float")
     return type(ast['n']) is float
-    
+
 @check('name')
 def _(ast):
     assert_type(ast, "name")
     return True
-    
+
 @check('assign')
 def _(ast):
     assert_type(ast, "assign")
@@ -187,7 +205,7 @@ def _(ast):
         syntax_error(ast, "starred assignment is not supported")
         return False
     return True
-    
+
 @check('binop')
 def _(ast):
     assert_type(ast, "binop")
@@ -195,6 +213,17 @@ def _(ast):
         return True
     #check 'left' and 'right' properties
     return False
+
+@check('call')
+def _(ast):
+    if ast['keywords']:
+        syntax_error(ast, "keyword args are not supported")
+    if ast['starargs']:
+        syntax_error(ast, "starargs are not supported")
+    if ast['kwargs']:
+        syntax_error(ast, "kwargs args are not supported")
+
+#TODO: should exit immediately on error, check functions should not return anyting
 
 ################################################################################
 # error reporting functions
