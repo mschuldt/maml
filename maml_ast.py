@@ -193,6 +193,14 @@ def alias(name, asname):
             'name': name,
             'asname': asname}
 
+def If(test, body, orelse, lineno=None, col_offset=None):
+    return {'type': 'if',
+            'test': test,
+            'body': body,
+            'else': orelse,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def make_ast(code):
     return eval(ast.dump(ast.parse(code),include_attributes=True))
 
