@@ -102,6 +102,7 @@ void setup(void){
   Serial.begin(9600);
   attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
 #else // setup signal interrupt
+  printf("Initializing avm...\n");
   lockfile = malloc(sizeof(char)*15);
   sprintf(lockfile, "%d.lock", getpid());
   FILE *fp = fopen(lockfile, "w");
@@ -113,6 +114,12 @@ void setup(void){
 #endif
 
   loop();// variables are initialized the first time loop is called
+
+#if arduino
+  //TODO
+#else
+  printf("Ready.\n----------\n");
+#endif
 }
 
 void* labels[20];
