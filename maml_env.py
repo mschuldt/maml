@@ -4,19 +4,53 @@ class env:
         self.parent = parent
         self.global_names = set()
         self.types = {}
-        
-    def name_index(self, name):
-        pass
-    def name_get_create(self, name):
-        pass
-    def add_globals(self, names):
-        g = self.global_names
-        for n in names:
-            g.add(n)
-        
-    def declare(self, decl):
-        "DECL is an assign ast node"
-        
+        self.n_names = 0
+        #TODO: track the size of the variable arrays in the Arduino
+
+    def get_store_index(self, name):
+        """returns the index at which to store NAME
+        return format: (global_p, index)"""
+        #check if this variable was declared 'global'
+        if name in self.global_names:
+            return self.parent.get_store_index(name)
+
+        globalp = (self.parent is None)
+
+        if name in self.names:
+            return (globalp, self.names[name])
+        else:
+            #TODO: check if index is greater then globals variable array on
+            #      arduino, send signal/codes to grow it if needed
+            index = self.n_names
+            self.names[name] = index
+            self.n_names += 1
+            return (globalp, index)
+
+    def get_load_index(self, name):
+        """returns teh index ast which to load NAME.
+        return format: (global_p, index)
+        for NAME to have a load index, it must have been stored (declared) first
+        (the corresponding call to get_store_index must have been made)"""
+        #check if this variable was declared 'global'
+        if name in self.global_names:
+            return self.parent.get_load_index(name)
+
+        globalp = (self.parent is None)
+
+        if name in self.names:
+            return (globalp, self.names[name])
+
+        #else: if we are in local scope, check global scope for index, else error
+        if self.parent:
+            return self.parent.get_load_index(name)
+        #else: no index found
+        print("Error: name '{}' is not defined")
+        exit(1) #TODO: just terminate compilation, not the whole program
+
+    def declare_global(self, name):
+        assert self.parent, "cannot add globals in global scope"
+        self.global_names.add(name)
+
     def get_type(self, name):
         "returns the type of varaible NAME"
         if name in self.global_names:
