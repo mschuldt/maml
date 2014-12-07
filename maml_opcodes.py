@@ -4,6 +4,9 @@
 #    ./maml_opcodes.py
 
 C_OPCODE_FILE = "_opcodes.h"
+
+#if True, use strings instead of numbers for opcode values
+debug = False
 ################################################################################
 
 opcodes = []
@@ -12,7 +15,10 @@ def OP(name):
     global i
     i = i + 1
     opcodes.append((name, i))
+    if debug:
+        return name
     return i
+
 
 #opcodes are numbered from 1
 
@@ -53,8 +59,8 @@ OP_PRINT_INT        = OP("OP_PRINT_INT")
 
 OP("OP_LOAD_CONST") #this opcode exists only in avm.c
 
-
 if __name__ == '__main__':
+    assert not debug, "disable debug mode when not debugging"
     print("re-generating C opcode file...", end="")
     f = open(C_OPCODE_FILE, "w")
     guard = C_OPCODE_FILE.upper().replace('.','_')
