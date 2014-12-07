@@ -2,6 +2,9 @@
 
 void delay(int seconds);
 
+//TODO have the preprocesser extra the number and type of args
+//     use that to check for errors while compiling
+
 _PRIMITIVE_
 int print_i(int n){
 #if arduino

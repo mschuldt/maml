@@ -1,38 +1,40 @@
+These are random notes and ideas. This is not project documentation.
+These notes do not refect the current state of the project.
+
 * type declarations
-
 x = [str]
-
 ** proposed type declaration grammar
-
+#+Begin_SRC java
 TYPE_DECL -> x = TYPE
 TYPE -> T | [ T ]
  T -> int | str | float | func |
- 
+#+END_SRC
 ** other possible type declaration syntax:
-
+#+Begin_SRC java
   x <= [str]
   x <- [str]
   x = [str]
   "x : [str]"
   x.type = [str]
   [str](x)
-
+#+END_SRC
 * arduino vm
 ** variable lookup
-
+#+Begin_SRC java
 global variables are stored in a global array
 functions have their own array for local vars
 
 the variable name mapping is not stored on the
 Arduino, only the indexes are send with the byte codes.
 The name->index mapping is stored in the compiler environment.
-
+#+END_SRC
 ** programming model
-
+#+Begin_SRC java
 stack based
 with registers
 codeblocks
 ?
+#+END_SRC
 * setting up the Arduino board
 ** hardware
 *** connecting the rx pin to an interrupt pin
@@ -41,7 +43,7 @@ TODO
 * questions/problems
 
 ** how to send code over serial to arduino?
-
+#+Begin_SRC java
  is there an interrupt for the serial?
  polling?
   how? insert bytecodes that check if serial is available
@@ -61,7 +63,8 @@ when data is sent it will also trigger this function, which will wait
 for the data to be fully read into the arduino, then it send it to the vm
  ?will it store it all first, or send it incrementally?
    ==>incrementally
-   
+#+END_SRC
+
 ** how to store the bytecode internally?
 
 bytecodes are kept in arrays that are stored in a linked list - blockchain
@@ -71,12 +74,12 @@ bytecodes are kept in arrays that are stored in a linked list - blockchain
 ==>no
 
 * codeblocks
-
+#+Begin_SRC java
  codeblocks are blocks of bytecode created in python and injected
  into the arduino main loop. By default they are appended but can
  also be inserted in any order. codeblocks can be moved or deleted.
  The mainloop will repeatedly execute the codeblock in order.
-
+#+END_SRC
 ** limitations
 
 All syntactic structures must be contained entirely in a single codeblock
@@ -93,19 +96,17 @@ sections of code. sections of code can be changed without having to retransmit
 everything. They allow us to avoid having to resize arrays or shift bytecodes.
 
 * compiler environment
-
 arduino vm state is partially duplicated in python in order
 to incrementally generate fast bytecode.
 
 mapping variable names to array indexes
-
 * possible points of confusion
-
+#+Begin_SRC java
 syntax is a subset of python but the semantics are different
   => to make things easier, we have clear error messages for
      unsupported syntax, but users will still have to learn the
      semantics. Semantics are as close to C.
-
+#+END_SRC
 ** defining codeblocks
 
 defining a codeblock:
@@ -118,12 +119,12 @@ does not create a function even though function syntax is used
 => Why use function syntax then?
    because we need a way of picking out the code to be compiled to bytecode from
    the ast, the decorator provides an easy way to find it.
-   
+
 * challenging parts
 TODO
 
 * order of implementation
-
+#+Begin_SRC java
 - simple vm + compiler running on desktop
   can execute x = 1 + 3; print(x)
   - ast
@@ -143,9 +144,9 @@ more robust serial object (automatic connection, reconnection)
 calling native functions
 writing c primitives
 adding/inserting/removing code blocks from mainloop
-
+#+END_SRC
 * syntax
-
+#+Begin_SRC java
 # define a codeblock
 @block
 def name():
@@ -168,9 +169,9 @@ arduino.move(name,2)
 # if a codeblock already exists in the mainloop, arduino.insert will move it
 # ==> Or should it duplicate it?
 
-
+#+END_SRC
 * interactivity
-
+#+Begin_SRC java
 the problem:
   the source code is needed to get the AST so just having a normal
   REPL does not work(only the bytecode is available at this stage)
@@ -188,9 +189,9 @@ possible solution:
 
  for getting and setting variable:
    this can be done interactively via the Arduino.get and Arduino.set methods.
-
+#+END_SRC
 * creating standalone arduino applications (no PC communication)
-
+#+Begin_SRC java
 This is done in the same way as an application that has PC communication
 except at the end of the program there is no kind event loop, after
 the code is sent to the Arduino it can be removed from the usb.
@@ -199,7 +200,7 @@ be preferred.
 
 #TODO: If we tell the vm that no more code will be sent, maybe it can
        free up some extra space
-
+#+END_SRC
 * serial protocol
 * adding new features
 ** new AST nodes
@@ -208,3 +209,122 @@ be preferred.
 * todo
 - Automatically find the pid of the avm process
 - Automatically find the Arduino serial port
+* how to handle injecting code?
+#+Begin_SRC java
+if we interrupt the process too run it we may mess up the internal state
+leading to super nasty bugs.
+possible solutions:
+The interrupt can stash the code somewhere and the vm will eval it at
+ its next opportunity - problem: now we constantly have to check for
+ available code to run, that sucks.
+ => maybe insert a special bytecode every 100 bytecodes and have the loop
+    check every iteration for available code.
+    (this can be disabled for applications that will not use this features)
+    Problem: calling primitives that take a long time to return
+OR: save all the critical variables and restore them after injected code finishes
+OR: specify when to run the injected code (after block or loop iter, etc)
+OR: temporally redefine the bytecode array so that the next instruction
+    jump will run the injected code. YES! THIS ONE
+    problem: this will not work if operands are dispersed in the bytecode
+             ->separate opcodes from operands?
+             -> temp variable 'next' that is set to the jump label
+                before anything else. -> But what if we are interrupted
+                mid assignment? at what points can we be interrupted?
+      maybe just best to save all vm state and restore it, works for
+      normal interrupts
+
+
+
+when injecting code need to make sure the current instruction has finished
+  => redefined where the interpreter jumps to next
+ signal interrupt for desktop version to read in code
+  => use lock file to prevent untimely interruptions
+  OR: if interrupted when reading in, set a flag. at the end of
+      bytecode readin if the flag is set then call the serial_in function
+      again. repeat until flag is left false.
+      PROBLEM: The python program will not know if the vm has read in the
+               current file and may change them so rapidly that the vm
+               will miss them. then sadness and broken invariants.
+#+END_SRC
+* calling functions
+#+Begin_SRC java
+function is on top of stack, it's arguments are below
+ -> primatives are different, args are on stack, func is next in bytecode
+
+separate primitives from user-defined functions
+  for primitive functions, the function pointer is next in bytecode
+    => need to have some way of registering primitive functions so that the
+    bytecode conversion knows now to convert the function reference
+    - have some kind of int -> function mapping
+
+  TODO: user defined functions
+#+END_SRC
+
+** defining primitive functions
+
+#+Begin_SRC java
+ python name to number mapping
+
+ bytecode:
+  SOP_PRIMATIVE primative_number
+
+ translation:
+  case SOP_PRIMATIVE_FN:
+   code_array[i] = _primitives[primitive_number]
+
+
+ primitive function syntax (in primitives.c)
+ _PRIMITIVE_
+ type name(type arg1, type arg2){ ... }
+
+
+ pre-processor creates two files from the primitives.c file:
+   _prim.c
+     // void** _primitives declared outside main
+     _primitives = malloc(sizeof(void*)*<LEN>);
+     _primitives[0] = &primative1
+     _primitives[1] = &primative2
+     ...
+
+  _prim.py
+   primitives = {}
+   primitives["primitive1"] = 0
+   primitives["primitive2"] = 1
+
+#+END_SRC
+* compiling bytecode with the vm:
+#+Begin_SRC java
+we could have the vm send back the threaded code, then compile that
+into vm
+=> this will take more room. If the program is large it may make more
+   sense to store the bytecodes and convert to threaded code at start up
+   => we may have to do this anyways, how else will we know how to
+      create the codeblock, strings, functions?
+
+compiling the bytecode is necessary for utilizing memory will for another reason:
+  We have to include all the standard primitive function definitions
+  just in case one is used. By compiling, we can eliminate all references
+  to them.
+
+
+can we just dump the whole vm image like emacs does?
+#+END_SRC
+* local vs global variable lookup
+#+Begin_SRC java
+ option 1: have the lookup function check that we are executing a lambda,
+           if not found locally, check for global value
+ option 2: have a separate opcode for variable lookups in functions.
+           it can fallthrough to the global lookup. YES
+
+local vs global variable setting
+  separate opcode for setting a variable in a function
+  if the variable is declared global, then the regular opcode is used
+
+#+END_SRC
+* Calling functions stored in variables
+#+Begin_SRC java
+if all functions have one type how do we know
+  if it is built-in or user defined?
+ => introduce limitation:
+      primative functions are not first class - they must be called by name
+#+END_SRC
