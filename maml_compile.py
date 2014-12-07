@@ -223,6 +223,9 @@ def _(ast):
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
 
+@check('expr')
+def _(ast): pass
+
 #TODO: should exit immediately on error, check functions should not return anyting
 
 ################################################################################
