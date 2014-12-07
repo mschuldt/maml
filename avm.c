@@ -146,6 +146,7 @@ void* l_call_prim_3;
 void* l_call_prim_4;
 void* l_call_prim_5;
 void* l_call_prim_6;
+void* l_pop;
 
 static int int_regs[8];
 static char* char_regs[8];
@@ -165,6 +166,7 @@ void loop (){
     l_call_prim_4 = &&call_prim_4;
     l_call_prim_5 = &&call_prim_5;
     l_call_prim_6 = &&call_prim_6;
+    l_pop = &&pop;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -282,7 +284,10 @@ void loop (){
  exit:
   Serial.println("Exiting");
 #endif
-
+ pop:
+  D("POP\n");
+  --top;
+  NEXT(code);
 }
 
 #if arduino
@@ -506,6 +511,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case OP_PRINT_INT:
       NL;
       code_array[i++] = l_print_int;
+      break;
+    case OP_POP:
+      NL;
+      code_array[i++] = l_pop;
       break;
     case SOP_STR:
       NL;

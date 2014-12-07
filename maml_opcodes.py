@@ -22,6 +22,7 @@ OP_PRIM_CALL        = OP("OP_PRIM_CALL")
 OP_USER_CALL        = OP("OP_USER_CALL")
 OP_FUNCTION         = OP("OP_FUNCTION")
 OP_RETURN           = OP("OP_RETURN")
+OP_POP              = OP("OP_POP")
 #bin ops
 OP_ADD              = OP("OP_ADD")
 OP_MULT             = OP("OP_MULT")
