@@ -4,13 +4,13 @@ These notes do not refect the current state of the project.
 * type declarations
 x = [str]
 ** proposed type declaration grammar
-#+Begin_SRC java
+#+Begin_SRC text
 TYPE_DECL -> x = TYPE
 TYPE -> T | [ T ]
  T -> int | str | float | func |
 #+END_SRC
 ** other possible type declaration syntax:
-#+Begin_SRC java
+#+Begin_SRC text
   x <= [str]
   x <- [str]
   x = [str]
@@ -20,7 +20,7 @@ TYPE -> T | [ T ]
 #+END_SRC
 * arduino vm
 ** variable lookup
-#+Begin_SRC java
+#+Begin_SRC text
 global variables are stored in a global array
 functions have their own array for local vars
 
@@ -29,7 +29,7 @@ Arduino, only the indexes are send with the byte codes.
 The name->index mapping is stored in the compiler environment.
 #+END_SRC
 ** programming model
-#+Begin_SRC java
+#+Begin_SRC text
 stack based
 with registers
 codeblocks
@@ -43,7 +43,7 @@ TODO
 * questions/problems
 
 ** how to send code over serial to arduino?
-#+Begin_SRC java
+#+Begin_SRC text
  is there an interrupt for the serial?
  polling?
   how? insert bytecodes that check if serial is available
@@ -74,7 +74,7 @@ bytecodes are kept in arrays that are stored in a linked list - blockchain
 ==>no
 
 * codeblocks
-#+Begin_SRC java
+#+Begin_SRC text
  codeblocks are blocks of bytecode created in python and injected
  into the arduino main loop. By default they are appended but can
  also be inserted in any order. codeblocks can be moved or deleted.
@@ -101,7 +101,7 @@ to incrementally generate fast bytecode.
 
 mapping variable names to array indexes
 * possible points of confusion
-#+Begin_SRC java
+#+Begin_SRC text
 syntax is a subset of python but the semantics are different
   => to make things easier, we have clear error messages for
      unsupported syntax, but users will still have to learn the
@@ -124,7 +124,7 @@ does not create a function even though function syntax is used
 TODO
 
 * order of implementation
-#+Begin_SRC java
+#+Begin_SRC text
 - simple vm + compiler running on desktop
   can execute x = 1 + 3; print(x)
   - ast
@@ -146,7 +146,7 @@ writing c primitives
 adding/inserting/removing code blocks from mainloop
 #+END_SRC
 * syntax
-#+Begin_SRC java
+#+Begin_SRC text
 # define a codeblock
 @block
 def name():
@@ -171,7 +171,7 @@ arduino.move(name,2)
 
 #+END_SRC
 * interactivity
-#+Begin_SRC java
+#+Begin_SRC text
 the problem:
   the source code is needed to get the AST so just having a normal
   REPL does not work(only the bytecode is available at this stage)
@@ -191,7 +191,7 @@ possible solution:
    this can be done interactively via the Arduino.get and Arduino.set methods.
 #+END_SRC
 * creating standalone arduino applications (no PC communication)
-#+Begin_SRC java
+#+Begin_SRC text
 This is done in the same way as an application that has PC communication
 except at the end of the program there is no kind event loop, after
 the code is sent to the Arduino it can be removed from the usb.
@@ -210,7 +210,7 @@ be preferred.
 - Automatically find the pid of the avm process
 - Automatically find the Arduino serial port
 * how to handle injecting code?
-#+Begin_SRC java
+#+Begin_SRC text
 if we interrupt the process too run it we may mess up the internal state
 leading to super nasty bugs.
 possible solutions:
@@ -247,7 +247,7 @@ when injecting code need to make sure the current instruction has finished
                will miss them. then sadness and broken invariants.
 #+END_SRC
 * calling functions
-#+Begin_SRC java
+#+Begin_SRC text
 function is on top of stack, it's arguments are below
  -> primatives are different, args are on stack, func is next in bytecode
 
@@ -262,7 +262,7 @@ separate primitives from user-defined functions
 
 ** defining primitive functions
 
-#+Begin_SRC java
+#+Begin_SRC text
  python name to number mapping
 
  bytecode:
@@ -293,7 +293,7 @@ separate primitives from user-defined functions
 
 #+END_SRC
 * compiling bytecode with the vm:
-#+Begin_SRC java
+#+Begin_SRC text
 we could have the vm send back the threaded code, then compile that
 into vm
 => this will take more room. If the program is large it may make more
@@ -310,7 +310,7 @@ compiling the bytecode is necessary for utilizing memory will for another reason
 can we just dump the whole vm image like emacs does?
 #+END_SRC
 * local vs global variable lookup
-#+Begin_SRC java
+#+Begin_SRC text
  option 1: have the lookup function check that we are executing a lambda,
            if not found locally, check for global value
  option 2: have a separate opcode for variable lookups in functions.
@@ -322,7 +322,7 @@ local vs global variable setting
 
 #+END_SRC
 * Calling functions stored in variables
-#+Begin_SRC java
+#+Begin_SRC text
 if all functions have one type how do we know
   if it is built-in or user defined?
  => introduce limitation:
