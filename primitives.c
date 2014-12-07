@@ -4,7 +4,11 @@ void delay(int seconds);
 
 _PRIMITIVE_
 int print_i(int n){
+#if arduino
+  //TODO:
+#else
   printf("%d\n", n);
+#endif
 }
 
 _PRIMITIVE_
@@ -18,16 +22,24 @@ void delay(int ms){
 
 //TODO: way of defining function from standard lib as primitives
 _PRIMITIVE_
-int die(code){
+int die(int code){
+#if arduino
+  //TODO:
+#else
   remove(lockfile);
   printf("bye.\n");
   exit(code);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ///primitives used for testing
 #if !arduino
+_PRIMITIVE_
+int test_add(int a, int b){
+  return a + b;
+}
 _PRIMITIVE_
 void test_add2(int a, int b){
   print_i(a + b);
