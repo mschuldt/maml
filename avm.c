@@ -91,6 +91,10 @@ void loop();
 char* lockfile;
 #endif
 
+void** globals; //array of global variables
+int max_globals = 20; //TODO: maml.env.py needs to know about this
+                      //      OR: have serial_in() check and resize!
+
 //if these names are changed, also change them in process_primitives.el
 void** primitives; //this is filled by auto-generated code in _prim.c
 int n_primitives;
@@ -102,6 +106,7 @@ void setup(void){
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
+  globals = malloc(sizeof(void*)*max_globals);
 
 #if arduino // setup serial
 
@@ -147,6 +152,8 @@ void* l_call_prim_4;
 void* l_call_prim_5;
 void* l_call_prim_6;
 void* l_pop;
+void* l_store_global;
+void* l_load_global;
 
 static int int_regs[8];
 static char* char_regs[8];
@@ -167,6 +174,8 @@ void loop (){
     l_call_prim_5 = &&call_prim_5;
     l_call_prim_6 = &&call_prim_6;
     l_pop = &&pop;
+    l_load_global = &&load_global;
+    l_store_global = &&store_global;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -245,6 +254,14 @@ void loop (){
 #undef _
 #undef S
   //// undef _ and S ////////////////////////////////////////////
+ load_global:
+  D("load_global\n")
+  stack[++top] = globals[(int)*code++];
+  NEXT(code);
+ store_global:
+  D("store_global\n")
+  globals[(int)*code++] = stack[top--];
+  NEXT(code);
  add:
   D("add\n");
   //*((int*)code[0]) = (a + b);
@@ -502,6 +519,23 @@ void serial_in(){ //serial ISR (interrupt service routine)
         exit(1);
       }
       code_array[i++] = primitives[index];
+      break;
+    case OP_GLOBAL_LOAD:
+      NL;
+
+      code_array[i++] = l_load_global;
+      SKIP(SOP_INT, "(in case global_load)"); NL;
+      goto read_globals_index;
+    case OP_GLOBAL_STORE:
+      NL;
+      code_array[i++] = l_store_global;
+      SKIP(SOP_INT, "(in case global_store)"); NL;
+    read_globals_index:
+      index = (int)READ_INT();
+      if (index < 0 || index > max_globals){
+        printf("Error: (op_load_global) invalid global variable index\n");
+      }
+      code_array[i++] = (void*)index;
       break;
     case OP_ADD:
       NL;
