@@ -1,6 +1,5 @@
 avm
 *.o
-__pycache__
-_bc.txt
+_*
 .emacs.desktop
 *.lock
