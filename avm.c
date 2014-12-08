@@ -155,6 +155,7 @@ void* l_pop;
 void* l_store_global;
 void* l_load_global;
 void* l_jump;
+void* l_if;
 static int int_regs[8];
 static char* char_regs[8];
 
@@ -177,6 +178,7 @@ void loop (){
     l_load_global = &&load_global;
     l_store_global = &&store_global;
     l_jump = &&jump;
+    l_if = &&_if;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -262,6 +264,13 @@ void loop (){
  store_global:
   D("store_global\n")
   globals[(int)*code++] = stack[top--];
+  NEXT(code);
+ _if:
+  D("if\n");
+  if (stack[top--]){
+    //skip
+    code+=2;
+  }
   NEXT(code);
  jump:
   code = *code;
@@ -458,7 +467,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
 
     //#char op = CHAR_TO_INT(data);
     char op = data;
-
     if (i == total && op != SOP_END){
       printf("ERROR: file has more bytecodes then header specified\n");
       exit(1);
@@ -569,6 +577,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case SOP_STR:
       NL;
       reading_str = true;
+      break;
+    case OP_IF:
+      NL;
+      code_array[i++] = l_if;
       break;
     case OP_JUMP:
       NL;

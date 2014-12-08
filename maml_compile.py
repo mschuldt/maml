@@ -123,6 +123,19 @@ func_index = index of function_pointer in the array 'primitives'"""
         exit(1)
 
 
+@node('if')
+def _(ast, btc, env, top):
+    false_l = env.make_label() #marks beginning of false code
+    done_l = env.make_label() #marks end of false code
+    gen_bytecode(ast['test'], btc, env, False)
+    btc.extend([OP_IF, OP_JUMP, SOP_INT, false_l])
+    for node in ast['body']:
+        gen_bytecode(node, btc, env, top);
+    btc.extend([OP_JUMP, SOP_INT, done_l, SOP_LABEL, SOP_INT, false_l])
+    for node in ast['else']:
+        gen_bytecode(node, btc, env, top);
+    btc.extend([SOP_LABEL, SOP_INT, done_l])
+
 @node('function')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
@@ -236,6 +249,9 @@ def _(ast):
         syntax_error(ast, "starargs are not supported")
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
+
+@check('if')
+def _(ast): pass
 
 @check('expr')
 def _(ast): pass

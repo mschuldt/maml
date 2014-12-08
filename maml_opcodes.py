@@ -37,6 +37,7 @@ OP_GLOBAL_LOAD      = OP("OP_GLOBAL_LOAD")
 OP_GLOBAL_STORE     = OP("OP_GLOBAL_STORE")
 OP_LOCAL_LOAD       = OP("OP_LOCAL_LOAD")
 OP_LOCAL_STORE      = OP("OP_LOCAL_STORE")
+OP_IF               = OP("OP_IF")
 OP_JUMP             = OP("OP_JUMP")
 #bin ops
 OP_ADD              = OP("OP_ADD")
