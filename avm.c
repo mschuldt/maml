@@ -6,6 +6,7 @@
 #define SERIAL_INTR_PIN 0
 #define DEBUG 0
 
+#define include_lists 1
 //NOTE: If these are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
 #define NUM_TERMINATOR 'x'
@@ -81,6 +82,29 @@ void append_codeblock(codeblock* block){
   }
   n_codeblocks++;
 }
+
+#if include_lists
+typedef struct node{
+  void* data;
+  struct node* next;
+} node;
+
+_PRIMITIVE_
+node* cons(void* d, node* list){
+  node* new = malloc(sizeof(node));
+  new->data = d;
+  new->next = list;
+  return new;
+}
+_PRIMITIVE_
+void* car(node* list){
+  return list->data;
+}
+_PRIMITIVE_
+node* cdr(node* list){
+  return list->next;
+}
+#endif
 
 void serial_in();
 
