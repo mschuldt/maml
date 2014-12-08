@@ -3,7 +3,6 @@
 import ast
 from sys import argv
 
-
 valid_types = ['int', 'str', 'float', 'func']
 
 def get_type(ast):
@@ -66,7 +65,7 @@ def Assign(targets, value, lineno=None, col_offset=None):
             'value': value,
             'lineno': lineno,
             'col_offset': col_offset}
-    
+
 def Num(n, lineno=None, col_offset=None):
     return {'type': ('int' if type(n) is int else 'float'),
             'n' : n,
@@ -78,7 +77,7 @@ def Str(s, lineno=None, col_offset=None):
             's' : s,
             'lineno': lineno,
             'col_offset': col_offset}
-    
+
 def Name(id, ctx, lineno=None, col_offset=None):
     return {'type' : 'name',
             'id' : id,
@@ -126,7 +125,7 @@ def BinOp(left, op, right, lineno=None, col_offset=None):
             'right': right,
             'lineno': lineno,
             'col_offset': col_offset}
-    
+
 def Add():      return "+"
 def Mult():     return "*"
 def Sub():      return "-"
@@ -138,6 +137,16 @@ def BitOr():    return "|"
 def BitAnd():   return "&"
 def Mod():      return "%"
 
+def Gt():    return ">"
+def Lt():    return "<"
+def Eq():    return "=="
+def NotEq(): return "!="
+def LtE():   return "<="
+def GtE():   return ">="
+def In():    return "in"
+def NotIn(): return "not-in"
+def Is():    return "is"
+
 def UnaryOp(op, operand, lineno=None, col_offset=None):
     return {'type': 'unaryOp',
             'op': op,
@@ -147,7 +156,7 @@ def UnaryOp(op, operand, lineno=None, col_offset=None):
 
 def Not(): return "not"
 def USub(): return "usub"
-    
+
 def Starred(value, ctx, lineno, col_offset):
     return {'type' : 'starred',
             'value': value,
@@ -184,7 +193,7 @@ def ImportFrom(module, names, level, lineno=None, col_offset=None):
             'level': level,
             'lineno': lineno,
             'col_offset': col_offset}
-    
+
 def alias(name, asname):
     return {'type': 'alias',
             'name': name,
@@ -203,8 +212,25 @@ def If(test, body, orelse, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset}
 
+def While(test, body, orelse, lineno=None, col_offset=None):
+    return {'type': 'while',
+            'test': test,
+            'body': body,
+            'orelse': orelse,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
+def AugAssign(target, op, value, lineno=None, col_offset=None):
+    return {'type': 'aug-assign',
+            'target': target,
+            'op':op,
+            'value': value,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def make_ast(code):
     return eval(ast.dump(ast.parse(code),include_attributes=True))
+
 
 if __name__ == "__main__":
     if len(argv) != 2:
