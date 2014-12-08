@@ -303,18 +303,6 @@ void loop (){
   current_block = current_block->next;
   code = current_block->code;
   NEXT(code);
- ret:
-#if arduino
-  goto exit;
-#else
-  printf("Exiting.\n");
-  exit(0);
-#endif
-
-#if arduino
- exit:
-  Serial.println("Exiting");
-#endif
  pop:
   D("POP\n");
   --top;
@@ -470,15 +458,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
     }
 #endif
 
-    if (reading_str){
-      if (data){
-        //TODO: add to str array
-      }else{
-        //TODO: add null terminator
-        //add string pointer to code_array
-        reading_str = false;
-      }
-      continue;
     }
     //#define REGISTER code_array[++i] = &int_regs[*(++curr)]
 #define POP stack[top--]
