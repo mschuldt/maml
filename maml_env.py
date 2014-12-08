@@ -5,6 +5,7 @@ class env:
         self.global_names = set()
         self.types = {}
         self.n_names = 0
+        self.label_counter = -1
         #TODO: track the size of the variable arrays in the Arduino
 
     def get_store_index(self, name):
@@ -51,6 +52,11 @@ class env:
     def declare_global(self, name):
         assert self.parent, "cannot add globals in global scope"
         self.global_names.add(name)
+
+    def make_label(self):
+        "returns a unique label marker"
+        self.label_counter += 1
+        return self.label_counter
 
     def get_type(self, name):
         "returns the type of varaible NAME"

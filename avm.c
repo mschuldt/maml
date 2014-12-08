@@ -154,7 +154,7 @@ void* l_call_prim_6;
 void* l_pop;
 void* l_store_global;
 void* l_load_global;
-
+void* l_jump;
 static int int_regs[8];
 static char* char_regs[8];
 
@@ -176,6 +176,7 @@ void loop (){
     l_pop = &&pop;
     l_load_global = &&load_global;
     l_store_global = &&store_global;
+    l_jump = &&jump;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -261,6 +262,9 @@ void loop (){
  store_global:
   D("store_global\n")
   globals[(int)*code++] = stack[top--];
+  NEXT(code);
+ jump:
+  code = *code;
   NEXT(code);
  add:
   D("add\n");
@@ -379,7 +383,16 @@ void serial_in(){ //serial ISR (interrupt service routine)
 
   int reading_str = false;
   void** code_array;
-  void* stack[5];
+  void* stack[5]; //?
+
+  //TODO: this should be reduced on the arduino and allowed to grow/shrink
+  int max_jumps = 100;
+  int max_labels = 100;
+  int n_jumps = 0;
+  int n_labels = 0;
+  void*** jumps = malloc(sizeof(void*)*max_jumps);
+  void** labels = malloc(sizeof(void*)*max_labels);
+
   int top = -1;
 
 #if arduino
@@ -557,7 +570,51 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       reading_str = true;
       break;
+    case OP_JUMP:
+      NL;
+      code_array[i++] = l_jump;
+      if (n_jumps > max_jumps-1){ //-1 because we add 2 items each time
+        //TODO: extend the jumps array
+        printf("Error: max jumps exceeded\n"); exit(1);
+      }
+      jumps[n_jumps++] = &code_array[i++];
+      SKIP(SOP_INT, "(in case op_jump)"); NL;
+      jumps[n_jumps++] = READ_INT();
+      break;
+    case SOP_LABEL:
+      NL;
+      SKIP(SOP_INT, "(in case op_label)"); NL;
+      index = (int)READ_INT();
+      if (index < 0){
+        printf("Error: invalid label index\n");  exit(1);
+      }
+      if (index > max_labels){
+        //TODO: extend the labels array
+        printf("Error: max labels exceeded\n");  exit(1);
+      }
+      labels[index] = &code_array[i];
+      break;
     case SOP_END:
+      //TODO: reset jump/label variables at start of block/function transfer
+      if (newblock || newlambda){
+        /*
+        printf("code_array = %d\n", code_array);
+        printf("before label conversion:\n");
+        for (int k =0;k< i;k++){
+          printf("%d, ", code_array[k]);
+        }
+        */
+        for (int j=0; j < n_jumps; j+=2){
+          *(jumps[j]) = labels[(int)jumps[j+1]];
+        }
+        /*
+        printf("\nafter conversion:\n:");
+        for (int k =0;k< i;k++){
+          printf("%d, ", code_array[k]);
+        }
+        printf("\n");
+        */
+      }
       if (newblock){
         //printf("appending new codeblock\n");
         code_array[i] = l_end_of_block;
