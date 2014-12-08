@@ -5,21 +5,21 @@
 ;;input: primitives.c
 ;;output: _prim.c, _prim.py
 
-(setq primitives_file "primitives.c"
+(setq primitives_files '("primitives.c" "avm.c")
       c_out "_prim.c"
       py_out "_prim.py"
       token "_PRIMITIVE_"
-      re (concat token "[ \n\t]+\\([a-zA-Z0-9_]+[ \t\n]+\\)+\\([a-zA-Z0-9_]+\\)[ \n\t]*("))
+      re (concat token "[ \n\t]+\\([a-zA-Z0-9\*_]+[ \t\n]+\\)+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*("))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq names nil)
 
 (defun process_primitives ()
-  (find-file primitives_file)
-  (while (re-search-forward  re nil :noerror)
-    (setq names (cons (match-string 2) names))))
-
+  (dolist (file primitives_files)
+    (find-file file)
+    (while (re-search-forward  re nil :noerror)
+      (setq names (cons (match-string 2) names)))))
 
 (defun write_py ()
   (find-file py_out)

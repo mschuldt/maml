@@ -34,6 +34,8 @@
 #define true 1
 #define false 0
 
+#define _PRIMITIVE_
+
 typedef struct string{
   int len;
   char* s;
