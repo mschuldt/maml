@@ -375,6 +375,25 @@ int read_int(FILE* fp){
   integer[i] = '\0';
   return atoi(integer);
 }
+string* read_string(FILE* fp){
+  int n = read_int(fp);
+  //TODO: check that we have enough mem
+  char* s = malloc(sizeof(char)*n+1);
+  string *str = malloc(sizeof(string));
+  str->s = s;
+  str->len = n;
+  int i = 0;
+  while (*s++ = fgetc(fp)){
+    if (++i > n){
+      printf("Error: max string size exceeded (%d)\n", n);
+      exit(1);
+    }
+    SKIP('\n', "(read_int)");
+  }
+  SKIP('\n', "(read_int)");
+  *s = '\0';
+  return str;
+}
 
 //TODO: how to handle a read signal while a read is already in progress?
 
@@ -383,6 +402,7 @@ int read_int(FILE* fp){
 void serial_in(){ //serial ISR (interrupt service routine)
 #if arduino
 #define READ_INT()   //TODO
+#define READ_STRING() //TODO
 #define NL //nothing
 #else
   //set lock file so that other processes will not interrupt this one
@@ -393,6 +413,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
   //reset signal handler (it gets unset everytime for some reason)
   signal(SIGIO, serial_in);
 #define READ_INT() ((void*) read_int(fp))
+#define READ_STRING() ((void*) read_string(fp))
 #define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
 #endif
 
@@ -586,7 +607,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
       break;
     case SOP_STR:
       NL;
-      reading_str = true;
+      code_array[i++] = (void*) l_load_const;
+      code_array[i++] = (void*) READ_STRING();
       break;
     case OP_IF:
       NL;

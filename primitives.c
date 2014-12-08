@@ -15,6 +15,15 @@ int print_i(int n){
 }
 
 _PRIMITIVE_
+void print_s(string* str){
+#if arduino
+  //TODO:
+#else
+  printf("%s\n", str->s);
+#endif
+}
+
+_PRIMITIVE_
 void delay(int ms){
 #if arduino
   delay(ms);

@@ -80,7 +80,9 @@ def expand_bytecode(bc):
             long_code.extend(list(str(bc[i])) + [NUM_TERMINATOR])
         elif c == SOP_STR:
             i += 1
-            long_code.extend(list(bc[i]) + [0])
+            s = bc[i]
+            long_code.extend(list(str(len(s))) + [NUM_TERMINATOR]
+                             + list(s) + [chr(0)])
         i += 1
     return long_code
 
