@@ -71,8 +71,6 @@ SOP_PRIM_CALL       = OP("SOP_PRIM_CALL")
 SOP_LABEL           = OP("SOP_LABEL")
 SOP_END             = OP("SOP_END")
 
-OP_PRINT_INT        = OP("OP_PRINT_INT")
-
 
 OP("OP_LOAD_CONST") #this opcode exists only in avm.c
 

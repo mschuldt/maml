@@ -142,7 +142,6 @@ void* l_addii;
 void* l_addi;
 void* l_add;
 void* l_ret;
-void* l_print_int;
 void* l_end_of_block;
 void* l_call_prim_0;
 void* l_call_prim_1;
@@ -167,7 +166,6 @@ void loop (){
     l_load_const = &&load_const;
     l_add = &&add;
     l_ret = &&ret;
-    l_print_int = &&print_int;
     l_end_of_block = &&end_of_block;
     l_call_prim_0 = &&call_prim_0;
     l_call_prim_1 = &&call_prim_1;
@@ -198,21 +196,6 @@ void loop (){
   void* stack[10];//??
   int top = -1;//index of the top item on the stack
 
-  /*
-  printf("l_load_const  = %d \n", l_load_const);
-  printf("l_add  = %d \n", l_add);
-  printf("l_ret  = %d \n", l_ret);
-  printf("l_print_int  = %d \n", l_print_int);
-  */
-
-  //prints translated code
-  /*
-  printf("block->code ==>\n");
-  for (int i = 0; i < current_block->len; i++){
-    printf("%d: %d\n",i, *((int*)(current_block->code + i)));
-  }
-  printf("=====\n");
-  */
   void* r_ret;
 
   NEXT(code);
@@ -222,23 +205,22 @@ void loop (){
   stack[++top] = *code;
   code++;
   NEXT(code);
- call_prim_0: //stack:   <function pointer> TOP
-  //TODO: need to push return value onto the stack if not top level
+ call_prim_0:
   D("call_0\n");
   stack[++top] = ((void* (*)(void))(*code))();
   NEXT(code);
- call_prim_1:// stack: <arg> <function pointer> TOP
+ call_prim_1:
   D("call_1\n");
   stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
- call_prim_2: // stack: <arg1> <arg2> <function pointer> TOP
+ call_prim_2:
   //// define _ and S////////////////////////////////////////////
 #define _ void*
 #define S(i) stack[top+i]
   D("call_2\n");
   stack[--top] = ((_ (*)(_, _))(*code++))(S(0), S(1));
   NEXT(code);
- call_prim_3: // stack: <arg1> <arg2> <arg3> <function pointer> TOP
+ call_prim_3:
   D("call_3\n");
   top -= 2;
   stack[top] = ((_ (*)(_, _, _))(*code++))(S(0),S(1), S(2));
@@ -263,17 +245,16 @@ void loop (){
   //// undef _ and S ////////////////////////////////////////////
  load_global:
   D("load_global\n")
-  stack[++top] = globals[(int)*code++];
+    stack[++top] = globals[(int)*code++];
   NEXT(code);
  store_global:
   D("store_global\n")
-  globals[(int)*code++] = stack[top--];
+    globals[(int)*code++] = stack[top--];
   NEXT(code);
  _if:
   D("if\n");
   if (stack[top--]){
-    //skip
-    code+=2;
+    code+=2; //skip over the jump
   }
   NEXT(code);
  jump:
@@ -281,15 +262,7 @@ void loop (){
   NEXT(code);
  add:
   D("add\n");
-  //*((int*)code[0]) = (a + b);
   stack[top-1] = (void*)((int)stack[top] + (int)stack[--top]);
-
-  ///FOR TESTING. Because we have no other way to print yet
-  /* printf("%d\n", ((int*)stack[top])); */
-  /* top--; */
-  /* sleep(1); */
-  ////////////////////
-
   NEXT(code);
  sub:
   D("add\n");
@@ -304,19 +277,6 @@ void loop (){
   current_block = current_block->next;
   code = current_block->code;
   NEXT(code);
- print_int:
-  D("print_int\n");
-#if arduino
-  char tmp[100]; //TODO: change to use stack
-  sprintf(tmp, "%d", *((int*)code[0]));
-  Serial.println(tmp);
-#else
-  //printf("%d\n", *((int*)code[0]));
-  printf("%d\n", ((int*)stack[top]));
-  top--;
-#endif
-  NEXT(code);
-
  ret:
 #if arduino
   goto exit;
@@ -359,7 +319,7 @@ volatile boolean receiving_serial = false;
 */
 #if arduino
 #define SKIP(ch, msg) if (fgetc(fp) != ch){     \
-    //TODO
+  //TODO
 }
 #else
 #define SKIP(ch, msg) if (fgetc(fp) != ch){             \
@@ -607,10 +567,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_ret;
       break;
-    case OP_PRINT_INT:
-      NL;
-      code_array[i++] = l_print_int;
-      break;
     case OP_POP:
       NL;
       code_array[i++] = l_pop;
@@ -652,21 +608,21 @@ void serial_in(){ //serial ISR (interrupt service routine)
       //TODO: reset jump/label variables at start of block/function transfer
       if (newblock || newlambda){
         /*
-        printf("code_array = %d\n", code_array);
-        printf("before label conversion:\n");
-        for (int k =0;k< i;k++){
+          printf("code_array = %d\n", code_array);
+          printf("before label conversion:\n");
+          for (int k =0;k< i;k++){
           printf("%d, ", code_array[k]);
-        }
+          }
         */
         for (int j=0; j < n_jumps; j+=2){
           *(jumps[j]) = labels[(int)jumps[j+1]];
         }
         /*
-        printf("\nafter conversion:\n:");
-        for (int k =0;k< i;k++){
+          printf("\nafter conversion:\n:");
+          for (int k =0;k< i;k++){
           printf("%d, ", code_array[k]);
-        }
-        printf("\n");
+          }
+          printf("\n");
         */
       }
       if (newblock){
