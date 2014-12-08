@@ -137,6 +137,14 @@ def BitOr():    return "|"
 def BitAnd():   return "&"
 def Mod():      return "%"
 
+def Compare (left, ops, comparators, lineno=None, col_offset=None):
+    return {'type': 'compare',
+            'left': left,
+            'ops': ops,
+            'comparators': comparators,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def Gt():    return ">"
 def Lt():    return "<"
 def Eq():    return "=="

@@ -156,6 +156,7 @@ void* l_store_global;
 void* l_load_global;
 void* l_jump;
 void* l_if;
+void* l_lt;
 static int int_regs[8];
 static char* char_regs[8];
 
@@ -179,6 +180,7 @@ void loop (){
     l_store_global = &&store_global;
     l_jump = &&jump;
     l_if = &&_if;
+    l_lt = &&lt;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -286,6 +288,10 @@ void loop (){
   /* sleep(1); */
   ////////////////////
 
+  NEXT(code);
+ lt:
+  // use > because items on stack are reversed
+  stack[top-1] = ((int)(stack[top]) > ((int)stack[--top]));
   NEXT(code);
 
  end_of_block:
@@ -561,6 +567,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case OP_ADD:
       NL;
       code_array[i++] = l_add;
+      break;
+    case OP_LT:
+      NL;
+      code_array[i++] = l_lt;
       break;
     case OP_RETURN:
       NL;

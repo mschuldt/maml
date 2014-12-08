@@ -136,6 +136,15 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top);
     btc.extend([SOP_LABEL, SOP_INT, done_l])
 
+@node('compare')
+def _(ast, btc, env, top):
+    #this implementation of chained comparisons does not work
+    #so...they are 'not supported' by @check('compare')
+    gen_bytecode(ast['left'], btc, env, False);
+    for comp, op in zip(ast['comparators'], ast['ops']):
+        gen_bytecode(comp, btc, env, False);
+        btc.append(comparison_ops[op])
+
 @node('function')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
@@ -158,6 +167,16 @@ bin_ops = {"+": OP_ADD,
            "|": OP_L_OR,
            "&": OP_L_AND,
            "%": OP_MOD}
+
+comparison_ops = {'>': OP_GT,
+                  '<': OP_LT,
+                  '==': OP_EQ,
+                  '!=': OP_NOT_EQ,
+                  '<=': OP_LT_EQ,
+                  '>=': OP_LT_EQ,
+                  'in': OP_IN,
+                  'not-in': OP_NOT_IN,
+                  'is': OP_IS}
 
 def gen_bytecode(ast, btc=None, env=None, top=True):
     global _error
@@ -249,6 +268,11 @@ def _(ast):
         syntax_error(ast, "starargs are not supported")
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
+
+@check('compare')
+def _(ast):
+    if len(ast['ops']) > 1: #ex: x < 1 < 1
+        syntax_error(ast, "chained comparison is (currently) not supported")
 
 @check('if')
 def _(ast): pass

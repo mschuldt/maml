@@ -50,6 +50,16 @@ OP_L_XOR            = OP("OP_L_XOR")
 OP_L_OR             = OP("OP_L_OR")
 OP_L_AND            = OP("OP_L_AND")
 OP_MOD              = OP("OP_MOD")
+#comparison ops
+OP_GT               = OP("OP_GT")
+OP_LT               = OP("OP_LT")
+OP_EQ               = OP("OP_EQ")
+OP_NOT_EQ           = OP("OP_NOT_EQ")
+OP_LT_EQ            = OP("OP_LT_EQ")
+OP_GT_EQ            = OP("OP_GT_EQ")
+OP_IN               = OP("OP_IN")
+OP_NOT_IN           = OP("OP_NOT_IN")
+OP_IS               = OP("OP_IS")
 
 #codes for serial protocol
 SOP_INT             = OP("SOP_INT")
