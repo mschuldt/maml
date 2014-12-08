@@ -72,9 +72,13 @@ def _(ast, btc, env, top):
 #TODO: 'name' and 'assign' still need to be tested with local names
 @node('name')
 def _(ast, btc, env, top):
-    globalp, index = env.get_load_index(ast['id'])
-    op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
-    btc.extend([op, SOP_INT, index])
+    name = ast['id']
+    if name == 'None' or name == 'False':
+        btc.append(SOP_NULL)
+    else:
+        globalp, index = env.get_load_index(name)
+        op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
+        btc.extend([op, SOP_INT, index])
 
 @node('assign')
 def _(ast, btc, env, top):

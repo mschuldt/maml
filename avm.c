@@ -630,6 +630,11 @@ void serial_in(){ //serial ISR (interrupt service routine)
       }
       labels[index] = &code_array[i];
       break;
+    case SOP_NULL:
+      NL;
+      code_array[i++] = (void*) l_load_const;
+      code_array[i++] = NULL;
+      break;
     case SOP_END:
       //TODO: reset jump/label variables at start of block/function transfer
       if (newblock || newlambda){
