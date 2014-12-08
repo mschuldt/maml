@@ -3,9 +3,41 @@
 import ast
 from sys import argv
 
+
+valid_types = ['int', 'str', 'float', 'func']
+
+def get_type(ast):
+    "returns the type of ast or None if it does not describe one"
+    if ast['type'] == 'list':
+        is_list = True if len(ast['elts']) == 1 else False
+        ast = ast['elts'][0]
+    if ast['type'] == name:
+        t = ast['id']
+        if t not in valid_types: return None
+    return "[{}]".format(t) if is_list else t
+
+def Compare (left, ops, comparators, lineno=None, col_offset=None):
+    if len(ops) == 1 and ops[0] == '<':
+        #special case for type declaration
+        if left['type'] == 'name':
+            c = comparators[0]
+            if c['type'] == 'unaryOp' and c['op'] == 'usub':
+                t = get_type(c['operand'])
+                if t:
+                    return {'type': 'declaration',
+                            'name': left['id'],
+                            'type_':t,
+                            'lineno': lineno,
+                            'col_offset': col_offset}
+    return {'type': 'compare',
+            'left': left,
+            'comparators' : comparators,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def Module(body):
     return body
-    
+
 def FunctionDef(name, args, body, decorator_list, returns, lineno=None, col_offset=None):
     return {'type': 'function',
             'name' : name,
@@ -77,50 +109,15 @@ def Expr(value, lineno=None, col_offset=None):
             'col_offset': col_offset}
 
 
-    
+
 def Return(value, lineno='nil', col_offset='nil'):
     return {'type' : 'return',
             'value': value,
             'lineno': lineno,
             'col_offset': col_offset}
-    
+
 def Load():     return 'load'
 def Store():    return 'store'
-
-def is_type_declaration(ast):
-    "return type if AST is a type declaration node, else False"
-    pass
-
-valid_types = ['int', 'str', 'float', 'func']
-
-def get_type(ast):
-    "returns the type of ast or None if it does not describe one"
-    if ast['type'] == 'list':
-        is_list = True if len(ast['elts']) == 1 else False
-        ast = ast['elts'][0]
-    if ast['type'] == name:
-        t = ast['id']
-        if t not in valid_types: return None
-    return "[{}]".format(t) if is_list else t
-    
-def Compare (left, ops, comparators, lineno=None, col_offset=None):
-    if len(ops) == 1 and ops[0] == '<':
-        #special case for type declaration
-        if left['type'] == 'name':
-            c = comparators[0] 
-            if c['type'] == 'unaryOp' and c['op'] == 'usub':
-                t = get_type(c['operand'])
-                if t:
-                    return {'type': 'declaration',
-                            'name': left['id'],
-                            'type_':t,
-                            'lineno': lineno,
-                            'col_offset': col_offset}
-    return {'type': 'compare',
-            'left': left,
-            'comparators' : comparators,
-            'lineno': lineno,
-            'col_offset': col_offset}
 
 def BinOp(left, op, right, lineno=None, col_offset=None):
     return {'type': 'binop',
