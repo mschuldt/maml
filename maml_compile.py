@@ -136,6 +136,18 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top);
     btc.extend([SOP_LABEL, SOP_INT, done_l])
 
+@node('while')
+def _(ast, btc, env, top):
+    # [start] <test> OP_IF <jump end> <body> <jump start> [end]
+    start_l = env.make_label()
+    end_l = env.make_label()
+    btc.extend([SOP_LABEL, SOP_INT, start_l])
+    gen_bytecode(ast['test'], btc, env, False)
+    btc.extend([OP_IF, OP_JUMP, SOP_INT, end_l])
+    for node in ast['body']:
+        gen_bytecode(node, btc, env, top);
+    btc.extend([OP_JUMP, SOP_INT, start_l, SOP_LABEL, SOP_INT, end_l])
+
 @node('compare')
 def _(ast, btc, env, top):
     #this implementation of chained comparisons does not work
@@ -268,6 +280,11 @@ def _(ast):
         syntax_error(ast, "starargs are not supported")
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
+
+@check('while')
+def _(ast):
+    if ast['orelse']:
+        syntax_error(ast, "while loop else thing is not supported")
 
 @check('compare')
 def _(ast):
