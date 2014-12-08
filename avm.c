@@ -183,6 +183,9 @@ void* l_jump;
 void* l_if;
 void* l_lt;
 void* l_sub;
+#if include_lists
+void* l_list;
+#endif
 static int int_regs[8];
 static char* char_regs[8];
 
@@ -207,6 +210,9 @@ void loop (){
     l_if = &&_if;
     l_lt = &&lt;
     l_sub = &&sub;
+#if include_lists
+    l_list = &&list;
+#endif
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -223,6 +229,8 @@ void loop (){
   int top = -1;//index of the top item on the stack
 
   void* r_ret;
+  int n;
+  node *list = NULL;
 
   NEXT(code);
 
@@ -298,7 +306,21 @@ void loop (){
   // use > because items on stack are reversed
   stack[top-1] = ((int)(stack[top]) > ((int)stack[--top]));
   NEXT(code);
-
+#if include_lists
+ list:
+  D("list\n");
+  n = (int)*code++;
+  list = NULL;
+  while (n){
+    tmp = malloc(sizeof(node));
+    tmp->next = list;
+    tmp->data = stack[top--];
+    list = tmp;
+    n--;
+  }
+  stack[++top] = list;
+  NEXT(code);
+#endif
  end_of_block:
   current_block = current_block->next;
   code = current_block->code;
@@ -477,6 +499,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
       exit(1);
     }
 
+    int n;
+
     switch (op){
     case SOP_START_CODEBLOCK:
       //For now we are just creating and appending a new block every time
@@ -581,6 +605,19 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_STRING();
       break;
+#if include_lists
+    case OP_LIST:
+      NL;
+      code_array[i++] = l_list;
+      SKIP(SOP_INT, "(in case op_list)"); NL;
+      n = READ_INT();
+      if (n <= 0){
+        printf("Error: (op_list) invalid length: %d\n", n); exit(1);
+      }
+      //TODO: give warning if we don't currently have enough memory
+      code_array[i++] = n;
+      break;
+#endif
     case OP_IF:
       NL;
       code_array[i++] = l_if;
