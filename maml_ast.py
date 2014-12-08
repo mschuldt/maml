@@ -193,6 +193,11 @@ def alias(name, asname):
             'name': name,
             'asname': asname}
 
+def Pass(lineno=None, col_offset=None):
+    return {'type':'pass',
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def If(test, body, orelse, lineno=None, col_offset=None):
     return {'type': 'if',
             'test': test,

@@ -131,6 +131,10 @@ def _(ast, btc, env, top):
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
+@node('pass')
+def _(ast, btc, env, top):
+    pass
+
 bin_ops = {"+": OP_ADD,
            "*": OP_MULT,
            "-": OP_SUB,
@@ -234,6 +238,9 @@ def _(ast):
         syntax_error(ast, "kwargs args are not supported")
 
 @check('expr')
+def _(ast): pass
+
+@check('pass')
 def _(ast): pass
 
 #TODO: should exit immediately on error, check functions should not return anyting
