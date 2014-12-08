@@ -3,3 +3,5 @@ avm
 _*
 .emacs.desktop
 *.lock
+
+tests/*.test_out
