@@ -15,7 +15,7 @@ int print_i(int n){
 }
 
 _PRIMITIVE_
-void print_s(string* str){
+void print_s(struct string* str){
 #if arduino
   //TODO:
 #else

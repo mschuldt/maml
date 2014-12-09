@@ -46,29 +46,29 @@
 
 #define _PRIMITIVE_
 
-typedef struct string{
+struct string{
   int len;
   char* s;
-}string;
+};
 
 typedef struct lambda{
   int nargs;
   void* code;
 }lambda;
 
-typedef struct codeblock{
+struct codeblock{
   int index; //index in codeblock chain
   void** code;
   int len; //length of 'code'
   struct codeblock* next;
   struct codeblock* prev;
-}codeblock;
+};
 
-codeblock* blockchain;
-codeblock* blockchain_end;
+struct codeblock* blockchain;
+struct codeblock* blockchain_end;
 int n_codeblocks;
 
-void init_codeblock(codeblock* block, int code_len){
+void init_codeblock(struct codeblock* block, int code_len){
   block->index = -1;
   block->len = code_len;
   //+ 1 for the END_OF_BLOCK instruction
@@ -76,7 +76,7 @@ void init_codeblock(codeblock* block, int code_len){
   block->prev = block->next = NULL;
 }
 
-void append_codeblock(codeblock* block){
+void append_codeblock(struct codeblock* block){
   //TODO: should add
   if (!blockchain_end){
     block->index = 0;
@@ -93,24 +93,24 @@ void append_codeblock(codeblock* block){
 }
 
 #if include_lists
-typedef struct node{
+struct node{
   void* data;
   struct node* next;
-} node;
+};
 
 _PRIMITIVE_
-node* cons(void* d, node* list){
-  node* new = malloc(sizeof(node));
+struct node* cons(void* d, struct node* list){
+  struct node* new = malloc(sizeof(struct node));
   new->data = d;
   new->next = list;
   return new;
 }
 _PRIMITIVE_
-void* car(node* list){
+void* car(struct node* list){
   return list->data;
 }
 _PRIMITIVE_
-node* cdr(node* list){
+struct node* cdr(struct node* list){
   return list->next;
 }
 #endif
@@ -227,7 +227,7 @@ void loop (){
   if (!blockchain) return;//no bytecode yet
 
   //this part happens only once
-  codeblock* current_block = blockchain;
+  struct codeblock* current_block = blockchain;
   int i_top=0, c_top=0;
   void** code = current_block->code;
   int *I = &int_regs[0];
@@ -239,7 +239,8 @@ void loop (){
 
   void* r_ret;
   int n;
-  node *list = NULL;
+  struct node *list = NULL;
+  struct node *tmp;
 
   NEXT(code);
 
@@ -321,7 +322,7 @@ void loop (){
   n = (int)*code++;
   list = NULL;
   while (n){
-    tmp = malloc(sizeof(node));
+    tmp = malloc(sizeof(struct node));
     tmp->next = list;
     tmp->data = stack[top--];
     list = tmp;
@@ -386,11 +387,11 @@ int read_int(FILE* fp){
   integer[i] = '\0';
   return atoi(integer);
 }
-string* read_string(FILE* fp){
+struct string* read_string(FILE* fp){
   int n = read_int(fp);
   //TODO: check that we have enough mem
   char* s = malloc(sizeof(char)*n+1);
-  string *str = malloc(sizeof(string));
+  struct string *str = malloc(sizeof(struct string));
   str->s = s;
   str->len = n;
   int i = 0;
@@ -459,8 +460,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
   //the nth bytecode should be the terminator
   int total = 0;
   int i = 0;//index of next bytecode in 'code_array'
-  codeblock* newblock = NULL;
-  procedure* newfunction = NULL;
+  struct codeblock* newblock = NULL;
+  struct procedure* newfunction = NULL;
 
 
   while (1){//until terminator is seen
@@ -523,7 +524,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       if (newfunction){
         //TODO: (error)
       }
-      newblock = malloc(sizeof(codeblock));
+      newblock = malloc(sizeof(struct codeblock));
       init_codeblock(newblock, total);
       code_array = newblock->code;
       break;
