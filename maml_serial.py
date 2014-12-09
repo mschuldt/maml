@@ -4,7 +4,6 @@ VM_PROCESS_NAME = 'avm'
 NUM_TERMINATOR = 'x'
 BYTECODE_IN_FILE = '_bc.txt'
 
-
 from maml_opcodes import *
 if debug:
     print("Error serializing: in maml_opcodes.py, debug must be False")
@@ -13,6 +12,9 @@ from signal import SIGIO as VM_SIGNAL
 from os import kill
 import subprocess
 from time import sleep
+import platform
+from glob import glob
+import serial
 
 class Maml_serial:
     "Automatically find and maintain a connection to an Arduino over serial"
@@ -67,6 +69,28 @@ class Maml_serial:
         print("wrote file '{}'".format(BYTECODE_IN_FILE))
         f.close()
 
+
+    def find_arduino_port():
+        def ping(s):
+            s.write(bytes(chr(SOP_PING), 'UTF-8'))
+            n = s.read()
+            if n:
+                return int(n) == SOP_ALIVE
+
+        for port in list_serial_ports():
+            print("trying port: {}...".format(port), end="")
+            try:
+                s = serial.Serial(port, 9600)
+                s.timeout = 0.1
+                if ping(s):
+                    print("yes")
+                    return port
+                print("no")
+            except serial.SerialException:
+                print("no")
+            return True
+
+
 def expand_bytecode(bc):
     "expands bc into an array of bytes"
     long_code = []
@@ -109,3 +133,28 @@ def find_vm_pid():
     else:
         print("Error: failed to find vm pid")
     return None
+
+
+def list_serial_ports():
+    #adapted from http://stackoverflow.com/questions/11303850/what-is-the-cross-platform-method-of-enumerating-serial-ports-in-python-includi
+    system_name = platform.system()
+    assert system_name != "Windows", "gross OS error"
+    if system_name == "Windows":
+        # Scan for available ports.
+        available = []
+        for i in range(256):
+            try:
+                s = serial.Serial(i)
+                available.append(i)
+                s.close()
+            except serial.SerialException:
+                pass
+        return available
+    elif system_name == "Darwin": # mac
+        return glob.glob('/dev/tty*') + glob.glob('/dev/cu*')
+    elif system_name == "Linux":
+        return glob('/dev/ttyUSB*') + glob('/dev/ttyACM*') #+ glob('/dev/ttyS*')
+    else:
+        print("Error: unknown system: " + system_name)
+        exit(1)
+
