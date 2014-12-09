@@ -1,0 +1,37 @@
+* langauge features
+- [ ] chain together multiple blocks or send multiple blocks at once
+- [ ] unary op
+- [ ] most binary ps
+- [ ] most conditionals
+- [ ] for loops (mark unimplemented?)
+- [ ] >, >=, <=, ==
+- [ ] augmented assignment
+- [ ] chained comparison (ex: 1 < 2 <= 3)
+- [ ] break and continue for while loops
+- [ ] a = b = c ?
+
+* compilation
+- [ ] check that reserved variable names, keyword, and function are not used incorrectly
+- [ ] any expression that can be at the top level that normally
+      pushes to the stack will have to pop that element from the stack
+* VM
+- [ ] need some way of growing the stack -> have a function or opcode to do that
+- [ ] separate function that wraps malloc and check if mem is available
+- [ ] optional array bounds checking for arrays and lists
+- [ ] attach all kill signals to function that removes the lock file
+- [ ] find someway of using an array for label addresses instead
+     (so that we can dynamically allocate the memory and free it if needed)
+* AST
+better way of transforming the ast - dont convert to dictionaries in that 
+traverse the ast object without converting to string and evaluating
+* primitive functions
+- [ ] primitive reprocessing needs to get arg count + type
+- [ ] check argument count when calling primitives
+* bugs
+** null terminators in middle of strings
+this is an error:
+  x = "test \0string"
+because the vm stops reading when it reaches \0
+and the rest of the characters are interpreted as opcodes
+
+fix: check for terminators in strings and only send first part
