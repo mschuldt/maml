@@ -323,8 +323,75 @@ local vs global variable setting
 #+END_SRC
 * Calling functions stored in variables
 #+Begin_SRC text
-if all functions have one type how do we know
-  if it is built-in or user defined?
- => introduce limitation:
-      primative functions are not first class - they must be called by name
+  if all functions have one type how do we know
+    if it is built-in or user defined?
+   => introduce limitation:
+        primative functions are not first class - they must be called by name
+#+END_SRC
+* 'if' conditions
+#+Begin_SRC text
+<condition> OP_IF false_label <true code> <false code>
+
+how do we know where the <false code> starts?
+ the bytecode array that we send changes size after internal conversation
+ so its hard to pre-calculate
+ => use tokens in place of the address, store address of spot in code
+   after OP_IF with token in separate array. have seporate SOP code at the
+    start of the <false code> that will lookup its token in that array
+    and insert its address after the corresponding OP_IF
+   translation runtime is proportional to the number of nested ifs
+   -> we need to do the same thing to jump over the false code if
+      the condition is true
+  'if' without 'else'?
+      same thing, there is just no <false code>
+  
+
+OP_IF (jmp false_label) <true code> (jmp done) [false] <false code> [done]
+#+END_SRC
+* jumps
+#+Begin_SRC text
+ 
+OP_JMP
+SOP_LABEL
+
+when generating bytecode each label is assigned an index number.
+when translating, every time a label is found its address is 
+saved in an array at that index.
+All jump are also saved in an array in the format:
+  <jmp address 1>, label_index, <jmp address 2>, label_index,...
+
+when all the bytecode for a block is read in, iterate through the
+jump array and set the corresponding addresses in the code array.
+
+
+instead of resizing arrays, could transit the needed array size and
+allocate once in the beginning.
+
+
+can only jump to labels in the same block/function
+
+#+END_SRC
+
+* interrupts
+#+Begin_SRC text
+ oops..can't attach ISRs to all pins and have them call designated 
+ interrupt variables as suggested at the end of the presentation. Instead:
+ 
+ attaching primitives can be done in the same way was they are
+ manipulated in the program as a function pointer. 
+
+ user defined functions are a bit harder.
+  predefine functions _isr_1,_isr_n,...,_isr_n
+  that call variables _isr_fn_1, _isr_fn_2,_isr_fn_n
+  
+  to define an isr:   => actually no need to have seporate decorator. use @function
+   @interrupt
+   def name():
+      ...
+  
+  desugar:
+    attachInterrupt(0, name, CHANGE)
+  into:
+    attachInterrupt(0, _isr_fn_i, CHANGE)
+    _isr_v_i = name
 #+END_SRC
