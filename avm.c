@@ -7,6 +7,7 @@
 #define DEBUG 0
 
 #define include_lists 1
+
 //NOTE: If these are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
 #define NUM_TERMINATOR 'x'
@@ -34,6 +35,14 @@
 
 #define true 1
 #define false 0
+
+#if arduino
+#define DIE //?
+#define SAY(words) Serial.write(words)
+#else
+#define DIE(n) exit(n)
+#define SAY(words) printf(words)
+#endif
 
 #define _PRIMITIVE_
 
@@ -387,8 +396,7 @@ string* read_string(FILE* fp){
   int i = 0;
   while (*s++ = fgetc(fp)){
     if (++i > n){
-      printf("Error: max string size exceeded (%d)\n", n);
-      exit(1);
+      SAY("Error: max string size exceeded\n"); DIE(1);
     }
     SKIP('\n', "(read_int)");
   }
@@ -442,8 +450,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
   char ch;
   fp = fopen(BYTECODE_IN_FILE, "r");
   if (!fp){
-    printf("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
-    exit(1);//TODO: should return
+    SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
+    DIE(1);//TODO: should return
   }
 #endif
   char data;
@@ -489,15 +497,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
     //#char op = CHAR_TO_INT(data);
     char op = data;
     if (i == total && op != SOP_END){
-      printf("ERROR: file has more bytecodes then header specified\n");
-      exit(1);
+      SAY("ERROR: file has more bytecodes then header specified\n"); DIE(1);
     }
     if (!newfunction && !newblock
         && ! (op == SOP_START_CODEBLOCK)
         && ! (op == SOP_START_FUNCTION)
         && ! (op == SOP_END)){
-      printf("ERROR: block or lambda has not been specified\n");
-      exit(1);
+      SAY("ERROR: block or lambda has not been specified\n"); DIE(1);
     }
 
     int n;
@@ -561,9 +567,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
       //now read in function pointer
       int index = READ_INT();
       if (index < 0 || index >= n_primitives){
+#if arduino
+        SAY("Error: invalid index for primitives array\n");
+#else
         printf("Error: invalid index for primitives array. max: %d, got %d\n",
                index, n_primitives);
         exit(1);
+#endif
       }
       code_array[i++] = primitives[index];
       break;
@@ -580,7 +590,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     read_globals_index:
       index = (int)READ_INT();
       if (index < 0 || index > max_globals){
-        printf("Error: (op_load_global) invalid global variable index\n");
+        SAY("Error: (op_load_global) invalid global variable index\n"); DIE(1);
       }
       code_array[i++] = (void*)index;
       break;
@@ -616,7 +626,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       SKIP(SOP_INT, "(in case op_list)"); NL;
       n = READ_INT();
       if (n <= 0){
-        printf("Error: (op_list) invalid length: %d\n", n); exit(1);
+        SAY("Error: (op_list) invalid length"); DIE(1);
       }
       //TODO: give warning if we don't currently have enough memory
       code_array[i++] = n;
@@ -631,7 +641,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = l_jump;
       if (n_jumps > max_jumps-1){ //-1 because we add 2 items each time
         //TODO: extend the jumps array
-        printf("Error: max jumps exceeded\n"); exit(1);
+        SAY("Error: max jumps exceeded\n"); DIE(1);
       }
       jumps[n_jumps++] = &code_array[i++];
       SKIP(SOP_INT, "(in case op_jump)"); NL;
@@ -642,11 +652,11 @@ void serial_in(){ //serial ISR (interrupt service routine)
       SKIP(SOP_INT, "(in case op_label)"); NL;
       index = (int)READ_INT();
       if (index < 0){
-        printf("Error: invalid label index\n");  exit(1);
+        SAY("Error: invalid label index\n");  DIE(1);
       }
       if (index > max_labels){
         //TODO: extend the labels array
-        printf("Error: max labels exceeded\n");  exit(1);
+        SAY("Error: max labels exceeded\n");  DIE(1);
       }
       labels[index] = &code_array[i];
       break;
@@ -684,15 +694,21 @@ void serial_in(){ //serial ISR (interrupt service routine)
       }else if (newfunction){
         //TODO:
       }else{
+#if !arduino
         fp = fopen(lockfile, "w");
         fprintf(fp, "0");
         fclose(fp);
+#endif
         return; //end of file
       }
       break;
     default: //bytecode
       //TODO:
+#if arduino
+      SAY("ERROR: unrecognized bytecode\n");
+#else
       printf("ERROR: unrecognized bytecode: '%d'\n", op);
+#endif
     }
   }
 #if arduino
