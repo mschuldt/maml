@@ -364,9 +364,10 @@ volatile boolean receiving_serial = false;
    using a persistent file for debugging purposes.
 */
 #if arduino
-#define SKIP(ch, msg) if (fgetc(fp) != ch){     \
-  //TODO
-}
+#define SKIP(ch, msg) if (Serial.read() != ch){         \
+    Serial.print("Error -- skip: unexpected char");     \
+  }
+
 #else
 #define SKIP(ch, msg) if (fgetc(fp) != ch){             \
     printf("Error: expected char '%c'"msg"\n", ch);     \
@@ -375,6 +376,18 @@ volatile boolean receiving_serial = false;
 #endif
 
 //TODO: equivalent functions for Arduino
+#if arduino
+int read_int(){
+  char integer[10];
+  int i=0;
+  char ch;
+  while ((ch = Serial.read()) != NUM_TERMINATOR){
+    integer[i++] = ch;
+  }
+  integer[i] = '\0';
+  return atoi(integer);
+}
+#else
 int read_int(FILE* fp){
   char integer[10];
   int i=0;
@@ -387,6 +400,13 @@ int read_int(FILE* fp){
   integer[i] = '\0';
   return atoi(integer);
 }
+#endif
+
+#if arduino
+struct string* read_string(){
+  //TODO
+}
+#else
 struct string* read_string(FILE* fp){
   int n = read_int(fp);
   //TODO: check that we have enough mem
@@ -405,6 +425,27 @@ struct string* read_string(FILE* fp){
   *s = '\0';
   return str;
 }
+#endif
+#if arduino
+int* read_int_array(FILE* fp){
+  //TODO
+}
+#else
+int* read_int_array(FILE* fp){
+  int n = read_int(fp);
+  //TODO: check that we have enough mem
+  int* a = (int*)malloc(sizeof(int)*n);
+  int i = 0;
+  while (*a++ = fgetc(fp)){
+    if (++i > n){
+      SAY("Error: max int array size exceeded"); DIE(1);
+    }
+    SKIP('\n', "(read_int_array)");
+  }
+  SKIP('\n', "(read_int_array)");
+  return a;
+}
+#endif
 
 //TODO: how to handle a read signal while a read is already in progress?
 
@@ -412,10 +453,18 @@ struct string* read_string(FILE* fp){
 
 void serial_in(){ //serial ISR (interrupt service routine)
 #if arduino
-#define READ_INT()   //TODO
-#define READ_STRING() //TODO
+#define READ_INT() read_int()
+#define READ_STRING() read_string()
+#define READ_INT_ARRAY() read_int_array()
 #define NL //nothing
 #else
+#define READ_INT() read_int(fp)
+#define READ_STRING() read_string(fp)
+#define READ_INT_ARRAY() read_int_array(fp)
+#define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
+#endif
+
+#if ! arduino
   //set lock file so that other processes will not interrupt this one
   //while it reads in the new bytecode (ugly things happen in that case)
   FILE *fp = fopen(lockfile, "w");
@@ -423,10 +472,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
   fclose(fp);
   //reset signal handler (it gets unset everytime for some reason)
   signal(SIGIO, (__sighandler_t)serial_in);
-#define READ_INT() ((void*) read_int(fp))
-#define READ_STRING() ((void*) read_string(fp))
-#define READ_INT_ARRAY() ((void*)read_int_array(fp))
-#define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
 #endif
 
   int reading_str = false;
@@ -538,7 +583,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case SOP_INT:
       NL;
       code_array[i++] = (void*) l_load_const;
-      code_array[i++] = READ_INT();
+      code_array[i++] = (void*) READ_INT();
       break;
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
       NL;
@@ -547,7 +592,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       void* tmp;
       int index;
       // get the address for the label that calls with that # args
-      switch ((int)READ_INT()){
+      switch (READ_INT()){
         //TODO: put all l_call_prim_N into an array and index that
         //      then we can free that array if all code is sent
       case 0:
@@ -565,17 +610,12 @@ void serial_in(){ //serial ISR (interrupt service routine)
       case 6:
         tmp = l_call_prim_6; break;
       default:
-#if arduino
-        //TODO
-#else
-        printf("ERROR: (current) max args to primitive is 6\n");
-        exit(1);
-#endif
+        SAY("ERROR: (current) max args to primitive is 6\n");
       }
       code_array[i++] = tmp;
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
       //now read in function pointer
-      index = (int)READ_INT();
+      index = READ_INT();
       if (index < 0 || index >= n_primitives){
 #if arduino
         SAY("Error: invalid index for primitives array\n");
@@ -598,7 +638,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = l_store_global;
       SKIP(SOP_INT, "(in case global_store)"); NL;
     read_globals_index:
-      index = (int)READ_INT();
+      index = READ_INT();
       if (index < 0 || index > max_globals){
         SAY("Error: (op_load_global) invalid global variable index\n"); DIE(1);
       }
@@ -634,7 +674,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_list;
       SKIP(SOP_INT, "(in case op_list)"); NL;
-      n = (int) READ_INT();
+      n = READ_INT();
       if (n <= 0){
         SAY("Error: (op_list) invalid length"); DIE(1);
       }
@@ -660,7 +700,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case SOP_LABEL:
       NL;
       SKIP(SOP_INT, "(in case op_label)"); NL;
-      index = (int)READ_INT();
+      index = READ_INT();
       if (index < 0){
         SAY("Error: invalid label index\n");  DIE(1);
       }
