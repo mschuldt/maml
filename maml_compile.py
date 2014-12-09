@@ -64,33 +64,17 @@ def check(name):
 def _(ast, btc, env, top):
     btc.extend([SOP_STR, ast['s']])
 
-@check('str')
-def _(ast):
-    assert_type(ast, "str")
-    #TODO:
-    return True
-
 ################################################################################
 # int
 @node('int')
 def _(ast, btc, env, top):
     btc.extend([SOP_INT, ast['n']])
 
-@check('int')
-def _(ast):
-    assert_type(ast, "int")
-    return type(ast['n']) is int
-
 ################################################################################
 # float
 @node('float')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
-
-@check('float')
-def _(ast):
-    assert_type(ast, "float")
-    return type(ast['n']) is float
 
 ################################################################################
 # list
@@ -102,9 +86,6 @@ def _(ast, btc, env, top):
     print("compiling 'list', len(elts) = {}".format(len(elts)))
     btc.extend([OP_LIST, SOP_INT, len(elts)])
     #TODO: if len = 0 ==> NULL
-
-@check('list')
-def _(ast): pass
 
 ################################################################################
 # str
@@ -124,11 +105,6 @@ def _(ast, btc, env, top):
         globalp, index = env.get_load_index(name)
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
         btc.extend([op, SOP_INT, index])
-
-@check('name')
-def _(ast):
-    assert_type(ast, "name")
-    return True
 
 ################################################################################
 # nameconstant
@@ -174,9 +150,6 @@ def _(ast):
 def _(ast, btc, env, top):
     #if not check_expr(ast): return
     gen_bytecode(ast['value'], btc, env, top)
-
-@check('expr')
-def _(ast): pass
 
 ################################################################################
 # binop
@@ -246,10 +219,6 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top);
     btc.extend([SOP_LABEL, SOP_INT, done_l])
 
-
-@check('if')
-def _(ast): pass
-
 ################################################################################
 # while
 
@@ -316,9 +285,6 @@ def _(ast, btc, env, top):
 def _(ast, btc, env, top):
     pass
 
-@check('pass')
-def _(ast): pass
-
 ################################################################################
 
 bin_ops = {"+": OP_ADD,
@@ -350,8 +316,8 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
     if check_fn:
         check_fn(ast) #the check function is responsible for
                       #error message and exiting
-    else:
-        print("Warning: node '{}' has no checking function".format(ast['type']))
+    # else:
+    #     print("Warning: node '{}' has no checking function".format(ast['type']))
 
     fn = _bytecode_switch_table.get(ast['type'])
     if fn:
