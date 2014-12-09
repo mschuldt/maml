@@ -78,6 +78,10 @@ def _(ast, btc, env, top):
     btc.extend([OP_LIST, SOP_INT, len(elts)])
     #TODO: if len = 0 ==> NULL
 
+@node('tuple')
+def _(ast, btc, env, top):
+    pass
+
 #TODO: 'name' and 'assign' still need to be tested with local names
 @node('name')
 def _(ast, btc, env, top):
@@ -311,6 +315,9 @@ def _(ast): pass
 def _(ast): pass
 
 @check('pass')
+def _(ast): pass
+
+@check('list')
 def _(ast): pass
 
 #TODO: should exit immediately on error, check functions should not return anyting

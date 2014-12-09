@@ -164,6 +164,9 @@ struct frame *current_frame = NULL;
 void** primitives; //this is filled by auto-generated code in _prim.c
 int n_primitives;
 #include "primitives.c"
+#if ! arduino
+#include "non_arduino_primitives.c"
+#endif
 
 void setup(void){
 #include "_prim.c"
@@ -266,7 +269,7 @@ void loop (){
   void* stack[10];//??
   int top = -1;//index of the top item on the stack
 
-  void* r_ret;
+  void* r_ret; //?
   int n;
   struct node *list = NULL;
   struct node *tmp;
@@ -316,6 +319,10 @@ void loop (){
 #undef _
 #undef S
   //// undef _ and S ////////////////////////////////////////////
+ call:
+  NEXT(code);
+ ret:
+  NEXT(code);
  load_global:
   D("load_global\n")
     stack[++top] = globals[(int)*code++];
