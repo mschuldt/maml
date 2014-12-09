@@ -51,24 +51,49 @@ def check(name):
 ################################################################################
 # bytecode generation
 
-# parameters:
+# @node function parameters:
 #   AST is the ast node
 #   BTC is the bytecode array
 #   ENV keeps track of variable index mappings and types
 #   TOP is this a top level node?
 
+################################################################################
+# str
+
 @node('str')
 def _(ast, btc, env, top):
     btc.extend([SOP_STR, ast['s']])
 
+@check('str')
+def _(ast):
+    assert_type(ast, "str")
+    #TODO:
+    return True
+
+################################################################################
+# int
 @node('int')
 def _(ast, btc, env, top):
     btc.extend([SOP_INT, ast['n']])
 
+@check('int')
+def _(ast):
+    assert_type(ast, "int")
+    return type(ast['n']) is int
+
+################################################################################
+# float
 @node('float')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
+@check('float')
+def _(ast):
+    assert_type(ast, "float")
+    return type(ast['n']) is float
+
+################################################################################
+# list
 @node('list')
 def _(ast, btc, env, top):
     elts = ast['elts']
@@ -78,10 +103,17 @@ def _(ast, btc, env, top):
     btc.extend([OP_LIST, SOP_INT, len(elts)])
     #TODO: if len = 0 ==> NULL
 
+@check('list')
+def _(ast): pass
+
+################################################################################
+# str
 @node('tuple')
 def _(ast, btc, env, top):
     pass
 
+################################################################################
+# str
 #TODO: 'name' and 'assign' still need to be tested with local names
 @node('name')
 def _(ast, btc, env, top):
@@ -93,12 +125,22 @@ def _(ast, btc, env, top):
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
         btc.extend([op, SOP_INT, index])
 
+@check('name')
+def _(ast):
+    assert_type(ast, "name")
+    return True
+
+################################################################################
+# nameconstant
 @node('nameconstant')
 def _(ast, btc, env, top):
     if ast['value']:
         btc.extend([SOP_INT, 1])
     else:
         btc.append(SOP_NULL)
+
+################################################################################
+# assign
 
 @node('assign')
 def _(ast, btc, env, top):
@@ -111,17 +153,50 @@ def _(ast, btc, env, top):
     op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
     btc.extend([op, SOP_INT, index])
 
+@check('assign')
+def _(ast):
+    assert_type(ast, "assign")
+    targets = ast['targets']
+    if len(targets) > 1:
+        #example: 'a,b=x'
+        syntax_error(ast, "unpacking is not supported")
+        return False
+    if targets[0]['type'] == 'starred':
+        #example: '*a=x'
+        syntax_error(ast, "starred assignment is not supported")
+        return False
+    return True
+
+################################################################################
+# expr
 #TODO: eliminate this type in maml_ast.py ?
 @node('expr')
 def _(ast, btc, env, top):
     #if not check_expr(ast): return
     gen_bytecode(ast['value'], btc, env, top)
 
+@check('expr')
+def _(ast): pass
+
+################################################################################
+# binop
+
 @node('binop')
 def _(ast, btc, env, top):
     gen_bytecode(ast['left'], btc, env, False);
     gen_bytecode(ast['right'], btc, env, False);
     btc.append(bin_ops[ast['op']])
+
+@check('binop')
+def _(ast):
+    assert_type(ast, "binop")
+    if ast['op'] in bin_ops:
+        return True
+    #check 'left' and 'right' properties
+    return False
+
+################################################################################
+# call
 
 @node('call')
 def _(ast, btc, env, top):
@@ -146,6 +221,17 @@ func_index = index of function_pointer in the array 'primitives'"""
               .format(ast['func']['id']));
         exit(1)
 
+@check('call')
+def _(ast):
+    if ast['keywords']:
+        syntax_error(ast, "keyword args are not supported")
+    if ast['starargs']:
+        syntax_error(ast, "starargs are not supported")
+    if ast['kwargs']:
+        syntax_error(ast, "kwargs args are not supported")
+
+################################################################################
+# if
 
 @node('if')
 def _(ast, btc, env, top):
@@ -160,6 +246,13 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top);
     btc.extend([SOP_LABEL, SOP_INT, done_l])
 
+
+@check('if')
+def _(ast): pass
+
+################################################################################
+# while
+
 @node('while')
 def _(ast, btc, env, top):
     # [start] <test> OP_IF <jump end> <body> <jump start> [end]
@@ -172,6 +265,13 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top);
     btc.extend([OP_JUMP, SOP_INT, start_l, SOP_LABEL, SOP_INT, end_l])
 
+@check('while')
+def _(ast):
+    if ast['orelse']:
+        syntax_error(ast, "while loop else thing is not supported")
+
+################################################################################
+# compare
 @node('compare')
 def _(ast, btc, env, top):
     #this implementation of chained comparisons does not work
@@ -181,17 +281,45 @@ def _(ast, btc, env, top):
         gen_bytecode(comp, btc, env, False);
         btc.append(comparison_ops[op])
 
+@check('compare')
+def _(ast):
+    if len(ast['ops']) > 1: #ex: x < 1 < 1
+        syntax_error(ast, "chained comparison is (currently) not supported")
+
+################################################################################
+# str
 @node('function')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
+
+################################################################################
+# 'function'
+@check('function')
+def _(ast):
+    """verifies syntatic correctness of function node"""
+    assert_type(ast, "function")
+    #TODO:
+    #check decorators
+    #check args
+    return True
+
+################################################################################
+### return
 
 @node('return')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
+################################################################################
+# pass
 @node('pass')
 def _(ast, btc, env, top):
     pass
+
+@check('pass')
+def _(ast): pass
+
+################################################################################
 
 bin_ops = {"+": OP_ADD,
            "*": OP_MULT,
@@ -236,96 +364,6 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
 
 def make_new_env():
     return env()
-
-################################################################################
-# ast checking functions
-
-# TODO: the checks that just verify type should be removed
-#       actually all ast type checks are pointless
-#       as these functions will only get called with correct node types
-
-@check('function')
-def _(ast):
-    """verifies syntatic correctness of function node"""
-    assert_type(ast, "function")
-    #TODO:
-    #check decorators
-    #check args
-    return True
-
-@check('str')
-def _(ast):
-    assert_type(ast, "str")
-    #TODO:
-    return True
-
-@check('int')
-def _(ast):
-    assert_type(ast, "int")
-    return type(ast['n']) is int
-
-@check('float')
-def _(ast):
-    assert_type(ast, "float")
-    return type(ast['n']) is float
-
-@check('name')
-def _(ast):
-    assert_type(ast, "name")
-    return True
-
-@check('assign')
-def _(ast):
-    assert_type(ast, "assign")
-    targets = ast['targets']
-    if len(targets) > 1:
-        #example: 'a,b=x'
-        syntax_error(ast, "unpacking is not supported")
-        return False
-    if targets[0]['type'] == 'starred':
-        #example: '*a=x'
-        syntax_error(ast, "starred assignment is not supported")
-        return False
-    return True
-
-@check('binop')
-def _(ast):
-    assert_type(ast, "binop")
-    if ast['op'] in bin_ops:
-        return True
-    #check 'left' and 'right' properties
-    return False
-
-@check('call')
-def _(ast):
-    if ast['keywords']:
-        syntax_error(ast, "keyword args are not supported")
-    if ast['starargs']:
-        syntax_error(ast, "starargs are not supported")
-    if ast['kwargs']:
-        syntax_error(ast, "kwargs args are not supported")
-
-@check('while')
-def _(ast):
-    if ast['orelse']:
-        syntax_error(ast, "while loop else thing is not supported")
-
-@check('compare')
-def _(ast):
-    if len(ast['ops']) > 1: #ex: x < 1 < 1
-        syntax_error(ast, "chained comparison is (currently) not supported")
-
-@check('if')
-def _(ast): pass
-
-@check('expr')
-def _(ast): pass
-
-@check('pass')
-def _(ast): pass
-
-@check('list')
-def _(ast): pass
 
 #TODO: should exit immediately on error, check functions should not return anyting
 
