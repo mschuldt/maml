@@ -3,6 +3,7 @@ avm
 _*
 .emacs.desktop
 *.lock
+avm.ino
 
 tests/*.test_out
 tests/*.bc
