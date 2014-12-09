@@ -58,10 +58,27 @@ struct string{
   char* s;
 };
 
-typedef struct lambda{
-  int nargs;
-  void* code;
-}lambda;
+struct procedure{
+  int n_args;
+  void** code;
+  int n_locals;
+  int* args;
+};
+
+void init_procedure(struct procedure* fn, int code_len, int n_locals){
+  fn->n_args = 0;
+  fn->n_locals = n_locals;
+  //+ 1 for the END_OF_BLOCK instruction
+  fn->code = (void**)malloc(sizeof(void*)*(code_len + 1));
+}
+
+struct frame{
+  void** code;
+  void** locals;
+  int n_locals;
+  struct frame* prev;
+  struct frame* next;
+};
 
 struct codeblock{
   int index; //index in codeblock chain
@@ -136,6 +153,7 @@ char* lockfile;
 void** globals; //array of global variables
 int max_globals = 20; //TODO: maml.env.py needs to know about this
                       //      OR: have serial_in() check and resize!
+struct frame *current_frame = NULL;
 
 //if these names are changed, also change them in process_primitives.el
 void** primitives; //this is filled by auto-generated code in _prim.c
