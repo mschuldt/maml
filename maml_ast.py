@@ -243,6 +243,12 @@ def List(elts, ctx, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset}
 
+def NameConstant(value, lineno=None, col_offset=None):
+    return {'type': 'nameconstant',
+            'value': value,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def make_ast(code):
     return eval(ast.dump(ast.parse(code),include_attributes=True))
 

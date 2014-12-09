@@ -93,6 +93,13 @@ def _(ast, btc, env, top):
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
         btc.extend([op, SOP_INT, index])
 
+@node('nameconstant')
+def _(ast, btc, env, top):
+    if ast['value']:
+        btc.extend([SOP_INT, 1])
+    else:
+        btc.append(SOP_NULL)
+
 @node('assign')
 def _(ast, btc, env, top):
     #TODO: check that target is declared
