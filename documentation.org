@@ -1,0 +1,210 @@
+* usage
+TODO
+* testing
+to run all tests in maml/tests/:
+  make test
+** using gdb
+start avm process with gdb
+then inject code in separate terminal by running python file:
+#+Begin_SRC text
+ ./maml.py filename.py
+#+END_SRC
+using ./run.sh will not work because it creates its own avm subprocess
+** testing bytecode compilation
+to print the compiled code from a file use:
+#+Begin_SRC text
+ ./maml_compile filename.py
+#+END_SRC
+this will print something like:
+#+Begin_SRC text
+  block: 'test'
+      [22, 2, 8, 0]
+#+END_SRC
+to print with human readable opcodes instead,
+at the top of maml_opcodes.py set "debug = True"
+Now maml_compile will print something like
+#+Begin_SRC text
+  block: 'test'
+      ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
+#+END_SRC
+
+* features
+features in the order they where implemented
+** main
+- defining/calling c primitive functions
+- global variables
+- if/elif/else conditions
+- conditionals
+- while loops
+- strings
+- lists
+
+** all
+- integers
+- addition
+- communication to vm on desktop using files and signals
+- defining/calling c primitive functions
+- global variables
+- jumps and labels  
+- if/elif/else conditions
+- conditionals
+- while loops
+- strings
+- None and False
+- linked lists
+- list literals
+  
+* defining new c primitives
+TODO
+primitives.c vs non_arduino_primitives.c
+* internals
+** adding a new opcode / VM case
+using 'pop' as an example.
+
+in maml_opcodes.py add the opcode definition:
+
+#+Begin_SRC python
+ OP_POP = OP("OP_POP")
+#+END_SRC
+
+in avm.c add the case in loop():
+
+#+Begin_SRC c
+  pop:
+   --top; 
+   NEXT(code); 
+#+END_SRC
+
+in avm.c at the top of loop() defined a label variable:
+ 
+#+Begin_SRC c
+ void* l_pop;
+#+END_SRC
+
+and below that, in loop(), add the label address assignment:
+
+#+Begin_SRC c
+ l_pop = &pop;
+#+END_SRC
+
+at the bottom of avm.c in serial_in(), add a case to the switch statement
+that reads in the bytecode and adds the address to the code array,
+if this opcode has operands, they are read in now, see case SOP_INT or 
+SOP_PRIM_CALL for and example of that.
+
+#+Begin_SRC c
+    case OP_POP:
+      NL;
+      code_array[i++] = l_pop;
+      break;      
+#+END_SRC
+** opcode format
+Operands are mixed in with opcodes. An opcodes operands come after the opcode
+in the bytecode array. 
+** lsdjlskjd
+if an opcode has integer operands it must insert SOP_INT before the number.
+This allows the number to be serialized. In serial_in, SOP_INT must
+be explicitly skipped with SKIP before calling READ_INT.
+
+** adding new feature
+using 'if' as an example.
+
+general steps (lots of them may not be used)
+- ast translation
+- ast checking function
+- code generation function
+- new opcode
+- serialization  
+- de-serialization, convert to threaded form
+- new vm case
+*** AST translation
+first attempt to get the ast of the example:
+#+Begin_SRC text
+  ./maml_ast.py filename.py
+#+END_SRC
+This will likely result in an error such as:
+#+Begin_SRC text
+  ...
+    return eval(ast.dump(ast.parse(code),include_attributes=True))
+  File "<string>", line 1, in <module>
+NameError: name 'If' is not defined
+#+END_SRC
+(If there is no error, the ast will be dumped. skip this section)
+This means we need to define the AST node translation function for 'If'
+in maml_ast.py. Before we do that we need to know what parameters the 
+translation function will take. Get a dump of the raw Python ast using:
+
+#+Begin_SRC text
+./py_ast.py filename.py
+#+END_SRC
+(include in filename.py only the new feature, py_ast.py will not extract
+code from maml blocks)
+
+The output is:
+#+Begin_SRC python
+Module(body=[If(test=Num(n=1, lineno=1, col_offset=3), body=[Expr(value=Call(func=Name(id='print_i', ctx=Load(), lineno=2, col_offset=4), args=[Num(n=11, lineno=2, col_offset=12)], keywords=[], starargs=None, kwargs=None, lineno=2, col_offset=4), lineno=2, col_offset=4)], orelse=[Expr(value=Call(func=Name(id='print_i', ctx=Load(), lineno=4, col_offset=4), args=[Num(n=22, lineno=4, col_offset=12)], keywords=[], starargs=None, kwargs=None, lineno=4, col_offset=4), lineno=4, col_offset=4)], lineno=1, col_offset=0)])
+#+END_SRC
+
+from this we can see that the If function takes parameters
+'test', 'body', 'orelse', 'lineno', and 'col_offset'.
+
+now define the translation function that goes in maml_ast.py:
+
+#+Begin_SRC python
+def If(test, body, orelse, lineno=None, col_offset=None):
+    return {'type': 'if',
+            'test': test,
+            'body': body,
+            'else': orelse,
+            'lineno': lineno,
+            'col_offset': col_offset}
+#+END_SRC
+At this point various changes can be made to the ast if it makes the compilation
+step easier.
+lineno and col_offset are optional and should be given None default values.
+
+Multiple translation functions may have to be defined for each new feature.
+
+run ./maml_ast.py filename.py again to verify correct ast creation.
+
+*** define ast checking function
+We are compiling a subset of Python so we need to check that the programmer
+is not trying to use features that are not supported.
+Do not check for syntactic correctness, Python does that for us.
+The checking function should raise an error if a problem is found.
+It's return result is ignored.
+
+the ast checking function takes the format:
+#+Begin_SRC python
+@check('if')
+def _(ast):
+   #checking code here
+#+END_SRC
+
+These functions are collected in the middle of maml_compile.py
+In this case of 'if' there is nothing to check for.
+
+The checking function is automatically called before compilation function.
+*** define bytecode compilation function
+
+all compilation functions take the form:
+#+Begin_SRC python
+@node('if')
+def _(ast, btc, env, top):
+  #compilation code
+#+END_SRC
+
+AST is the ast node of the corresponding type.
+Generated code is appended to BTC.
+In recursive calls to 'gen_bytecode', the TOP parameter should be False.
+
+*** new opcodes
+<see the example for 'pop'>
+
+TODO
+*** (de)serialization, threaded code
+TODO
+*** vm case
+TODO
+* .lock files
+TODO
