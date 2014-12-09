@@ -17,9 +17,11 @@ avm.ino: avm.c _opcodes.h _prim.c _prim.py build_ino_file.el
 
 ino: avm.ino
 
-.PHONY: clean
+.PHONY: clean test
 
-clean:
+test:
+	./run_tests.sh
+clean::
 	rm -f avm _prim.c _prim.py _opcodes.h avm.ino
 
 
