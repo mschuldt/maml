@@ -509,6 +509,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
     int n;
 
     switch (op){
+    case SOP_PING:
+#if arduino
+      Serial.write(SOP_ALIVE);
+#else
+      printf("Alive\n");
+#endif
+      break;
     case SOP_START_CODEBLOCK:
       //For now we are just creating and appending a new block every time
       //TODO: the next code should specify creation/replacement of a block

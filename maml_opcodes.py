@@ -64,6 +64,8 @@ OP_NOT_IN           = OP("OP_NOT_IN")
 OP_IS               = OP("OP_IS")
 
 #codes for serial protocol
+SOP_PING            = OP("SOP_PING")
+SOP_ALIVE           = OP("SOP_ALIVE")
 SOP_INT             = OP("SOP_INT")
 SOP_FLOAT           = OP("SOP_FLOAT")
 SOP_STR             = OP("SOP_STR")
