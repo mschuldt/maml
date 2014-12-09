@@ -18,14 +18,15 @@ to send compile and send code to a running VM
 - make ino
   generate a .ino file that can be copied into the Arduino IDE
 * dependencies
- - g++
-    The VM does not compile with LLVM
+ - g++ (The VM does not compile with LLVM)
  - Emacs
  - Arduino IDE
    http://arduino.cc/en/Main/Software
 * testing
 to run all tests in maml/tests/:
+#+Begin_SRC text
   make test
+#+END_SRC
 ** using gdb
 start avm process with gdb
 then inject code in separate terminal by running python file:
