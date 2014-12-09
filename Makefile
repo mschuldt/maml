@@ -25,3 +25,7 @@ clean::
 	rm -f avm _prim.c _prim.py _opcodes.h avm.ino
 
 
+☃:
+	echo "snowman!"
+snowman:
+	echo ☃
