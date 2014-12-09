@@ -51,10 +51,12 @@ do
         echo "fail"
         bad=$((bad + 1))
         failed="$f $failed"
+        cp _bc.txt ${expect}.bc
     else
         echo "ok"
         good=$((good + 1))
         rm -f $test_out
+        rm -f ${expect}.bc
     fi
 done
 
