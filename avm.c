@@ -72,7 +72,7 @@ void init_codeblock(struct codeblock* block, int code_len){
   block->index = -1;
   block->len = code_len;
   //+ 1 for the END_OF_BLOCK instruction
-  block->code = malloc(sizeof(void*)*(code_len + 1));
+  block->code = (void**)malloc(sizeof(void*)*(code_len + 1));
   block->prev = block->next = NULL;
 }
 
@@ -100,10 +100,10 @@ struct node{
 
 _PRIMITIVE_
 struct node* cons(void* d, struct node* list){
-  struct node* new = malloc(sizeof(struct node));
-  new->data = d;
-  new->next = list;
-  return new;
+  struct node* _new = (struct node*)malloc(sizeof(struct node));
+  _new->data = d;
+  _new->next = list;
+  return _new;
 }
 _PRIMITIVE_
 void* car(struct node* list){
@@ -151,13 +151,13 @@ void setup(void){
   attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
 #else // setup signal interrupt
   printf("Initializing avm...\n");
-  lockfile = malloc(sizeof(char)*15);
+  lockfile = (char*)malloc(sizeof(char)*15);
   sprintf(lockfile, "%d.lock", getpid());
   FILE *fp = fopen(lockfile, "w");
   fprintf(fp, "0");
   fclose(fp);
 
-  signal(SIGIO, serial_in);
+  signal(SIGIO, (__sighandler_t)serial_in);
   //TODO: catch kill signal and remove lock file
 #endif
 
@@ -302,7 +302,7 @@ void loop (){
   }
   NEXT(code);
  jump:
-  code = *code;
+  code = (void**)*code;
   NEXT(code);
  add:
   D("add\n");
@@ -322,7 +322,7 @@ void loop (){
   n = (int)*code++;
   list = NULL;
   while (n){
-    tmp = malloc(sizeof(struct node));
+    tmp = (struct node*)malloc(sizeof(struct node));
     tmp->next = list;
     tmp->data = stack[top--];
     list = tmp;
@@ -390,8 +390,8 @@ int read_int(FILE* fp){
 struct string* read_string(FILE* fp){
   int n = read_int(fp);
   //TODO: check that we have enough mem
-  char* s = malloc(sizeof(char)*n+1);
-  struct string *str = malloc(sizeof(struct string));
+  char* s = (char*)malloc(sizeof(char)*n+1);
+  struct string *str = (struct string*)malloc(sizeof(struct string));
   str->s = s;
   str->len = n;
   int i = 0;
@@ -422,9 +422,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
   fprintf(fp, "1");
   fclose(fp);
   //reset signal handler (it gets unset everytime for some reason)
-  signal(SIGIO, serial_in);
+  signal(SIGIO, (__sighandler_t)serial_in);
 #define READ_INT() ((void*) read_int(fp))
 #define READ_STRING() ((void*) read_string(fp))
+#define READ_INT_ARRAY() ((void*)read_int_array(fp))
 #define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
 #endif
 
@@ -437,8 +438,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
   int max_labels = 100;
   int n_jumps = 0;
   int n_labels = 0;
-  void*** jumps = malloc(sizeof(void*)*max_jumps);
-  void** labels = malloc(sizeof(void*)*max_labels);
+  void*** jumps = (void***)malloc(sizeof(void*)*max_jumps);
+  void** labels = (void**)malloc(sizeof(void*)*max_labels);
 
   int top = -1;
 
@@ -524,7 +525,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       if (newfunction){
         //TODO: (error)
       }
-      newblock = malloc(sizeof(struct codeblock));
+      newblock = (struct codeblock*)malloc(sizeof(struct codeblock));
       init_codeblock(newblock, total);
       code_array = newblock->code;
       break;
@@ -544,6 +545,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       // get the primitives function pointer
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
       void* tmp;
+      int index;
       // get the address for the label that calls with that # args
       switch ((int)READ_INT()){
         //TODO: put all l_call_prim_N into an array and index that
@@ -573,7 +575,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = tmp;
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
       //now read in function pointer
-      int index = (int)READ_INT();
+      index = (int)READ_INT();
       if (index < 0 || index >= n_primitives){
 #if arduino
         SAY("Error: invalid index for primitives array\n");
@@ -653,7 +655,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       }
       jumps[n_jumps++] = &code_array[i++];
       SKIP(SOP_INT, "(in case op_jump)"); NL;
-      jumps[n_jumps++] = READ_INT();
+      jumps[n_jumps++] = (void**)READ_INT(); //TODO: store them in a separate array
       break;
     case SOP_LABEL:
       NL;

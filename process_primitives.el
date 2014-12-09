@@ -40,10 +40,11 @@
   (let ((c 0)
         (p names)
         (l (length names)))
-    (insert (format "primitives = malloc(sizeof(void*)*%s);\n" (length names)))
+    (insert (format "primitives = (void**)malloc(sizeof(void*)*%s);\n"
+                    (length names)))
     (insert (format "n_primitives = %s;\n" l))
     (while p
-      (insert (format "primitives[%s] = &%s;\n" c (car p)))
+      (insert (format "primitives[%s] = (void*)&%s;\n" c (car p)))
       (setq c (1+ c)
             p (cdr p))))
   (save-buffer))
