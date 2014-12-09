@@ -1,5 +1,28 @@
 * usage
-TODO
+to compile, send, and run a file on the desktop:
+#+Begin_SRC text
+./run.sh filename.py
+#+END_SRC
+to start the VM:
+#+Begin_SRC text
+./avm
+#+END_SRC
+to send compile and send code to a running VM
+#+Begin_SRC text
+./maml_compile.py filename.py
+#+END_SRC
+* building
+- make
+  build the virtual machine for use on the desktop
+
+- make ino
+  generate a .ino file that can be copied into the Arduino IDE
+* dependencies
+ - g++
+    The VM does not compile with LLVM
+ - Emacs
+ - Arduino IDE
+   http://arduino.cc/en/Main/Software
 * testing
 to run all tests in maml/tests/:
   make test
