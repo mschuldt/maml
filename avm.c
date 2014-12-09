@@ -58,6 +58,11 @@ struct string{
   char* s;
 };
 
+struct array{
+  int len;
+  void* data;
+};
+
 struct procedure{
   int n_args;
   void** code;
@@ -169,7 +174,6 @@ void setup(void){
   globals = malloc(sizeof(void*)*max_globals);
 
 #if arduino // setup serial
-
   pinMode(2, INPUT);
   digitalWrite(2, LOW);
   Serial.begin(9600);
@@ -534,6 +538,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
   struct codeblock* newblock = NULL;
   struct procedure* newfunction = NULL;
 
+  int reading_array = 0;
+  int array_index = 0;
+  int array_len = 0;
+  int* int_array;
+  void** any_array;
+#define TYPE_ANY 1
+#define TYPE_INT 2
 
   while (1){//until terminator is seen
     if (total == 0){
@@ -561,6 +572,21 @@ void serial_in(){ //serial ISR (interrupt service routine)
     }
 #endif
 
+    switch (reading_array){
+    case 0: break;
+    case TYPE_ANY:
+      if (array_index >= array_len){
+        //TODO:
+      }
+      //TODO:
+      break;
+    case TYPE_INT:
+      if (array_index >= array_len){
+
+      }
+      break;
+    default:
+      SAY("Error: unknown array type"); DIE(1);
     }
     //#define REGISTER code_array[++i] = &int_regs[*(++curr)]
 #define POP stack[top--]
@@ -654,7 +680,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
       break;
     case OP_GLOBAL_LOAD:
       NL;
-
       code_array[i++] = l_load_global;
       SKIP(SOP_INT, "(in case global_load)"); NL;
       goto read_globals_index;
@@ -739,6 +764,16 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = NULL;
+      break;
+    case SOP_ARRAY:
+      NL;
+      //TODO:
+      break;
+    case SOP_INT_ARRAY:
+      NL;
+      code_array[i++] = (void*) l_load_const;
+      //TODO
+      //code_array[i++] = READ_INT_ARRAY();
       break;
     case SOP_END:
       //TODO: reset jump/label variables at start of block/function transfer

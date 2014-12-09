@@ -96,17 +96,28 @@ def expand_bytecode(bc):
     long_code = []
     i=0;
     length = len(bc)
+
+    def expand_int(n):
+        #TODO: better protocol for sending numbers, this is pretty dumb
+        return list(str(n)) + [NUM_TERMINATOR]
+
     while i < length:
         c = bc[i]
         long_code.append(chr(c))
         if c == SOP_INT:
             i += 1
-            long_code.extend(list(str(bc[i])) + [NUM_TERMINATOR])
+            long_code.extend(expand_int(bc[i]))
         elif c == SOP_STR:
             i += 1
             s = bc[i]
-            long_code.extend(list(str(len(s))) + [NUM_TERMINATOR]
-                             + list(s) + [chr(0)])
+            long_code.extend(expand_int(len(s)) + list(s) + [chr(0)])
+        elif c == SOP_ARRAY or c == SOP_INT_ARRAY:
+            i += 1
+            s = bc[i]
+            #types: 0 -> int
+            #       1 -> void*
+            long_code.extend(expand_int(len(s)) + expand_int(c == SOP_ARRAY) + s)
+
         i += 1
     return long_code
 
