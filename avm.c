@@ -313,7 +313,7 @@ void loop (){
   NEXT(code);
  lt:
   // use > because items on stack are reversed
-  stack[top-1] = ((int)(stack[top]) > ((int)stack[--top]));
+  stack[top-1] = (void*) ((int)(stack[top]) > ((int)stack[--top]));
   NEXT(code);
 #if include_lists
  list:
@@ -466,7 +466,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
   while (1){//until terminator is seen
     if (total == 0){
       //the first number specifies how many bytecodes are left
-      total = READ_INT();
+      total = (int)READ_INT();
       if (total == 0){
         return;
       }
@@ -536,7 +536,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case SOP_INT:
       NL;
       code_array[i++] = (void*) l_load_const;
-      code_array[i++] = (void*) READ_INT();
+      code_array[i++] = READ_INT();
       break;
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
       NL;
@@ -572,7 +572,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = tmp;
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
       //now read in function pointer
-      int index = READ_INT();
+      int index = (int)READ_INT();
       if (index < 0 || index >= n_primitives){
 #if arduino
         SAY("Error: invalid index for primitives array\n");
@@ -631,12 +631,12 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_list;
       SKIP(SOP_INT, "(in case op_list)"); NL;
-      n = READ_INT();
+      n = (int) READ_INT();
       if (n <= 0){
         SAY("Error: (op_list) invalid length"); DIE(1);
       }
       //TODO: give warning if we don't currently have enough memory
-      code_array[i++] = n;
+      code_array[i++] = (void*)n;
       break;
 #endif
     case OP_IF:
@@ -697,7 +697,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
         //printf("appending new codeblock\n");
         code_array[i] = l_end_of_block;
         append_codeblock(newblock);
-        newblock = code_array = NULL;
+        newblock = NULL;
+        code_array = NULL;
       }else if (newfunction){
         //TODO:
       }else{
