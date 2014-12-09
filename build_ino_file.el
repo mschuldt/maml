@@ -5,6 +5,10 @@
               "_prim.c"))
 
 (find-file "avm.c")
+(re-search-forward "#define +arduino +\\(0\\)")
+(replace-match "1" nil nil nil 1)
+(goto-char 1)
+(insert "/***** This file is auto-generated, do not modify. *****/\n\n")
 (dolist (f files)
   (goto-char 1)
   (while (re-search-forward (format "#include +\"%s\"" f) nil t)
