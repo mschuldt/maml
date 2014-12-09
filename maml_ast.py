@@ -236,6 +236,13 @@ def AugAssign(target, op, value, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset}
 
+def List(elts, ctx, lineno=None, col_offset=None):
+    return {'type': 'list',
+            'elts': elts,
+            'ctx' : ctx,
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 def make_ast(code):
     return eval(ast.dump(ast.parse(code),include_attributes=True))
 

@@ -39,6 +39,8 @@ OP_LOCAL_LOAD       = OP("OP_LOCAL_LOAD")
 OP_LOCAL_STORE      = OP("OP_LOCAL_STORE")
 OP_IF               = OP("OP_IF")
 OP_JUMP             = OP("OP_JUMP")
+OP_LIST             = OP("OP_LIST")
+
 #bin ops
 OP_ADD              = OP("OP_ADD")
 OP_MULT             = OP("OP_MULT")

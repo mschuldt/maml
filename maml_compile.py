@@ -69,6 +69,15 @@ def _(ast, btc, env, top):
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
+@node('list')
+def _(ast, btc, env, top):
+    elts = ast['elts']
+    for e in elts:
+        gen_bytecode(e, btc, env, False)
+    print("compiling 'list', len(elts) = {}".format(len(elts)))
+    btc.extend([OP_LIST, SOP_INT, len(elts)])
+    #TODO: if len = 0 ==> NULL
+
 #TODO: 'name' and 'assign' still need to be tested with local names
 @node('name')
 def _(ast, btc, env, top):
