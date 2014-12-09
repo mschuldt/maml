@@ -19,9 +19,11 @@ to send compile and send code to a running VM
   generate a .ino file that can be copied into the Arduino IDE
 * dependencies
  - g++ (The VM does not compile with LLVM)
- - Emacs
+ - python3
+ - python-serial
  - Arduino IDE
    http://arduino.cc/en/Main/Software
+ - Emacs
 * testing
 to run all tests in maml/tests/:
 #+Begin_SRC text
