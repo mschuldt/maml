@@ -452,7 +452,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
   int total = 0;
   int i = 0;//index of next bytecode in 'code_array'
   codeblock* newblock = NULL;
-  lambda* newlambda = NULL;
+  procedure* newfunction = NULL;
+
 
   while (1){//until terminator is seen
     if (total == 0){
@@ -491,7 +492,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       printf("ERROR: file has more bytecodes then header specified\n");
       exit(1);
     }
-    if (!newlambda && !newblock
+    if (!newfunction && !newblock
         && ! (op == SOP_START_CODEBLOCK)
         && ! (op == SOP_START_FUNCTION)
         && ! (op == SOP_END)){
@@ -506,7 +507,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       //For now we are just creating and appending a new block every time
       //TODO: the next code should specify creation/replacement of a block
       //      or just its index number with the creation/replacement implied
-      if (newlambda){
+      if (newfunction){
         //TODO: (error)
       }
       newblock = malloc(sizeof(codeblock));
@@ -514,7 +515,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array = newblock->code;
       break;
     case SOP_START_FUNCTION:
-      //TODO
+      if (newblock){
+        //TODO: error
+      }
+
       break;
     case SOP_INT:
       NL;
@@ -653,7 +657,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       break;
     case SOP_END:
       //TODO: reset jump/label variables at start of block/function transfer
-      if (newblock || newlambda){
+      if (newblock || newfunction){
         /*
           printf("code_array = %d\n", code_array);
           printf("before label conversion:\n");
@@ -677,7 +681,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
         code_array[i] = l_end_of_block;
         append_codeblock(newblock);
         newblock = code_array = NULL;
-      }else if (newlambda){
+      }else if (newfunction){
         //TODO:
       }else{
         fp = fopen(lockfile, "w");
