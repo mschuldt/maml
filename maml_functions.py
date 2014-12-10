@@ -9,7 +9,7 @@ def compile(name):
 
 
 @compile('print')
-def _(ast, env):
+def _(ast, btc, env, top):
     if ast['s_type'] == 'int':
         pass #generate call to print_i    
     elif ast['s_type'] == 'str':
@@ -18,7 +18,7 @@ def _(ast, env):
         pass #other
 
 @compile('cast')
-def _(ast, env):
+def _(ast, btc, env, top):
     pass #TODO
 
     
