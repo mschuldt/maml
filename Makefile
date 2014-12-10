@@ -19,7 +19,7 @@ ino: avm.ino
 
 .PHONY: clean test ☃
 
-test:
+test: avm
 	./run_tests.sh
 clean::
 	rm -f avm _prim.c _prim.py _opcodes.h avm.ino
