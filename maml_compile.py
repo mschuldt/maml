@@ -191,6 +191,7 @@ def _(ast, btc, env, top):
     #target = ast['targets'][0] #no support for unpacking
     #value = gen_bytecode(ast['value'])
     for target in ast['targets']:
+        #TODO: value should only be evaluated once
         gen_bytecode(ast['value'], btc, env, False)
         globalp, index = env.get_store_index(target['id'])
         op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
@@ -332,6 +333,8 @@ def _(ast):
 
 @type_check('call')
 def _(ast, env):
+    ast['s_type'] = "TODO:call"
+    return
     functionArgs = env.funcTypes[ast['func']['id']]
     argNum = 0
     for elem in ast['args']:

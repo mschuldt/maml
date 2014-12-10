@@ -18,6 +18,8 @@
 - [ ] Need way of declaring types of built in functions
 - [ ] in @type_check('assign'), need to handle assignment to list indices etc
       currently only supports assignment to variables
+- [ ] bug: in @code_gen('assign'), the assigned value should only be evaluated once
+
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
 - [ ] Separate function that wraps malloc and check if mem is available
