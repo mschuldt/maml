@@ -3,6 +3,10 @@
 import ast
 from sys import argv
 
+# Logger
+import logging
+logging.basicConfig(formate='%(asctime)s %(message)s')
+
 valid_types = ['int', 'str', 'float', 'func']
 #TODO: user defined types
 
@@ -402,13 +406,15 @@ def make_ast(code):
 
 if __name__ == "__main__":
     if len(argv) != 2:
-        print('Usage:')
-        print('  ./maml_ast.py <filename>.py')
+        # print('Usage:')
+        # print('  ./maml_ast.py <filename>.py')
+        logging.info("Usage: ./maml_ast.py <filename>.py")
         exit(1)
     filename = argv[1]
     try:
         f = open(filename, 'r')
     except IOError:
-        print('Error: where is "{}"?'.format(filename))
+        # print('Error: where is "{}"?'.format(filename))
+        logging.error("Where is %s?", filename)
         exit(1)
     print(make_ast(f.read()))
