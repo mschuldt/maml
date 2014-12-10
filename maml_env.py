@@ -1,13 +1,14 @@
 class env:
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, allow_type_reassign=False):
         self.names = {}
         self.parent = parent
         self.global_names = set()
         self.types = build_int_types
         self.n_names = 0
         self.label_counter = -1
-        self._funcTypes = {}
+        self.funcTypes = {}
+        self.allow_type_reassign = allow_type_reassign
         # TODO: track the size of the variable arrays in the Arduino
 
     def get_store_index(self, name):
@@ -71,13 +72,17 @@ class env:
         self.label_counter += 1
         return self.label_counter
 
-    def declare_type(self, name, _type):
+    def declare_type(self, name, typ):
         """
-        Declare NAME to have static type TYPE
+        Declare NAME to have static type TYP
         """
 
-        # This currently allows for redeclaring types
-        self.types[name] = _type
+        type_ = self.types.get(name)
+        if type_ and type_ != typ and not self.allow_type_reassign:
+            print("Error: cannot re-declare '{}' as type '{}'. " +
+                  "was type '{}'".format(name, typ, type_))
+            exit(1)
+        self.types[name] = typ
 
     def get_type(self, name):
         """

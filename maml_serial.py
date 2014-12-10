@@ -1,6 +1,6 @@
 
 VM_PROCESS_NAME = 'avm'
-#NOTE: If this are changed, their value in avm.c must be also changed.
+# NOTE: If this are changed, their value in avm.c must be also changed.
 NUM_TERMINATOR = 'x'
 BYTECODE_IN_FILE = '_bc.txt'
 
@@ -16,8 +16,12 @@ import platform
 from glob import glob
 import serial
 
+
 class Maml_serial:
-    "Automatically find and maintain a connection to an Arduino over serial"
+    """
+    Automatically find and maintain a connection to an Arduino over serial
+    """
+
     def __init__(self, speed=9600, port=None):
         self.speed = speed
         self.port = port
@@ -25,32 +29,39 @@ class Maml_serial:
         self.vm_pid = None
 
     def send_codeblock(self, block):
-        "send BLOCK to vm on arduino or desktop"
-        #TODO: how to handle disconnection and other errors?
+        """
+        Send BLOCK to vm on arduino or desktop
+        """
+
+        # TODO: how to handle disconnection and other errors?
         bc = block.bytecode
         length = len(bc)
-        exp = expand_bytecode(bc);
-        exp = list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] +exp
-        self._send(exp + [chr(SOP_END), chr(SOP_END)])#end block and end file
+        exp = expand_bytecode(bc)
+        exp += list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)]
+        # end block and end file
+        self._send(exp + [chr(SOP_END), chr(SOP_END)])
 
     def send_function(self, fn):
-        #TODO
+        # TODO
         self._send(expanded)
 
     def _send(self, bytecode):
-        "send fully expanded BYTECODE"
+        """
+        Send fully expanded BYTECODE
+        """
+
         if self.desktop:
             if not self.vm_pid:
-                self.vm_pid = find_vm_pid();
+                self.vm_pid = find_vm_pid()
                 if not self.vm_pid:
-                    return False #find_vm_pid prints the error message
-            #TODO: check that vm is still alive
+                    return False  # find_vm_pid prints the error message
+            # TODO: check that vm is still alive
             while True:
                 f = open("{}.lock".format(self.vm_pid), 'r')
                 if f.read(1) == '0':
-                    break;
+                    break
                 print("VM is locked")
-                #TODO: after some number of iterations, report failure
+                # TODO: after some number of iterations, report failure
                 f.close()
                 sleep(0.2)
 
@@ -59,16 +70,15 @@ class Maml_serial:
             kill(self.vm_pid, VM_SIGNAL)
             return True
         else:
-            pass #TODO: send to arduino over serial
+            pass  # TODO: send to arduino over serial
 
     def _write_to_file(self, bytecode):
         "write BYTECODE to file"
         f = open(BYTECODE_IN_FILE, 'w')
         for c in bytecode:
-            f.write(str(c)+'\n');
+            f.write(str(c)+'\n')
         print("wrote file '{}'".format(BYTECODE_IN_FILE))
         f.close()
-
 
     def find_arduino_port():
         def ping(s):
@@ -94,11 +104,11 @@ class Maml_serial:
 def expand_bytecode(bc):
     "expands bc into an array of bytes"
     long_code = []
-    i=0;
+    i = 0
     length = len(bc)
 
     def expand_int(n):
-        #TODO: better protocol for sending numbers, this is pretty dumb
+        # TODO: better protocol for sending numbers, this is pretty dumb
         return list(str(n)) + [NUM_TERMINATOR]
 
     while i < length:
@@ -114,22 +124,26 @@ def expand_bytecode(bc):
         elif c == SOP_ARRAY or c == SOP_INT_ARRAY:
             i += 1
             s = bc[i]
-            #types: 0 -> int
-            #       1 -> void*
-            long_code.extend(expand_int(len(s)) + expand_int(c == SOP_ARRAY) + s)
+            # Types: 0 -> int
+            #        1 -> void*
+            long_code.extend(expand_int(len(s)) + expand_int(c == SOP_ARRAY) +
+                             s)
 
         i += 1
     return long_code
 
+
 def find_vm_pid():
-    p = subprocess.Popen(['ps -C '+ VM_PROCESS_NAME], stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(['ps -C ' + VM_PROCESS_NAME], stdout=subprocess.PIPE,
+                         shell=True)
     out, err = p.communicate()
     vm_pid = None
     found = 0
 
     for line in out.splitlines():
         pieces = str(line).strip("'b").split()
-        if len(pieces) < 3: continue
+        if len(pieces) < 3:
+            continue
         pid, *rest, name = pieces
         if VM_PROCESS_NAME == name.strip(" '"):
             found += 1
@@ -147,7 +161,7 @@ def find_vm_pid():
 
 
 def list_serial_ports():
-    #adapted from http://stackoverflow.com/questions/11303850/what-is-the-cross-platform-method-of-enumerating-serial-ports-in-python-includi
+    # Adapted from http://stackoverflow.com/questions/11303850/what-is-the-cross-platform-method-of-enumerating-serial-ports-in-python-includi
     system_name = platform.system()
     assert system_name != "Windows", "gross OS error"
     if system_name == "Windows":
@@ -161,11 +175,11 @@ def list_serial_ports():
             except serial.SerialException:
                 pass
         return available
-    elif system_name == "Darwin": # mac
+    elif system_name == "Darwin":  # Mac
         return glob.glob('/dev/tty*') + glob.glob('/dev/cu*')
     elif system_name == "Linux":
-        return glob('/dev/ttyUSB*') + glob('/dev/ttyACM*') #+ glob('/dev/ttyS*')
+        # + glob('/dev/ttyS*')
+        return glob('/dev/ttyUSB*') + glob('/dev/ttyACM*')
     else:
         print("Error: unknown system: " + system_name)
         exit(1)
-
