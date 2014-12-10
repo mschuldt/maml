@@ -1,4 +1,5 @@
-* Langauge features
+
+* Language features
 - [ ] Break and continue for while loops
 - [ ] For loops (mark unimplemented?)
 - [ ] Chain together multiple blocks or send multiple blocks at once
@@ -8,17 +9,19 @@
 - [X] >, >=, <=, ==
 - [X] Augmented assignment
 - [X] Chained assignment (e.g. a = b = 2)
-- [ ] Chained comparison (ex: 1 < 2 <= 3) __lower priority__
-
+- [-] Chained comparison (ex: 1 < 2 <= 3) __lower priority__
+- [ ] standard functions for working with arrays/lists + print etc
+      the compiler should use the available types to output correct function
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] Any expression that can be at the top level that normally
       pushes to the stack will have to pop that element from the stack
-- [ ] Declaration of built-in variable types
+- [X] Declaration of built-in variable types
 - [ ] Need way of declaring types of built in functions
-- [ ] in @type_check('assign'), need to handle assignment to list indices etc
+- [ ] assignment to list/vertex indices etc
       currently only supports assignment to variables
-- [ ] bug: in @code_gen('assign'), the assigned value should only be evaluated once
+- [ ] decorator used for defining the translation of specific functions
+- [ ] static typing should not be optional - only auto type declarations
 
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
@@ -38,12 +41,17 @@ traverse the ast object without converting to string and evaluating
 
 * Bugs
 - [X] null terminators in middle of strings
-this is an error:
-  x = "test \0string"
-because the vm stops reading when it reaches \0
-and the rest of the characters are interpreted as opcodes
-
+      this is an error:
+        x = "test \0string"
+      because the vm stops reading when it reaches \0
+      and the rest of the characters are interpreted as opcodes
+- [ ] bug: in @code_gen('assign'), the assigned value should only be evaluated once
 * Miscellaneous
-- [ ] Function for reporting errors (instead of using print + exit everytime )
-
-Fix: check for terminators in strings and only send first part
+- [ ] Functions for reporting errors (instead of using print + exit everytime )
+- [ ] need test framework for testing invalid programs
+      current version does not work because it only diffs with the
+      VM output.
+- [ ] configuration file compilation + vm features
+   static type configs
+   debugging vars
+   features to include in the compiled vm
