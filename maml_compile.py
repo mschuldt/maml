@@ -14,6 +14,7 @@ compile_decorator = 'arduino'
 from maml_ast import make_ast
 from maml_opcodes import *
 from maml_env import env
+from maml_functions import function_compiler_functions
 from functools import reduce
 from operator import add
 from sys import argv
