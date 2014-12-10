@@ -481,6 +481,12 @@ def _(ast, btc, env, top):
         gen_bytecode(comp, btc, env, False)
         btc.append(comparison_ops[op])
 
+@type_check('compare')
+def _(ast, env):
+    check_types(ast['left'], env)
+    check_types(ast['comparators'][0], env)
+    #we can compare any types together
+
 
 @ast_check('compare')
 def _(ast):
