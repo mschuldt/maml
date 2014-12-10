@@ -8,7 +8,7 @@
 - [X] Augmented assignment
 - [ ] Chained comparison (ex: 1 < 2 <= 3)
 - [ ] Break and continue for while loops
-- [ ] Chained assignment (e.g. a = b = 2)
+- [X] Chained assignment (e.g. a = b = 2)
 
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
@@ -33,7 +33,7 @@ traverse the ast object without converting to string and evaluating
 - [ ] Check argument count when calling primitives
 
 * Bugs
-** [X] null terminators in middle of strings
+- [X] null terminators in middle of strings
 this is an error:
   x = "test \0string"
 because the vm stops reading when it reaches \0

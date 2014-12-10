@@ -182,26 +182,28 @@ def _(ast, btc, env, top):
 @code_gen('assign')
 def _(ast, btc, env, top):
     #TODO: check that target is declared
-
-    target = ast['targets'][0] #no support for unpacking
+    #target = ast['targets'][0] #no support for unpacking
     #value = gen_bytecode(ast['value'])
-    gen_bytecode(ast['value'], btc, env, False)
-    globalp, index = env.get_store_index(target['id'])
-    op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
-    btc.extend([op, SOP_INT, index])
+    for target in ast['targets']:
+        gen_bytecode(ast['value'], btc, env, False)
+        globalp, index = env.get_store_index(target['id'])
+        op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
+        btc.extend([op, SOP_INT, index])
 
 @ast_check('assign')
 def _(ast):
     assert_type(ast, "assign")
     targets = ast['targets']
-    if len(targets) > 1:
-        #example: 'a,b=x'
-        syntax_error(ast, "unpacking is not supported")
-        return False
+    #if len(targets) > 1:
+    #    #example: 'a,b=x'
+    #    syntax_error(ast, "unpacking is not supported")
+    #    return False
     if targets[0]['type'] == 'starred':
         #example: '*a=x'
         syntax_error(ast, "starred assignment is not supported")
         return False
+    if ast['targets'][0]['type'] == 'tuple':
+        syntax_error(ast, "tuple assignment is not supported")
     return True
 
 @type_check('assign')
