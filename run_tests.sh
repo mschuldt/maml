@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 pid=$(pgrep avm)
-#TODO: if only one 'avm' process is running,
-#      use that one instead of creating a new one
+# TODO: if only one 'avm' process is running,
+#       use that one instead of creating a new one
 if [ $? -eq 0 ] ;
 then
     pgrep avm
@@ -35,7 +35,7 @@ do
 
     rm -f $test_out
 
-    #TODO: direct stderrr to vm_out as well
+    # TODO: direct stderrr to vm_out as well
     ./avm > $test_out &
     pid=$!
 
