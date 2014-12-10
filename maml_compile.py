@@ -511,6 +511,7 @@ def _(ast, env):
     check_types(ast['left'], env)
     check_types(ast['comparators'][0], env)
     #we can compare any types together
+    ast['s_type'] = 'int'
 
 
 @ast_check('compare')

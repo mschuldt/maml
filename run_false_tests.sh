@@ -23,7 +23,6 @@ else
     files=$(ls *.py)  # because ls false_tests/*py includes the directory
     cd ..
 fi
-echo $files
 
 for f in $files ;
 do

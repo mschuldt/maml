@@ -501,7 +501,7 @@ struct string* read_string(FILE* fp){
 }
 #endif
 #if arduino
-int* read_int_array(FILE* fp){
+int* read_int_array(){
   //TODO
 }
 #else
