@@ -6,6 +6,7 @@
 
 type_checking = True
 auto_var_types = True
+allow_type_reassign = False
 verbose = True
 compile_decorator = 'arduino'
 
@@ -491,7 +492,7 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
         exit(1)
 
 def make_new_env():
-    return env()
+    return env(None, allow_type_reassign)
 
 #TODO: should exit immediately on error, check functions should not return anyting
 
