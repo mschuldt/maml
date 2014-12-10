@@ -58,17 +58,23 @@ class env:
         self.label_counter += 1
         return self.label_counter
 
+    def declare_type(self, name, typ):
+        "declare NAME to have static type TYP"
+        #this currently allows for redeclaring types
+        self.types[name] = typ;
+
     def get_type(self, name):
         "returns the type of varaible NAME"
-        if name in self.global_names:
+        if self.parent and name in self.global_names:
             return self.parent.get_type(name)
         typ = self.types.get(name, None)
         if typ: return typ
         #TODO: pass ast node so that line/col numbers can be printed
         print("Error: name '{}' is not declared".format(name))
+        exit(1)
 
     def is_declared(self, name):
         "check if NAME is declared"
-        if name in self.globals_names:
+        if self.parent and name in self.global_names:
             return self.parent.is_declared(name)
         return name in self.types
