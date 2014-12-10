@@ -239,8 +239,8 @@ def _(ast, env):
 
 @code_gen('binop')
 def _(ast, btc, env, top):
-    gen_bytecode(ast['left'], btc, env, False);
-    gen_bytecode(ast['right'], btc, env, False);
+    gen_bytecode(ast['left'], btc, env, False)
+    gen_bytecode(ast['right'], btc, env, False)
     btc.append(bin_ops[ast['op']])
 
 @ast_check('binop')
@@ -271,10 +271,10 @@ func_index = index of function_pointer in the array 'primitives'"""
         #can expand the numbers
         btc.extend([SOP_PRIM_CALL, SOP_INT, nargs, SOP_INT, index])
         if top:
-            btc.append(OP_POP);
+            btc.append(OP_POP)
     else: #calling a user defined function
         print("Error -- not implemented: calling non-primitives ('{}')"
-              .format(ast['func']['id']));
+              .format(ast['func']['id']))
         exit(1)
 
 @type_check('call')
@@ -301,10 +301,10 @@ def _(ast, btc, env, top):
     gen_bytecode(ast['test'], btc, env, False)
     btc.extend([OP_IF, OP_JUMP, SOP_INT, false_l])
     for node in ast['body']:
-        gen_bytecode(node, btc, env, top);
+        gen_bytecode(node, btc, env, top)
     btc.extend([OP_JUMP, SOP_INT, done_l, SOP_LABEL, SOP_INT, false_l])
     for node in ast['else']:
-        gen_bytecode(node, btc, env, top);
+        gen_bytecode(node, btc, env, top)
     btc.extend([SOP_LABEL, SOP_INT, done_l])
 
 
@@ -320,7 +320,7 @@ def _(ast, btc, env, top):
     gen_bytecode(ast['test'], btc, env, False)
     btc.extend([OP_IF, OP_JUMP, SOP_INT, end_l])
     for node in ast['body']:
-        gen_bytecode(node, btc, env, top);
+        gen_bytecode(node, btc, env, top)
     btc.extend([OP_JUMP, SOP_INT, start_l, SOP_LABEL, SOP_INT, end_l])
 
 @ast_check('while')
@@ -334,9 +334,9 @@ def _(ast):
 def _(ast, btc, env, top):
     #this implementation of chained comparisons does not work
     #so...they are 'not supported' by @ast_check('compare')
-    gen_bytecode(ast['left'], btc, env, False);
+    gen_bytecode(ast['left'], btc, env, False)
     for comp, op in zip(ast['comparators'], ast['ops']):
-        gen_bytecode(comp, btc, env, False);
+        gen_bytecode(comp, btc, env, False)
         btc.append(comparison_ops[op])
 
 @ast_check('compare')
@@ -415,7 +415,7 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
     else:
         _error = True
         print("Error -- gen_bytecode(): unknown AST node type: '{}'"
-              .format(ast['type']));
+              .format(ast['type']))
 
 def make_new_env():
     return env()
