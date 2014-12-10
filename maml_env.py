@@ -123,7 +123,7 @@ class env:
     def get_while_start_label(self):
         self.while_start_labels[len(self.while_end_labels)-1]
 
-    def get_end_start_label(self):
+    def get_while_end_label(self):
         self.while_end_labels[len(self.while_end_labels)-1]
 
     def createFuncTypes(self, funcName, argTypes, returnType):
