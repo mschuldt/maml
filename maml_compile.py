@@ -200,7 +200,6 @@ def _(ast, btc, env, top):
 
 @ast_check('assign')
 def _(ast):
-    assert_type(ast, "assign")
     targets = ast['targets']
     if len(targets) > 1:
         #example: 'a,b=x'
@@ -254,7 +253,6 @@ def _(ast, btc, env, top):
 
 @ast_check('binop')
 def _(ast):
-    assert_type(ast, "binop")
     if ast['op'] in bin_ops:
         return True
     #check 'left' and 'right' properties
@@ -368,7 +366,6 @@ def _(ast, btc, env, top):
 @ast_check('function')
 def _(ast):
     """verifies syntatic correctness of function node"""
-    assert_type(ast, "function")
     #TODO:
     #check decorators
     #check args
@@ -448,11 +445,9 @@ def check_types(ast, env):
               .format(ast['type']))
         exit(1)
 
+
 ################################################################################
 # error reporting functions
-
-def assert_type(ast, typ):
-        pass #TODO
 
 def syntax_error(ast, message):
     global _error
