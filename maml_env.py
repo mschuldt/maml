@@ -116,9 +116,8 @@ class env:
             self.argTypes = argTypes
             self.returnType = returnType
 
-
-build_int_types = {'true': 'int',
-                   'false': 'int',
-                   'none': 'int'}
+built_in_types = {'true': 'int',
+                  'false': 'int',
+                  'none': 'int'}
 
 
