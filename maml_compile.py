@@ -82,7 +82,7 @@ def _(ast):
         exit(1)
 
 @type_check('str')
-def _(ast):
+def _(ast, env):
     ast['s_type'] = 'str'
 
 ################################################################################
@@ -154,7 +154,7 @@ def _(ast, btc, env, top):
 
 @type_check('declaration')
 def _(ast, env):
-    #TODO:
+    #declarations must be top level so we don't have to set the s_type of this node
     env.declare_type(ast['name'], ast['s_type'])
 
 ################################################################################
@@ -329,6 +329,7 @@ def _(ast):
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
 
+
 ################################################################################
 # if
 
@@ -350,6 +351,7 @@ def _(ast, env):
     check_types(ast['test'], env)
     for node in ast['body']: check_types(node, env)
     for node in ast['else']: check_types(node, env)
+
 ################################################################################
 # while
 
@@ -369,6 +371,11 @@ def _(ast, btc, env, top):
 def _(ast):
     if ast['orelse']:
         syntax_error(ast, "while loop else thing is not supported")
+
+@type_check('while')
+def _(ast, env):
+    for node in ast['body']:
+        check_types(node, env)
 
 ################################################################################
 # compare
@@ -413,6 +420,10 @@ def _(ast, btc, env, top):
 # pass
 @code_gen('pass')
 def _(ast, btc, env, top):
+    pass
+
+@type_check('pass')
+def _(ast, env):
     pass
 
 ################################################################################

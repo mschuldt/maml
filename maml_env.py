@@ -3,7 +3,7 @@ class env:
         self.names = {}
         self.parent = parent
         self.global_names = set()
-        self.types = {}
+        self.types = build_int_types
         self.n_names = 0
         self.label_counter = -1
         #TODO: track the size of the variable arrays in the Arduino
@@ -78,3 +78,7 @@ class env:
         if self.parent and name in self.global_names:
             return self.parent.is_declared(name)
         return name in self.types
+
+build_int_types = {'true' : 'int',
+                   'false' : 'int',
+                   'none': 'int'}
