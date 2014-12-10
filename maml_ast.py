@@ -108,7 +108,7 @@ def Call(func, args, keywords, starargs, kwargs, lineno=None, col_offset=None):
             'col_offset': col_offset}
 
 def keyword(arg, value):
-    return {'type': keyword,
+    return {'type': 'keyword',
             'arg': arg,
             'value':value}
 
