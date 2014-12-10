@@ -4,6 +4,7 @@
 #     and have avm.c adjust the stacksize as needed ast start of
 #     block execution.
 
+type_checking = True
 verbose = True
 compile_decorator = 'arduino'
 
@@ -452,6 +453,8 @@ def compile_str(code : str) -> list:
     env = make_new_env()
     bytecode = []
     for a in ast:
+        if type_checking:
+            check_types(a, env)
         gen_bytecode(a, bytecode, env)
     if _error:
         exit(1)
@@ -466,6 +469,8 @@ def compile_ast(ast : list) -> list:
     env = make_new_env()
     bytecode = []
     for a in ast:
+        if type_checking:
+            check_types(a, env)
         gen_bytecode(a, bytecode, env)
     if _error:
         exit(1)
