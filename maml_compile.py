@@ -101,17 +101,17 @@ def _(ast, btc, env, top):
     #TODO: if len = 0 ==> NULL
 
 @type_check('list')
-def _(ast):
+def _(ast, env):
     prev_type = None
     for e in ast['elts']:
-        check_types(e)
+        check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
                 print("Error: list has multiple types. {} and {}"
                       .format(prev_type, e['s_type']))
                 exit(1)
         prev_type = e['s_type']
-    ast['s_type'] = 'l_' + prev_type
+    ast['s_type'] = '[' + prev_type + ']'
 
 ################################################################################
 # tuple
@@ -119,6 +119,19 @@ def _(ast):
 @code_gen('tuple')
 def _(ast, btc, env, top):
     pass
+
+@type_check('tuple')
+def _(ast, env):
+    prev_type = None
+    for e in ast['elts']:
+        check_types(e, env)
+        if prev_type:
+            if prev_type != e['s_type']:
+                print("Error: tuple has multiple types. {} and {}"
+                      .format(prev_type, e['s_type']))
+                exit(1)
+        prev_type = e['s_type']
+    ast['s_type'] = '(' + prev_type + ')'
 
 ################################################################################
 # name
@@ -133,6 +146,14 @@ def _(ast, btc, env, top):
         globalp, index = env.get_load_index(name)
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
         btc.extend([op, SOP_INT, index])
+
+@type_check('name')
+def _(ast, env):
+    check_types(ast[id], env)
+    if ast[id]['s_type'] != "str":
+        print("Error: cannot assign variable {}"
+                      .format(ast[id]['s_type']))
+                exit(1)
 
 ################################################################################
 # nameconstant
@@ -170,6 +191,16 @@ def _(ast):
         syntax_error(ast, "starred assignment is not supported")
         return False
     return True
+
+@type_check('assign')
+def _(ast, env):
+    check_types(ast[targets], env)
+    check_types(ast[value], env)
+    if ast[targets]['s_type'] != ast[value]['s_type']:
+        print("Error: cannot assign variable of type {} to type {}"
+                      .format(ast[targets]['s_type'], ast[value]['s_type']))
+        exit(1)
+    
 
 ################################################################################
 # expr
@@ -246,6 +277,7 @@ def _(ast, btc, env, top):
     for node in ast['else']:
         gen_bytecode(node, btc, env, top);
     btc.extend([SOP_LABEL, SOP_INT, done_l])
+
 
 ################################################################################
 # while
@@ -364,11 +396,11 @@ def make_new_env():
 ################################################################################
 # type analysis
 
-def check_types(ast):
+def check_types(ast, env):
     "checks for type correctness and annotates AST nodes with their type"
     fn = _ast_type_check_switch_table(ast['type'])
     if fn:
-        fn(ast)
+        fn(ast, env)
     else:
         print("Error: ast node '{}' has no type analysis function"
               .format(ast['type']))
