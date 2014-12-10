@@ -22,7 +22,8 @@
       currently only supports assignment to variables
 - [ ] decorator used for defining the translation of specific functions
 - [ ] static typing should not be optional - only auto type declarations
-
+- [ ] allow_type_reassign should be set to False by default
+      currently to to True because tests fail otherwise
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
 - [ ] Separate function that wraps malloc and check if mem is available
