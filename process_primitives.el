@@ -46,7 +46,9 @@
 
 (find-file py_out)
 (erase-buffer)
-(insert "primitives = {}\n")
+(insert "###### This file is auto-generated, do not modify. #####
+
+primitives = {}\n")
 (write_py names)
 ;;TODO: need some variable that is set when not compiling for arduino
 (write_py na_names l_names t)
@@ -55,7 +57,9 @@
 
 (find-file c_out)
 (erase-buffer)
-(insert (format "#if arduino
+(insert (format "/***** This file is auto-generated, do not modify. *****/
+
+#if arduino
 n_primitives = %s;
 #else
 n_primitives = %s;
