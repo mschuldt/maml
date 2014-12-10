@@ -213,11 +213,11 @@ def _(ast):
 
 @type_check('assign')
 def _(ast, env):
-    check_types(ast[targets], env)
-    check_types(ast[value], env)
-    if ast[targets]['s_type'] != ast[value]['s_type']:
+    check_types(ast['targets'][0], env)
+    check_types(ast['value'], env)
+    if ast['targets'][0]['s_type'] != ast['value']['s_type']:
         print("Error: cannot assign variable of type {} to type {}"
-                      .format(ast[targets]['s_type'], ast[value]['s_type']))
+                      .format(ast['targets']['s_type'], ast['value']['s_type']))
         exit(1)
 
 
@@ -228,6 +228,11 @@ def _(ast, env):
 def _(ast, btc, env, top):
     #if not check_expr(ast): return
     gen_bytecode(ast['value'], btc, env, top)
+
+@type_check('expr')
+def _(ast, env):
+    check_types(ast['value'], env)
+    ast['s_type'] = ast['value']['s_type']
 
 ################################################################################
 # binop
@@ -271,6 +276,11 @@ func_index = index of function_pointer in the array 'primitives'"""
         print("Error -- not implemented: calling non-primitives ('{}')"
               .format(ast['func']['id']));
         exit(1)
+
+@type_check('call')
+def _(ast, env):
+    #TODO:
+    ast['s_type'] = "TODO"
 
 @ast_check('call')
 def _(ast):
@@ -417,12 +427,13 @@ def make_new_env():
 
 def check_types(ast, env):
     "checks for type correctness and annotates AST nodes with their type"
-    fn = _ast_type_check_switch_table(ast['type'])
+    fn = _ast_type_check_switch_table.get(ast['type'])
     if fn:
         fn(ast, env)
     else:
         print("Error: ast node '{}' has no type analysis function"
               .format(ast['type']))
+        exit(1)
 
 ################################################################################
 # error reporting functions
