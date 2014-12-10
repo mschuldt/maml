@@ -7,13 +7,23 @@ valid_types = ['int', 'str', 'float', 'func']
 
 def get_type(ast):
     "returns the type of ast or None if it does not describe one"
+    format_str = "{}"
     if ast['type'] == 'list':
-        is_list = True if len(ast['elts']) == 1 else False
-        ast = ast['elts'][0]
-    if ast['type'] == name:
+        if len(ast['elts']) == 1:
+            format_str = "[{}]"
+            ast = ast['elts'][0]
+        else:
+            return False
+    elif ast['type'] == 'tuple':
+        if len(ast['elts']) == 1:
+            format_str = "({})"
+            ast = ast['elts'][0]
+        else:
+            return False
+    if ast['type'] == 'name':
         t = ast['id']
         if t not in valid_types: return None
-    return "[{}]".format(t) if is_list else t
+    return format_str.format(t)
 
 def Compare (left, ops, comparators, lineno=None, col_offset=None):
     if len(ops) == 1 and ops[0] == '<':
@@ -25,10 +35,10 @@ def Compare (left, ops, comparators, lineno=None, col_offset=None):
                 if t:
                     return {'type': 'declaration',
                             'name': left['id'],
-                            'type_':t,
+                            's_type':t,
                             'lineno': lineno,
                             'col_offset': col_offset}
-    return {'type': 'compare',
+    return {'type': ':compare',
             'left': left,
             'comparators' : comparators,
             'lineno': lineno,
@@ -137,13 +147,13 @@ def BitOr():    return "|"
 def BitAnd():   return "&"
 def Mod():      return "%"
 
-def Compare (left, ops, comparators, lineno=None, col_offset=None):
-    return {'type': 'compare',
-            'left': left,
-            'ops': ops,
-            'comparators': comparators,
-            'lineno': lineno,
-            'col_offset': col_offset}
+# def Compare (left, ops, comparators, lineno=None, col_offset=None):
+#     return {'type': 'compare',
+#             'left': left,
+#             'ops': ops,
+#             'comparators': comparators,
+#             'lineno': lineno,
+#             'col_offset': col_offset}
 
 def Gt():    return ">"
 def Lt():    return "<"

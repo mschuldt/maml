@@ -11,7 +11,7 @@
 (insert "/***** This file is auto-generated, do not modify. *****/\n\n")
 (dolist (f files)
   (goto-char 1)
-  (re-search-forward (format "#include +\"%s\"" f) nil t)
+  (re-search-forward (format "#include +\"%s\"" f))
   (beginning-of-line)
   (kill-line)
   (insert-file-contents-literally f)

@@ -81,6 +81,11 @@ SOP_END             = OP("SOP_END")
 
 OP("OP_LOAD_CONST") #this opcode exists only in avm.c
 
+def print_opcodes():
+    max_len = max(map(lambda x: len(x[0]), opcodes))
+    for name, num in opcodes:
+        print(name, " "*(max_len - len(name)) + str(num))
+
 if __name__ == '__main__':
     assert not debug, "disable debug mode when not debugging"
     print("re-generating C opcode file...", end="")
@@ -99,5 +104,3 @@ if __name__ == '__main__':
 else:
     del i
     del OP
-    del opcodes
-
