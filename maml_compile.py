@@ -472,6 +472,31 @@ def _(ast, env):
     ast['s_type'] = 'None'
 
 ###############################################################################
+#continue
+
+@code_gen('continue')
+def _ast(ast, btc, env, top):
+    btc.extend([OP_JUMP, SOP_INT, env.get_while_start_label()])
+
+@type_check('continue')
+def _ast(ast, env):
+    pass
+
+
+
+###############################################################################
+#break
+
+@code_gen('break')
+def _ast(ast, btc, env, top):
+    btc.extend([OP_JUMP, SOP_INT, env.get_while_end_label()])
+
+@type_check('break')
+def _ast(ast, env):
+    pass
+
+
+###############################################################################
 # compare
 
 
