@@ -353,14 +353,16 @@ def While(test, body, orelse, lineno=None, col_offset=None):
             }
 
 def Break(lineno=None, col_offset=None):
-    return {'lineno': lineno,
-            'col_offset': col_offset
-        }
+    return {'type': 'break',
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 
 def Continue(lineno=None, col_offset=None):
-    return {'lineno': lineno,
-            'col_offset': col_offset
-    }
+    return {'type': 'continue',
+            'lineno': lineno,
+            'col_offset': col_offset}
+
 
 def AugAssign(target, op, value, lineno=None, col_offset=None):
     return {'type': 'assign',
