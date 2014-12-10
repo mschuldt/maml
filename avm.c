@@ -207,6 +207,7 @@ void* l_load_const;
 void* l_addii;
 void* l_addi;
 void* l_add;
+void* l_sub;
 void* l_mult;
 void* l_div;
 void* l_ret;
@@ -224,7 +225,11 @@ void* l_load_global;
 void* l_jump;
 void* l_if;
 void* l_lt;
-void* l_sub;
+void* l_gt;
+void* l_eq;
+void* l_notEq;
+void* l_ltEq;
+void* l_gtEq;
 #if include_lists
 void* l_list;
 #endif
@@ -252,7 +257,12 @@ void loop (){
     l_store_global = &&store_global;
     l_jump = &&jump;
     l_if = &&_if;
+    l_gt = &&gt;
     l_lt = &&lt;
+    l_eq = &&eq;
+    l_notEq = &&notEq;
+    l_ltEq = &&ltEq;
+    l_gtEq = &&gtEq;
     l_sub = &&sub;
 #if include_lists
     l_list = &&list;
@@ -359,9 +369,27 @@ void loop (){
   D("div\n");
   stack[top-1] = (void*)((int)stack[top-1] / (int)stack[top--]);
   NEXT(code);
+ gt:
+  // use < because items on stack are reversed
+  stack[top-1] = (void*) ((int)(stack[top]) < ((int)stack[--top]));
+  NEXT(code);
  lt:
   // use > because items on stack are reversed
   stack[top-1] = (void*) ((int)(stack[top]) > ((int)stack[--top]));
+  NEXT(code);
+ eq:
+  stack[top-1] = (void*) ((int)(stack[top]) == ((int)stack[--top]));
+  NEXT(code);
+ notEq:
+  stack[top-1] = (void*) ((int)(stack[top]) != ((int)stack[--top]));
+  NEXT(code);
+ ltEq:
+  // use > because items on stack are reversed
+  stack[top-1] = (void*) ((int)(stack[top]) >= ((int)stack[--top]));
+  NEXT(code);
+ gtEq:
+  // use < because items on stack are reversed
+  stack[top-1] = (void*) ((int)(stack[top]) <= ((int)stack[--top]));
   NEXT(code);
 #if include_lists
  list:
@@ -734,9 +762,29 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_div;
       break;
+    case OP_GT:
+      NL;
+      code_array[i++] = l_gt;
+      break;
     case OP_LT:
       NL;
       code_array[i++] = l_lt;
+      break;
+    case OP_EQ:
+      NL;
+      code_array[i++] = l_eq;
+      break;
+    case OP_NOT_EQ:
+      NL;
+      code_array[i++] = l_notEq;
+      break;
+    case OP_LT_EQ:
+      NL;
+      code_array[i++] = l_ltEq;
+      break;
+    case OP_GT_EQ:
+      NL;
+      code_array[i++] = l_gtEq;
       break;
     case OP_RETURN:
       NL;

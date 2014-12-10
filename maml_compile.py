@@ -377,7 +377,7 @@ comparison_ops = {'>': OP_GT,
                   '==': OP_EQ,
                   '!=': OP_NOT_EQ,
                   '<=': OP_LT_EQ,
-                  '>=': OP_LT_EQ,
+                  '>=': OP_GT_EQ,
                   'in': OP_IN,
                   'not-in': OP_NOT_IN,
                   'is': OP_IS}
