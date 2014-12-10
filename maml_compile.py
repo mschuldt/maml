@@ -21,6 +21,10 @@ from operator import add
 from sys import argv
 from _prim import primitives
 
+# Logger
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s')
+
 # for the AST node with type X:
 #   * node['type'] == 'X'
 #   * The code generation function is defined as
@@ -87,7 +91,8 @@ def _(ast, btc, env, top):
 @ast_check('str')
 def _(ast):
     if ast['s'].find('\0') != -1:
-        print ("Error: null terminators not allowed in strings.")
+        # print ("Error: null terminators not allowed in strings.")
+        logging.error("Null terminators not allwed in strings.")
         exit(1)
 
 
@@ -125,7 +130,8 @@ def _(ast, btc, env, top):
     elts = ast['elts']
     for e in elts:
         gen_bytecode(e, btc, env, False)
-    print("compiling 'list', len(elts) = {}".format(len(elts)))
+    # print("compiling 'list', len(elts) = {}".format(len(elts)))
+    logging.info("Compiling 'list', len(elts) = %i", len(elts))
     btc.extend([OP_LIST, SOP_INT, len(elts)])
     # TODO: if len = 0 ==> NULL
 
@@ -298,19 +304,26 @@ def _(ast, env):
     t_r = ast['right']['s_type']
     op = ast['op']
     if t_l not in valid_bin_op_types[op]:
-        print("Invalid type for left operand: '{}'. Expected '{}'"
-              .format(tl, reduce(lambda a, b: a + " or " + b,
-                      valid_bin_op_types[op])))
+        # print("Invalid type for left operand: '{}'. Expected '{}'"
+        #       .format(tl, reduce(lambda a, b: a + " or " + b,
+        #               valid_bin_op_types[op])))
+        logging.error("Invalid type for left operand: '%s'. Expected '%s'", tl,
+                      reduce(lambda a, b: a + " or " + b,
+                      valid_bin_op_types[op]))
         exit(1)
 
     if t_r not in valid_bin_op_types[op]:
-        print("TypeError: Invalid type for right operand: '{}'. Expected '{}'"
-              .format(t_r, reduce(lambda a, b: a + "' or '" + b,
-                      valid_bin_op_types[op])))
+        # print("TypeError: Invalid type for right operand: '{}'. Expected '{}'"
+        #       .format(t_r, reduce(lambda a, b: a + "' or '" + b,
+        #               valid_bin_op_types[op])))
+        logging.error("Invalid type for right operand: '%s'. Expected '%s'",
+                      t_r, reduce(lambda a, b: a + "' or '" + b,
+                      valid_bin_op_types[op]))
         exit(1)
     if t_l != t_r:
-        print("TypeError: type for {} do not match, '{}' and '{}'"
-              .format(op, t_l, t_r))
+        # print("TypeError: type for {} do not match, '{}' and '{}'"
+        #       .format(op, t_l, t_r))
+        logging.error("Type for %s do not match, '%s' and '%s'", op, t_l, t_r)
         exit(1)
     ast['s_type'] = t_l
 
@@ -369,16 +382,20 @@ def _(ast, btc, env, top):
         # We have to use SOP_INT here so that the bytecode expansion
         # can expand the numbers
         if transform_fn:
-            print("Error: primitive function '{}' has tranform function"
-                  .format(name))
+            # print("Error: primitive function '{}' has tranform function"
+            #       .format(name))
+            logging.error("Primitive function '%s' has transform function",
+                          name)
         btc.extend([SOP_PRIM_CALL, SOP_INT, nargs, SOP_INT, index])
         if top:
             btc.append(OP_POP)
     elif transform_fn:
         transform_fn(ast, btc, env, top)
     else:  # Calling a user defined function
-        print("Error -- not implemented: calling non-primitives ('{}')"
-              .format(ast['func']['id']))
+        # print("Error -- not implemented: calling non-primitives ('{}')"
+        #       .format(ast['func']['id']))
+        logging.error("Not implemented: Calling non-primitives('%s')",
+                      ast['func']['id'])
         exit(1)
 
 
@@ -598,8 +615,10 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
         fn(ast, btc, env, top)
         return btc
     else:
-        print("Error -- gen_bytecode(): unknown AST node type: '{}'"
-              .format(ast['type']))
+        # print("Error -- gen_bytecode(): unknown AST node type: '{}'"
+        #      .format(ast['type']))
+        logging.error("gen_bytecode(): Unknown AST node type: '%s'",
+                      ast['type'])
         exit(1)
 
 
@@ -622,8 +641,10 @@ def check_types(ast, env):
     if fn:
         fn(ast, env)
     else:
-        print("Error: ast node '{}' has no @type_check type analysis function"
-              .format(ast['type']))
+        # print("Error: ast node '{}' has no @type_check type analysis function"
+        #       .format(ast['type']))
+        logging.error("AST node '%s' has no @type_check type analysis " +
+                      "function", ast['type'])
         exit(1)
 
 
@@ -632,20 +653,26 @@ def check_types(ast, env):
 
 
 def syntax_error(ast, message):
-    print("SYNTAX ERROR[{}:{}]: {}"
-          .format(ast['lineno'], ast['col_offset'], message))
+    # print("SYNTAX ERROR[{}:{}]: {}"
+    #       .format(ast['lineno'], ast['col_offset'], message))
+    logging.error("Syntax [%s:%s]: %s", ast['lineno'], ast['col_offset'],
+                  message)
     exit(1)
 
 
 def not_implemented_error(ast):
-    print("ERROR[{}:{}]: node type '{}' is not implemented"
-          .format(ast['lineno'], ast['col_offset'], ast['type']))
+    # print("ERROR[{}:{}]: node type '{}' is not implemented"
+    #       .format(ast['lineno'], ast['col_offset'], ast['type']))
+    logging.error("[%s:%s]: Node type '%s' is not implemented", ast['lineno'],
+                  ast['col_offset'], ast['type'])
     exit(1)
 
 
 def type_error(ast, message):
-    print("TYPE ERROR[{}:{}]: {}"
-          .format(ast['lineno'], ast['col_offset'], message))
+    # print("TYPE ERROR[{}:{}]: {}"
+    #       .format(ast['lineno'], ast['col_offset'], message))
+    logging.error("Type [%s:%s]: %s", ast['lineno'], ast['col_offset'],
+                  message)
     exit(1)
 
 ###############################################################################
@@ -676,8 +703,10 @@ def compile_ast(ast: list) -> list:
         if type_checking:
             check_types(a, env)
             if not a.get('s_type'):
-                print("Error: node '{}' was not annotated with static type"
-                      .format(a['type']))
+                # print("Error: node '{}' was not annotated with static type"
+                #       .format(a['type']))
+                logging.error("Node '%s' was not annotated with static type",
+                              a['type'])
                 exit(1)
         gen_bytecode(a, bytecode, env)
     # TODO: CHECK TYPES
@@ -687,14 +716,16 @@ def compile_ast(ast: list) -> list:
 
 if __name__ == '__main__':
     if len(argv) != 2:
-        print('Usage:')
-        print('  ./maml-compile.py <filename>.py')
+        # print('Usage:')
+        # print('  ./maml-compile.py <filename>.py')
+        logging.info("Usage: ./maml_compile.py <filename>.py")
         exit(1)
     filename = argv[1]
     try:
         f = open(filename, 'r')
     except IOError:
-        print('Error: where is "{}"?'.format(filename))
+        # print('Error: where is "{}"?'.format(filename))
+        logging.error("Where is '%s'?", filename)
         exit(1)
 
     _block_decorator = 'block'
@@ -722,8 +753,9 @@ if __name__ == '__main__':
     # print(compile_str(f.read()))
     compile_blocks(f.read())
     for k in _blocks:
-        print("block: '{}'".format(k))
-        print("   ", _blocks[k])
+        # print("block: '{}'".format(k))
+        # print("   ", _blocks[k])
+        logging.info("Block: '%s'  %s", k, _blocks[k])
     # TODO: compile/print functions
 
     exit(0)
