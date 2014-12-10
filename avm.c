@@ -63,11 +63,14 @@ struct array{
   void* data;
 };
 
+struct i_array{
+  int len;
+  int* data;
+};
 struct procedure{
-  int n_args;
   void** code;
   int n_locals;
-  int* args;
+  struct i_array *args;
 };
 
 void init_procedure(struct procedure* fn, int code_len, int n_locals){
@@ -576,6 +579,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
       //wait.
     }
     data = Serial.read();
+    Serial.print("received: ");
+    Serial.println(data);
 #else
     data = fgetc(fp);
     if (data == '\n'){
@@ -624,7 +629,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     switch (op){
     case SOP_PING:
 #if arduino
-      Serial.write(SOP_ALIVE);
+      Serial.println(SOP_ALIVE);
 #else
       printf("Alive\n");
 #endif
@@ -644,7 +649,11 @@ void serial_in(){ //serial ISR (interrupt service routine)
       if (newblock){
         //TODO: error
       }
-
+      READ_INT_ARRAY()
+      newfunction = (struct procedure*)malloc(sizeof(struct procedure));
+      newfunction->args = READ_INT_ARRAY();
+      newfunction->
+      code_array = newfunction->code;
       break;
     case SOP_INT:
       NL;
@@ -795,8 +804,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     case SOP_INT_ARRAY:
       NL;
       code_array[i++] = (void*) l_load_const;
-      //TODO
-      //code_array[i++] = READ_INT_ARRAY();
+      code_array[i++] = READ_INT_ARRAY();
       break;
     case SOP_END:
       //TODO: reset jump/label variables at start of block/function transfer
