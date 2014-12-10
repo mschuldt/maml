@@ -37,7 +37,7 @@ class Maml_serial:
         bc = block.bytecode
         length = len(bc)
         exp = expand_bytecode(bc)
-        exp += list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)]
+        exp = list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
         # end block and end file
         self._send(exp + [chr(SOP_END), chr(SOP_END)])
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cd tests/
-
 pid=$(pgrep avm)
 #TODO: if only one 'avm' process is running,
 #      use that one instead of creating a new one
