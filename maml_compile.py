@@ -307,7 +307,11 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top)
     btc.extend([SOP_LABEL, SOP_INT, done_l])
 
-
+@type_check('if')
+def _(ast, env):
+    check_types(ast['test'], env)
+    for node in ast['body']: check_types(node, env)
+    for node in ast['else']: check_types(node, env)
 ################################################################################
 # while
 
