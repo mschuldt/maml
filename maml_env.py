@@ -1,4 +1,5 @@
 class env:
+
     def __init__(self, parent=None):
         self.names = {}
         self.parent = parent
@@ -6,6 +7,7 @@ class env:
         self.types = {}
         self.n_names = 0
         self.label_counter = -1
+        self.funcTypes = {}
         #TODO: track the size of the variable arrays in the Arduino
 
     def get_store_index(self, name):
@@ -78,3 +80,14 @@ class env:
         if self.parent and name in self.global_names:
             return self.parent.is_declared(name)
         return name in self.types
+
+    def createFuncTypes(funcName, argTypes, returnType):
+        self.funcTypes[funcName] = funcTypes(argTypes, returnType)
+
+    class funcTypes:
+
+        def __init__(self, funcName, argTypes, returnType):
+            self.argTypes = argTypes
+            self.returnType = returnType
+
+
