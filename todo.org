@@ -1,14 +1,14 @@
 * Langauge features
+- [ ] Break and continue for while loops
+- [ ] For loops (mark unimplemented?)
 - [ ] Chain together multiple blocks or send multiple blocks at once
 - [X] Unary opCode
 - [X] Most conditionals
-- [ ] For loops (mark unimplemented?)
 - [X] Arithmetic expressions (a*b, a/b, a-b, a+b)
 - [X] >, >=, <=, ==
 - [X] Augmented assignment
-- [ ] Chained comparison (ex: 1 < 2 <= 3) __lower priority__
-- [ ] Break and continue for while loops
 - [X] Chained assignment (e.g. a = b = 2)
+- [ ] Chained comparison (ex: 1 < 2 <= 3) __lower priority__
 
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
