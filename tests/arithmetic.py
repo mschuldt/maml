@@ -17,7 +17,7 @@ def test():
     print_i(1+1 > 3)  # 0
     print_i(1+1 <= 1) # 0
     print_i(1+1 < 1)  # 0
-
+    print_i("s" == "s")
     # Arithmetic equality tests
     print_i(1 - 1) # 0
     print_i(2 - 1) # 1
