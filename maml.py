@@ -7,10 +7,6 @@ from functools import reduce
 from sys import argv
 from maml_serial import Maml_serial
 
-# Logger
-import logging
-logging.basicConfig(format='%(asctime)s %(message)s')
-
 # maps block names to bytecode arrays and
 # function names to FunctionByteCode objects
 _compiled_code = {}
@@ -78,10 +74,8 @@ def block(fn):
     block_name = fn.__name__
     code = _compiled_code.get(block_name)
     if not code:
-        # print("Error: could not retrieve compiled block code")
-        logging.error("Could not retrieve compiled block code")
-        # print("_compiled_code = %s", _compiled_code)
-        logging.info("_compiled_code = ", _compiled_code)
+        print("Error: could not retrieve compiled block code")
+        print("_compiled_code = ", _compiled_code)
     # update (or add) this block in the global list of blocks
     codeblock = _blocks.get(block_name)
     if codeblock:
@@ -99,8 +93,7 @@ def function(fn):
     fn_name = fn.__name__
     code = _compiled_code.get(fn_name)
     if not code:
-        # print("Error: could not retrieve compiled function code")
-        logging.error("Could not retrieve compiled function code")
+        print("Error: could not retrieve compiled function code")
     # update (or add) this block in the global list of blocks
     codeblock = _blocks.get(fn_name)
     if codeblock:
@@ -118,8 +111,7 @@ class Arduino:
     def __init__(self, desktop=False):
         global _arduino
         if _arduino:
-            # print("WARNING: multiple Arduino boards are not supported")
-            logging.warning("Multiple Arduino boards are not supported.")
+            print("WARNING: multiple Arduino boards are not supported")
             return self
         _arduino = self
 
@@ -145,8 +137,7 @@ class Arduino:
         elif type(code) is A_function:
             self.serial.send_function(code)
         else:
-            # print("ERROR: attempt to send invalid code object")
-            logging.error("Attempt to send invalid code object.")
+            print("ERROR: attempt to send invalid code object")
             exit(1)
 
     def inject(self, code):
@@ -227,16 +218,14 @@ if __name__ == '__main__':
     if len(sp) < 2 or sp[-1] != 'py':
         err = True
     if err:
-        # print('Usage:')
-        logging.info("Usage: ./maml.py <filename>.py")
-        # print('  ./maml.py <filename>.py')
+        print('Usage:')
+        print('  ./maml.py <filename>.py')
         exit(1)
 
     try:
         f = open(filename, 'r')
     except IOError:
-        # print("Error: where is '{}'?".format(filename))
-        logging.error("Where is %s?", filename)
+        print("Error: where is '{}'?".format(filename))
         exit(1)
 
     code = f.read()
@@ -256,12 +245,10 @@ if __name__ == '__main__':
     # exit(0)
 
 else:
-    # print("Error: invalid usage")
-    # print("  Instead of doing 'import maml' in NAME.py")
-    # print("  run it with:")
-    # print("    ./maml.py NAME.py")
-    logging.error("Invalid usage. Instead of doing 'import maml' in NAME.py " +
-                  "run it with: ./maml.py NAME.py")
+    print("Error: invalid usage")
+    print("  Instead of doing 'import maml' in NAME.py")
+    print("  run it with:")
+    print("    ./maml.py NAME.py")
     # TODO: is there anyway that a module can get the filename
     #       of the file that is importing it?
     #       Then we can handle this case without error
