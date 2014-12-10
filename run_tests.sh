@@ -23,7 +23,6 @@ else
     files=$(ls *.py) #because ls tests/*py includes the directory
     cd ..
 fi
-echo $files
 
 for f in $files ;
 do
@@ -67,8 +66,5 @@ if [ $bad -ne 0 ] ; then
     done
 fi
 
-
 echo $bad tests failed
 echo $good tests passed
-
-
