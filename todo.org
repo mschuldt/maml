@@ -1,3 +1,5 @@
+* misc
+- [ ] function for reporting errors (instead of using print + exit everytime )
 * langauge features
 - [ ] chain together multiple blocks or send multiple blocks at once
 - [ ] unary op
@@ -14,6 +16,7 @@
 - [ ] check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] any expression that can be at the top level that normally
       pushes to the stack will have to pop that element from the stack
+- [ ] need way of declaring types of built in functions and variables
 * VM
 - [ ] need some way of growing the stack -> have a function or opcode to do that
 - [ ] separate function that wraps malloc and check if mem is available
@@ -22,7 +25,7 @@
 - [ ] find someway of using an array for label addresses instead
      (so that we can dynamically allocate the memory and free it if needed)
 * AST
-better way of transforming the ast - dont convert to dictionaries in that 
+better way of transforming the ast - dont convert to dictionaries in that
 traverse the ast object without converting to string and evaluating
 * primitive functions
 - [ ] primitive reprocessing needs to get arg count + type
