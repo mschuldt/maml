@@ -6,7 +6,8 @@
 - [ ] most binary ps
 - [ ] most conditionals
 - [ ] for loops (mark unimplemented?)
-- [ ] >, >=, <=, ==
+- [X] arithmetic expressions (a*b, a/b, a-b, a+b)
+- [X] >, >=, <=, ==
 - [ ] augmented assignment
 - [ ] chained comparison (ex: 1 < 2 <= 3)
 - [ ] break and continue for while loops
