@@ -208,6 +208,8 @@ void* l_load_const;
 void* l_addii;
 void* l_addi;
 void* l_add;
+void* l_mult;
+void* l_div;
 void* l_ret;
 void* l_end_of_block;
 void* l_call_prim_0;
@@ -235,6 +237,8 @@ void loop (){
     initialized = true;
     l_load_const = &&load_const;
     l_add = &&add;
+    l_mult = &&mult;
+    l_div = &&div;
     l_ret = &&ret;
     l_end_of_block = &&end_of_block;
     l_call_prim_0 = &&call_prim_0;
@@ -347,6 +351,14 @@ void loop (){
  sub:
   D("add\n");
   stack[top-1] = (void*)((int)stack[top-1] - (int)stack[top--]);
+  NEXT(code);
+ mult:
+  D("mult\n");
+  stack[top-1] = (void*)((int)stack[top-1] * (int)stack[top--]);
+  NEXT(code);
+ div:
+  D("div\n");
+  stack[top-1] = (void*)((int)stack[top-1] / (int)stack[top--]);
   NEXT(code);
  lt:
   // use > because items on stack are reversed
@@ -705,9 +717,17 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_add;
       break;
-    case OP_SUB:
+    case OP_MULT:
+      NL;
+      code_array[i++] = l_mult;
+      break;
+     case OP_SUB:
       NL;
       code_array[i++] = l_sub;
+      break;
+    case OP_DIV:
+      NL;
+      code_array[i++] = l_div;
       break;
     case OP_LT:
       NL;
