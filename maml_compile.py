@@ -73,6 +73,12 @@ def type_check(name):
 def _(ast, btc, env, top):
     btc.extend([SOP_STR, ast['s']])
 
+@ast_check('str')
+def _(ast):
+    if ast['s'].find('\0') != -1:
+        print ("Error: null terminators not allowed in strings.")
+        exit(1)
+
 @type_check('str')
 def _(ast):
     ast['s_type'] = 'str'
@@ -149,11 +155,11 @@ def _(ast, btc, env, top):
 
 @type_check('name')
 def _(ast, env):
-    check_types(ast[id], env)
-    if ast[id]['s_type'] != "str":
+    check_types(ast['id'], env)
+    if ast['id']['s_type'] != "str":
         print("Error: cannot assign variable {}"
-                      .format(ast[id]['s_type']))
-                exit(1)
+                      .format(ast['id']['s_type']))
+        exit(1)
 
 ################################################################################
 # nameconstant
