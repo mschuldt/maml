@@ -32,7 +32,7 @@ traverse the ast object without converting to string and evaluating
 - [ ] primitive reprocessing needs to get arg count + type
 - [ ] check argument count when calling primitives
 * bugs
-** null terminators in middle of strings
+** [X] null terminators in middle of strings
 this is an error:
   x = "test \0string"
 because the vm stops reading when it reaches \0
