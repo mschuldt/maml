@@ -173,6 +173,10 @@ def NotIn(): return "not-in"
 def Is():    return "is"
 
 def UnaryOp(op, operand, lineno=None, col_offset=None):
+    if operand['type'] == 'int' or operand['type'] == 'float':
+        operand['n'] *= -1
+        return operand
+
     return {'type': 'unaryOp',
             'op': op,
             'operand': operand,
@@ -246,10 +250,14 @@ def While(test, body, orelse, lineno=None, col_offset=None):
             'col_offset': col_offset}
 
 def AugAssign(target, op, value, lineno=None, col_offset=None):
-    return {'type': 'aug-assign',
-            'target': target,
-            'op':op,
-            'value': value,
+    return {'type': 'assign',
+            'targets': [target],
+            'value': {'type': 'binop',
+                      'left': target,
+                      'op': op,
+                      'right': value,
+                      'lineno': lineno,
+                      'col_offset': col_offset},
             'lineno': lineno,
             'col_offset': col_offset}
 
