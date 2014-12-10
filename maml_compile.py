@@ -228,8 +228,8 @@ def _(ast, env):
 
         if target['s_type'] != val_type:
             #TODO ??????
-            type_error(ast, "Error: cannot assign variable of type {} to type {}"
-                          .format(ast[targets]['s_type'], ast[value]['s_type']))
+            type_error(ast, "cannot assign variable of type '{}' to type '{}'"
+                          .format(ast['targets'][0]['s_type'], ast['value']['s_type']))
 
 
 ################################################################################
@@ -524,7 +524,7 @@ def not_implemented_error(ast):
     exit(1)
 
 def type_error(ast, message):
-    print("TYPE ERROR[{}:{}]: type {} is not compatible with type {}"
+    print("TYPE ERROR[{}:{}]: {}"
           .format(ast['lineno'], ast['col_offset'], message))
     exit(1)
 
