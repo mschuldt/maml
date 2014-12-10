@@ -120,10 +120,10 @@ class env:
         self.while_start_labels.pop()
         self.while_end_labels.pop()
 
-    def get_while_start_labele(self):
+    def get_while_start_label(self):
         self.while_start_labels[len(self.while_end_labels)-1]
 
-    def get_end_start_labele(self):
+    def get_end_start_label(self):
         self.while_end_labels[len(self.while_end_labels)-1]
 
     def createFuncTypes(self, funcName, argTypes, returnType):
