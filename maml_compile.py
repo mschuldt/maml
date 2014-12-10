@@ -18,11 +18,11 @@ from _prim import primitives
 # for the AST node with type X:
 #   * node['type'] == 'X'
 #   * The code generation function is defined as
-#        @node('X')
+#        @code_gen('X')
 #        def _(ast, btc, env, top):
 #           ...
 #   * The ast node checking function is defined as
-#        @check('X')
+#        @ast_check('X')
 #        def _(ast):
 #           ...
 #   * The corresponding opcode is OP_X
@@ -32,18 +32,18 @@ from _prim import primitives
 #     generate AST nodes whose bytecode is generated
 #     by another nodes generation function
 #     (ex: 'function' node consumes the 'arguments' node,
-#          so there is no @node('arguments') function)
+#          so there is no @code_gen('arguments') function)
 
 _bytecode_switch_table = {}
 _ast_check_switch_table = {}
 _ast_type_check_switch_table = {}
 
-def node(name):
+def code_gen(name):
     def decorator(fn):
         _bytecode_switch_table[name] = fn
     return decorator
 
-def check(name):
+def ast_check(name):
     def decorator(fn):
         _ast_check_switch_table[name] = fn
     return decorator
@@ -56,7 +56,7 @@ def type_check(name):
 ################################################################################
 # bytecode generation
 
-# @node function parameters:
+# @code_gen function parameters:
 #   AST is the ast node
 #   BTC is the bytecode array
 #   ENV keeps track of variable index mappings and types
@@ -65,28 +65,29 @@ def type_check(name):
 ################################################################################
 # str
 
-@node('str')
+@code_gen('str')
 def _(ast, btc, env, top):
     btc.extend([SOP_STR, ast['s']])
 
 @type_check('str')
 def _(ast):
     ast['s_type'] = 'str'
+
 ################################################################################
 # int
-@node('int')
+@code_gen('int')
 def _(ast, btc, env, top):
     btc.extend([SOP_INT, ast['n']])
 
 ################################################################################
 # float
-@node('float')
+@code_gen('float')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
 ################################################################################
 # list
-@node('list')
+@code_gen('list')
 def _(ast, btc, env, top):
     elts = ast['elts']
     for e in elts:
@@ -111,7 +112,7 @@ def _(ast):
 ################################################################################
 # tuple
 
-@node('tuple')
+@code_gen('tuple')
 def _(ast, btc, env, top):
     pass
 
@@ -119,7 +120,7 @@ def _(ast, btc, env, top):
 # name
 
 #TODO: 'name' and 'assign' still need to be tested with local names
-@node('name')
+@code_gen('name')
 def _(ast, btc, env, top):
     name = ast['id']
     if name == 'None' or name == 'False':
@@ -131,7 +132,7 @@ def _(ast, btc, env, top):
 
 ################################################################################
 # nameconstant
-@node('nameconstant')
+@code_gen('nameconstant')
 def _(ast, btc, env, top):
     if ast['value']:
         btc.extend([SOP_INT, 1])
@@ -141,7 +142,7 @@ def _(ast, btc, env, top):
 ################################################################################
 # assign
 
-@node('assign')
+@code_gen('assign')
 def _(ast, btc, env, top):
     #TODO: check that target is declared
 
@@ -152,7 +153,7 @@ def _(ast, btc, env, top):
     op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
     btc.extend([op, SOP_INT, index])
 
-@check('assign')
+@ast_check('assign')
 def _(ast):
     assert_type(ast, "assign")
     targets = ast['targets']
@@ -169,7 +170,7 @@ def _(ast):
 ################################################################################
 # expr
 #TODO: eliminate this type in maml_ast.py ?
-@node('expr')
+@code_gen('expr')
 def _(ast, btc, env, top):
     #if not check_expr(ast): return
     gen_bytecode(ast['value'], btc, env, top)
@@ -177,13 +178,13 @@ def _(ast, btc, env, top):
 ################################################################################
 # binop
 
-@node('binop')
+@code_gen('binop')
 def _(ast, btc, env, top):
     gen_bytecode(ast['left'], btc, env, False);
     gen_bytecode(ast['right'], btc, env, False);
     btc.append(bin_ops[ast['op']])
 
-@check('binop')
+@ast_check('binop')
 def _(ast):
     assert_type(ast, "binop")
     if ast['op'] in bin_ops:
@@ -194,7 +195,7 @@ def _(ast):
 ################################################################################
 # call
 
-@node('call')
+@code_gen('call')
 def _(ast, btc, env, top):
     """bytecode format:
     arg1 arg2 ... argn OP_PRIM_CALL function_pointer"
@@ -217,7 +218,7 @@ func_index = index of function_pointer in the array 'primitives'"""
               .format(ast['func']['id']));
         exit(1)
 
-@check('call')
+@ast_check('call')
 def _(ast):
     if ast['keywords']:
         syntax_error(ast, "keyword args are not supported")
@@ -229,7 +230,7 @@ def _(ast):
 ################################################################################
 # if
 
-@node('if')
+@code_gen('if')
 def _(ast, btc, env, top):
     false_l = env.make_label() #marks beginning of false code
     done_l = env.make_label() #marks end of false code
@@ -245,7 +246,7 @@ def _(ast, btc, env, top):
 ################################################################################
 # while
 
-@node('while')
+@code_gen('while')
 def _(ast, btc, env, top):
     # [start] <test> OP_IF <jump end> <body> <jump start> [end]
     start_l = env.make_label()
@@ -257,36 +258,36 @@ def _(ast, btc, env, top):
         gen_bytecode(node, btc, env, top);
     btc.extend([OP_JUMP, SOP_INT, start_l, SOP_LABEL, SOP_INT, end_l])
 
-@check('while')
+@ast_check('while')
 def _(ast):
     if ast['orelse']:
         syntax_error(ast, "while loop else thing is not supported")
 
 ################################################################################
 # compare
-@node('compare')
+@code_gen('compare')
 def _(ast, btc, env, top):
     #this implementation of chained comparisons does not work
-    #so...they are 'not supported' by @check('compare')
+    #so...they are 'not supported' by @ast_check('compare')
     gen_bytecode(ast['left'], btc, env, False);
     for comp, op in zip(ast['comparators'], ast['ops']):
         gen_bytecode(comp, btc, env, False);
         btc.append(comparison_ops[op])
 
-@check('compare')
+@ast_check('compare')
 def _(ast):
     if len(ast['ops']) > 1: #ex: x < 1 < 1
         syntax_error(ast, "chained comparison is (currently) not supported")
 
 ################################################################################
 # str
-@node('function')
+@code_gen('function')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
 ################################################################################
 # 'function'
-@check('function')
+@ast_check('function')
 def _(ast):
     """verifies syntatic correctness of function node"""
     assert_type(ast, "function")
@@ -298,13 +299,13 @@ def _(ast):
 ################################################################################
 ### return
 
-@node('return')
+@code_gen('return')
 def _(ast, btc, env, top):
     not_implemented_error(ast)
 
 ################################################################################
 # pass
-@node('pass')
+@code_gen('pass')
 def _(ast, btc, env, top):
     pass
 
