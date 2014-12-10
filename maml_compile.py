@@ -254,16 +254,6 @@ def _(ast, btc, env, top):
     gen_bytecode(ast['right'], btc, env, False)
     btc.append(bin_ops[ast['op']])
 
-valid_bin_op_types = {"+": ['int', 'float', 'str'],
-                      "*": ['int', 'float'],
-                      "-": ['int', 'float'],
-                      "/": ['int', 'float'],
-                      "//": ['int', 'float'],
-                      "**": ['int', 'float'],
-                      "^": ['int', 'float'],
-                      "|": ['int', 'float'],
-                      "&": ['int', 'float'],
-                      "%": ['int', 'float']}
 @type_check('binop')
 def _(ast, env):
     check_types(ast['left'], env)
@@ -292,6 +282,28 @@ def _(ast):
         return True
     #check 'left' and 'right' properties
     return False
+
+bin_ops = {"+": OP_ADD,
+           "*": OP_MULT,
+           "-": OP_SUB,
+           "/": OP_DIV,
+           "//": OP_FDIV,
+           "**": OP_EXPT,
+           "^": OP_L_XOR,
+           "|": OP_L_OR,
+           "&": OP_L_AND,
+           "%": OP_MOD}
+
+valid_bin_op_types = {"+": ['int', 'float', 'str'],
+                      "*": ['int', 'float'],
+                      "-": ['int', 'float'],
+                      "/": ['int', 'float'],
+                      "//": ['int', 'float'],
+                      "**": ['int', 'float'],
+                      "^": ['int', 'float'],
+                      "|": ['int', 'float'],
+                      "&": ['int', 'float'],
+                      "%": ['int', 'float']}
 
 ################################################################################
 # call
@@ -410,6 +422,16 @@ def _(ast):
     if len(ast['ops']) > 1: #ex: x < 1 < 1
         syntax_error(ast, "chained comparison is (currently) not supported")
 
+comparison_ops = {'>': OP_GT,
+                  '<': OP_LT,
+                  '==': OP_EQ,
+                  '!=': OP_NOT_EQ,
+                  '<=': OP_LT_EQ,
+                  '>=': OP_GT_EQ,
+                  'in': OP_IN,
+                  'not-in': OP_NOT_IN,
+                  'is': OP_IS}
+
 ################################################################################
 # str
 @code_gen('function')
@@ -450,27 +472,6 @@ def _(ast, env):
     pass
 
 ################################################################################
-
-bin_ops = {"+": OP_ADD,
-           "*": OP_MULT,
-           "-": OP_SUB,
-           "/": OP_DIV,
-           "//": OP_FDIV,
-           "**": OP_EXPT,
-           "^": OP_L_XOR,
-           "|": OP_L_OR,
-           "&": OP_L_AND,
-           "%": OP_MOD}
-
-comparison_ops = {'>': OP_GT,
-                  '<': OP_LT,
-                  '==': OP_EQ,
-                  '!=': OP_NOT_EQ,
-                  '<=': OP_LT_EQ,
-                  '>=': OP_GT_EQ,
-                  'in': OP_IN,
-                  'not-in': OP_NOT_IN,
-                  'is': OP_IS}
 
 def gen_bytecode(ast, btc=None, env=None, top=True):
     if btc is None: btc = []
