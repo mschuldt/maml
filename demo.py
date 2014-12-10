@@ -19,7 +19,7 @@
 #   164
 #   14
 #   ...
-# 
+#
 # Each time a codeblock is sent, it will be appended to the end of the
 # blockchain. This behavior is temporary (hopefully), a codeblock should
 # replace another codeblock with the same name.
@@ -28,10 +28,12 @@ print("loading demo.py")
 
 arduino = Arduino(desktop=True)
 
+
 @block
 def test_block():
-    1 + 3   #   for testing, the vm is currently modified so
-    88 + 77 #   that a+b is equivalent to print(a+b);sleep(1)
+    1 + 3  # for testing, the vm is currently modified so
+    88 + 77  # that a+b is equivalent to print(a+b);sleep(1)
+
 
 @block
 def another_block():
@@ -40,7 +42,7 @@ def another_block():
 # alternatively we could send the blocks here and
 # non-interactively call "./maml.py test.py"
 #
-#arduino.send(test_block)
-#arduino.send(another_block)
+# arduino.send(test_block)
+# arduino.send(another_block)
 
 print("done loading demo.py")

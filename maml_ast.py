@@ -5,8 +5,12 @@ from sys import argv
 
 valid_types = ['int', 'str', 'float', 'func']
 
+
 def get_type(ast):
-    "returns the type of ast or None if it does not describe one"
+    """
+    Returns the type of ast or None if it does not describe one
+    """
+
     format_str = "{}"
     if ast['type'] == 'list':
         if len(ast['elts']) == 1:
@@ -22,12 +26,14 @@ def get_type(ast):
             return False
     if ast['type'] == 'name':
         t = ast['id']
-        if t not in valid_types: return None
+        if t not in valid_types:
+            return None
     return format_str.format(t)
 
-def Compare (left, ops, comparators, lineno=None, col_offset=None):
+
+def Compare(left, ops, comparators, lineno=None, col_offset=None):
     if len(ops) == 1 and ops[0] == '<':
-        #special case for type declaration
+        # special case for type declaration
         if left['type'] == 'name':
             c = comparators[0]
             if c['type'] == 'unaryOp' and c['op'] == 'usub':
@@ -35,7 +41,7 @@ def Compare (left, ops, comparators, lineno=None, col_offset=None):
                 if t:
                     return {'type': 'declaration',
                             'name': left['id'],
-                            's_type':t,
+                            's_type': t,
                             'lineno': lineno,
                             'col_offset': col_offset}
     return {'type': 'compare',
@@ -45,8 +51,10 @@ def Compare (left, ops, comparators, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset}
 
+
 def Module(body):
     return body
+
 
 def arg(arg, annotation, lineno, col_offset):
     return {
@@ -54,86 +62,109 @@ def arg(arg, annotation, lineno, col_offset):
         'argType': annotation['id']
     }
 
-def FunctionDef(name, args, body, decorator_list, returns, lineno=None, col_offset=None):
+
+def FunctionDef(name, args, body, decorator_list, returns, lineno=None,
+                col_offset=None):
     return {'type': 'function',
-            'name' : name,
-            'args' : args,
-            'body' : body,
-            'decorator_list' : decorator_list,
-            'returns' : returns,
+            'name': name,
+            'args': args,
+            'body': body,
+            'decorator_list': decorator_list,
+            'returns': returns,
             'lineno': lineno,
             'col_offset': col_offset}
 
+
 def arguments(args=None, vararg=None, varargannotation=None, kwonlyargs=None,
-              kwarg=None, kwargannotation=None,defaults=None, kw_defaults=None):
+              kwarg=None, kwargannotation=None, defaults=None,
+              kw_defaults=None):
     return {'type': 'arguments',
-            'args' :args,
-            'vararg' :vararg,
-            'varargannotation' :varargannotation,
-            'kwonlyargs' :kwonlyargs,
-            'kwarg' :kwarg,
-            'kwargannotation' :kwargannotation,
-            'defaults' :defaults,
-            'kw_defaults' :kw_defaults}
+            'args': args,
+            'vararg': vararg,
+            'varargannotation': varargannotation,
+            'kwonlyargs': kwonlyargs,
+            'kwarg': kwarg,
+            'kwargannotation': kwargannotation,
+            'defaults': defaults,
+            'kw_defaults': kw_defaults
+            }
+
 
 def Assign(targets, value, lineno=None, col_offset=None):
-    return {'type' : 'assign',
+    return {'type': 'assign',
             'targets': targets,
             'value': value,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def Num(n, lineno=None, col_offset=None):
     return {'type': ('int' if type(n) is int else 'float'),
-            'n' : n,
+            'n': n,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def Str(s, lineno=None, col_offset=None):
-    return {'type' : 'str',
-            's' : s,
+    return {'type': 'str',
+            's': s,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def Name(id, ctx, lineno=None, col_offset=None):
-    return {'type' : 'name',
-            'id' : id,
-            'ctx' : ctx,
+    return {'type': 'name',
+            'id': id,
+            'ctx': ctx,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
 
 
 def Call(func, args, keywords, starargs, kwargs, lineno=None, col_offset=None):
     return {'type': 'call',
             'lineno': lineno,
-            'func':func,
-            'args':args,
-            'keywords':keywords,
-            'starargs':starargs,
-            'kwargs':kwargs,
+            'func': func,
+            'args': args,
+            'keywords': keywords,
+            'starargs': starargs,
+            'kwargs': kwargs,
             'col_offset': col_offset}
+
 
 def keyword(arg, value):
     return {'type': 'keyword',
             'arg': arg,
-            'value':value}
+            'value': value
+            }
+
 
 def Expr(value, lineno=None, col_offset=None):
-    return {'type' : 'expr',
+    return {'type': 'expr',
             'value': value,
             'lineno': lineno,
-            'col_offset': col_offset}
-
+            'col_offset': col_offset
+            }
 
 
 def Return(value, lineno='nil', col_offset='nil'):
-    return {'type' : 'return',
+    return {'type': 'return',
             'value': value,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
 
-def Load():     return 'load'
-def Store():    return 'store'
+
+def Load():
+    return 'load'
+
+
+def Store():
+    return 'store'
+
 
 def BinOp(left, op, right, lineno=None, col_offset=None):
     return {'type': 'binop',
@@ -141,18 +172,48 @@ def BinOp(left, op, right, lineno=None, col_offset=None):
             'op': op,
             'right': right,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
 
-def Add():      return "+"
-def Mult():     return "*"
-def Sub():      return "-"
-def Div():      return "/"
-def FloorDiv(): return "//"
-def Pow():      return "**"
-def BitXor():   return "^"
-def BitOr():    return "|"
-def BitAnd():   return "&"
-def Mod():      return "%"
+
+def Add():
+    return "+"
+
+
+def Mult():
+    return "*"
+
+
+def Sub():
+    return "-"
+
+
+def Div():
+    return "/"
+
+
+def FloorDiv():
+    return "//"
+
+
+def Pow():
+    return "**"
+
+
+def BitXor():
+    return "^"
+
+
+def BitOr():
+    return "|"
+
+
+def BitAnd():
+    return "&"
+
+
+def Mod():
+    return "%"
 
 # def Compare (left, ops, comparators, lineno=None, col_offset=None):
 #     return {'type': 'compare',
@@ -162,15 +223,42 @@ def Mod():      return "%"
 #             'lineno': lineno,
 #             'col_offset': col_offset}
 
-def Gt():    return ">"
-def Lt():    return "<"
-def Eq():    return "=="
-def NotEq(): return "!="
-def LtE():   return "<="
-def GtE():   return ">="
-def In():    return "in"
-def NotIn(): return "not-in"
-def Is():    return "is"
+
+def Gt():
+    return ">"
+
+
+def Lt():
+    return "<"
+
+
+def Eq():
+    return "=="
+
+
+def NotEq():
+    return "!="
+
+
+def LtE():
+    return "<="
+
+
+def GtE():
+    return ">="
+
+
+def In():
+    return "in"
+
+
+def NotIn():
+    return "not-in"
+
+
+def Is():
+    return "is"
+
 
 def UnaryOp(op, operand, lineno=None, col_offset=None):
     if operand['type'] == 'int' or operand['type'] == 'float':
@@ -183,37 +271,50 @@ def UnaryOp(op, operand, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset}
 
-def Not(): return "not"
-def USub(): return "usub"
+
+def Not():
+    return "not"
+
+
+def USub():
+    return "usub"
+
 
 def Starred(value, ctx, lineno, col_offset):
-    return {'type' : 'starred',
+    return {'type': 'starred',
             'value': value,
             'ctx': ctx,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def Tuple(elts, ctx, lineno=None, col_offset=None):
-    return {'type' : 'tuple',
+    return {'type': 'tuple',
             'elts': elts,
-            'ctx' : ctx,
+            'ctx': ctx,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def Attribute(value, attr, ctx, lineno=None, col_offset=None):
-    return {'type' : 'attribute',
+    return {'type': 'attribute',
             'value': value,
             'attr': attr,
             'ctx': ctx,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
 
 
 def Import(names, lineno=None, col_offset=None):
     return {'type': 'import',
             'names': names,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def ImportFrom(module, names, level, lineno=None, col_offset=None):
     return {'type': 'importfrom',
@@ -221,17 +322,23 @@ def ImportFrom(module, names, level, lineno=None, col_offset=None):
             'names': names,
             'level': level,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def alias(name, asname):
     return {'type': 'alias',
             'name': name,
-            'asname': asname}
+            'asname': asname
+            }
+
 
 def Pass(lineno=None, col_offset=None):
-    return {'type':'pass',
+    return {'type': 'pass',
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def If(test, body, orelse, lineno=None, col_offset=None):
     return {'type': 'if',
@@ -239,7 +346,9 @@ def If(test, body, orelse, lineno=None, col_offset=None):
             'body': body,
             'else': orelse,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def While(test, body, orelse, lineno=None, col_offset=None):
     return {'type': 'while',
@@ -247,7 +356,9 @@ def While(test, body, orelse, lineno=None, col_offset=None):
             'body': body,
             'orelse': orelse,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def AugAssign(target, op, value, lineno=None, col_offset=None):
     return {'type': 'assign',
@@ -257,25 +368,32 @@ def AugAssign(target, op, value, lineno=None, col_offset=None):
                       'op': op,
                       'right': value,
                       'lineno': lineno,
-                      'col_offset': col_offset},
+                      'col_offset': col_offset
+                      },
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def List(elts, ctx, lineno=None, col_offset=None):
     return {'type': 'list',
             'elts': elts,
-            'ctx' : ctx,
+            'ctx': ctx,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def NameConstant(value, lineno=None, col_offset=None):
     return {'type': 'nameconstant',
             'value': value,
             'lineno': lineno,
-            'col_offset': col_offset}
+            'col_offset': col_offset
+            }
+
 
 def make_ast(code):
-    return eval(ast.dump(ast.parse(code),include_attributes=True))
+    return eval(ast.dump(ast.parse(code), include_attributes=True))
 
 
 if __name__ == "__main__":
