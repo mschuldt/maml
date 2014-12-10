@@ -119,9 +119,8 @@ def _(ast, env):
         check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
-                print("Error: list has multiple types. {} and {}"
-                      .format(prev_type, e['s_type']))
-                exit(1)
+                type_error(ast, "Error: list has multiple types. {} and {}"
+                      .format(prev_type, e['s_type']));
         prev_type = e['s_type']
     ast['s_type'] = '[' + prev_type + ']'
 
@@ -139,9 +138,8 @@ def _(ast, env):
         check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
-                print("Error: tuple has multiple types. {} and {}"
-                      .format(prev_type, e['s_type']))
-                exit(1)
+                 type_error(ast, "Error: tuple has multiple types. {} and {}"
+                      .format(prev_type, e['s_type']));
         prev_type = e['s_type']
     ast['s_type'] = '(' + prev_type + ')'
 
@@ -190,25 +188,27 @@ def _(ast, btc, env, top):
 @code_gen('assign')
 def _(ast, btc, env, top):
     #TODO: check that target is declared
-
-    target = ast['targets'][0] #no support for unpacking
+    #target = ast['targets'][0] #no support for unpacking
     #value = gen_bytecode(ast['value'])
-    gen_bytecode(ast['value'], btc, env, False)
-    globalp, index = env.get_store_index(target['id'])
-    op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
-    btc.extend([op, SOP_INT, index])
+    for target in ast['targets']:
+        gen_bytecode(ast['value'], btc, env, False)
+        globalp, index = env.get_store_index(target['id'])
+        op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
+        btc.extend([op, SOP_INT, index])
 
 @ast_check('assign')
 def _(ast):
     targets = ast['targets']
-    if len(targets) > 1:
-        #example: 'a,b=x'
-        syntax_error(ast, "unpacking is not supported")
-        return False
+    #if len(targets) > 1:
+    #    #example: 'a,b=x'
+    #    syntax_error(ast, "unpacking is not supported")
+    #    return False
     if targets[0]['type'] == 'starred':
         #example: '*a=x'
         syntax_error(ast, "starred assignment is not supported")
         return False
+    if ast['targets'][0]['type'] == 'tuple':
+        syntax_error(ast, "tuple assignment is not supported")
     return True
 
 @type_check('assign')
@@ -223,10 +223,9 @@ def _(ast, env):
     env.declare_type(target['id'], target['s_type'])
 
     if target['s_type'] != ast['value']['s_type']:
-        print("Error: cannot assign variable of type {} to type {}"
-                      .format(ast['targets']['s_type'], ast['value']['s_type']))
-        exit(1)
-
+        #TODO ??????
+        type_error(ast, "Error: cannot assign variable of type {} to type {}"
+                      .format(ast[targets]['s_type'], ast[value]['s_type']))
 
 
 ################################################################################
@@ -329,6 +328,17 @@ def _(ast):
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
 
+@type_check('call')
+def _(ast, env):
+    functionArgs = env.funcTypes[ast['func']['id']]
+    argNum = 0
+    for elem in ast['args']:
+        check_types(elem, env)
+        if elem['s_type'] != functionArgs.argTypes[argNum]:
+            type_error(ast, "Error: argument type {} does not match received argument type {}"
+              .format(functionArgs.argTypes[argNum], elem['s_type']))
+        argNum+=1
+    ast['s_type'] = functionArgs.returnType
 
 ################################################################################
 # if
@@ -397,6 +407,12 @@ def _(ast):
 # str
 @code_gen('function')
 def _(ast, btc, env, top):
+    argTypes = {}
+    argNum = 0;
+    for elem in ast['args']:
+        argTypes[argNum] = elem['argType']
+        argNum+=1
+    env.createFuncTypes(ast['name'], argTypes, ast['returns']['id'])
     not_implemented_error(ast)
 
 ################################################################################
@@ -450,7 +466,6 @@ comparison_ops = {'>': OP_GT,
                   'is': OP_IS}
 
 def gen_bytecode(ast, btc=None, env=None, top=True):
-    global _error
     if btc is None: btc = []
     if env is None: env = make_new_env()
     check_fn = _ast_check_switch_table.get(ast['type'])
@@ -465,9 +480,9 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
         fn(ast, btc, env, top)
         return btc
     else:
-        _error = True
         print("Error -- gen_bytecode(): unknown AST node type: '{}'"
               .format(ast['type']))
+        exit(1)
 
 def make_new_env():
     return env()
@@ -492,49 +507,42 @@ def check_types(ast, env):
 # error reporting functions
 
 def syntax_error(ast, message):
-    global _error
-    _error = True
     print("SYNTAX ERROR[{}:{}]: {}"
           .format(ast['lineno'], ast['col_offset'], message))
+    exit(1)
 
 def not_implemented_error(ast):
-    global _error
-    _error = True
     print("ERROR[{}:{}]: node type '{}' is not implemented"
           .format(ast['lineno'], ast['col_offset'], ast['type']))
+    exit(1)
 
+def type_error(ast, message):
+    print("TYPE ERROR[{}:{}]: type {} is not compatible with type {}"
+          .format(ast['lineno'], ast['col_offset'], message))
+    exit(1)
 
 ################################################################################
 
 def compile_str(code : str) -> list:
-    global _error
     ast = make_ast(code)
-    #print(ast)
-    _error = False
     env = make_new_env()
     bytecode = []
     for a in ast:
         if type_checking:
             check_types(a, env)
         gen_bytecode(a, bytecode, env)
-    if _error:
-        exit(1)
     #TODO: CHECK TYPES
     #COMPILE
     return bytecode
 
 #TODO: instead of handling errors like gcc, just terminate after the first one
 def compile_ast(ast : list) -> list:
-    global _error
-    _error = False
     env = make_new_env()
     bytecode = []
     for a in ast:
         if type_checking:
             check_types(a, env)
         gen_bytecode(a, bytecode, env)
-    if _error:
-        exit(1)
     #TODO: CHECK TYPES
     #COMPILE
     return bytecode
