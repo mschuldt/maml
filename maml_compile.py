@@ -271,17 +271,18 @@ def _(ast, env):
     t_r = ast['right']['s_type']
     op = ast['op']
     if t_l not in valid_bin_op_types[op]:
-        print("Invalid type for left operand: {}. Expected {}"
+        print("Invalid type for left operand: '{}'. Expected '{}'"
               .format(tl, reduce(lambda a,b: a + " or " + b, valid_bin_op_types[op])))
         exit(1)
 
     if t_r not in valid_bin_op_types[op]:
-        print("TypeError: Invalid type for left operand: {}. Expected {}"
-              .format(tr, reduce(lambda a,b: a + " or " + b, valid_bin_op_types[op])))
+        print("TypeError: Invalid type for right operand: '{}'. Expected '{}'"
+              .format(t_r, reduce(lambda a,b: a + "' or '" + b, valid_bin_op_types[op])))
         exit(1)
     if t_l != t_r:
         print("TypeError: type for {} do not match, '{}' and '{}'"
-              .format(t_l, t_r))
+              .format(op, t_l, t_r))
+        exit(1)
     ast['s_type'] = t_l
 
 @ast_check('binop')
