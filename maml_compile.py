@@ -215,17 +215,19 @@ def _(ast):
 def _(ast, env):
     #TODO: this currently only works for assignment to variables
     check_types(ast['value'], env)
-    target = ast['targets'][0]
-    if auto_var_types:
-        target['s_type'] = ast['value']['s_type']
-    else:
-        check_types(target, env)
-    env.declare_type(target['id'], target['s_type'])
+    val_type = ast['value']['s_type']
 
-    if target['s_type'] != ast['value']['s_type']:
-        #TODO ??????
-        type_error(ast, "Error: cannot assign variable of type {} to type {}"
-                      .format(ast[targets]['s_type'], ast[value]['s_type']))
+    for target in ast['targets']:
+        if auto_var_types:
+            target['s_type'] = val_type
+        else:
+            check_types(target, env)
+        env.declare_type(target['id'], target['s_type'])
+
+        if target['s_type'] != val_type:
+            #TODO ??????
+            type_error(ast, "Error: cannot assign variable of type {} to type {}"
+                          .format(ast[targets]['s_type'], ast[value]['s_type']))
 
 
 ################################################################################
