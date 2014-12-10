@@ -11,6 +11,7 @@
 - [ ] Chained comparison (ex: 1 < 2 <= 3) 
 - [ ] standard functions for working with arrays/lists + print etc
       the compiler should use the available types to output correct function
+
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] Any expression that can be at the top level that normally
@@ -23,6 +24,7 @@
 - [ ] static typing should not be optional - only auto type declarations
 - [ ] allow_type_reassign should be set to False by default
       currently to to True because tests fail otherwise
+
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
 - [ ] Separate function that wraps malloc and check if mem is available
@@ -49,7 +51,7 @@ traverse the ast object without converting to string and evaluating
 
 * Miscellaneous
 - [ ] Functions for reporting errors (instead of using print + exit everytime)
-- [ ] need test framework for testing invalid programs
+- [X] need test framework for testing invalid programs
       current version does not work because it only diffs with the
       VM output.
 - [ ] configuration file compilation + vm features

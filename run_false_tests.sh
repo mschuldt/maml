@@ -19,8 +19,8 @@ failed=""
 if [ $1 ] ; then
     files=$1
 else
-    cd tests/
-    files=$(ls *.py) #because ls tests/*py includes the directory
+    cd false_tests/
+    files=$(ls *.py)  # because ls false_tests/*py includes the directory
     cd ..
 fi
 echo $files
@@ -29,21 +29,17 @@ for f in $files ;
 do
     echo -n "testing ${f}..."    
 
-    file=tests/$f
-    expect=${file}.out 
-    test_out=${file}.test_out
+    file=false_tests/$f
+    expect=${file}.err
+    error_out=${file}.err_out
 
-    rm -f $test_out
+    rm -f $error_out
 
-    # TODO: direct stderrr to vm_out as well
-    ./avm > $test_out &
-    pid=$!
-
-    python3 maml.py $file
+    python3 maml.py $file > ${file}.err_out
 
     wait
 
-    diff $expect $test_out > /dev/null
+    diff $expect $error_out > /dev/null
     ret=$?
     if [ $ret != 0 ] ; then
         echo "fail"
@@ -53,7 +49,7 @@ do
     else
         echo "ok"
         good=$((good + 1))
-        rm -f $test_out
+        rm -f $error_out
         rm -f ${expect}.bc
     fi
 done
@@ -70,5 +66,3 @@ fi
 
 echo $bad tests failed
 echo $good tests passed
-
-
