@@ -140,6 +140,18 @@ def _(ast, env):
     ast['s_type'] = '(' + prev_type + ')'
 
 ################################################################################
+# declaration
+
+@code_gen('declaration')
+def _(ast, btc, env, top):
+    pass
+
+@type_check('declaration')
+def _(ast, env):
+    #TODO:
+    env.declare_type(ast['name'], ast['s_type'])
+
+################################################################################
 # name
 
 #TODO: 'name' and 'assign' still need to be tested with local names
@@ -202,7 +214,7 @@ def _(ast, env):
         print("Error: cannot assign variable of type {} to type {}"
                       .format(ast[targets]['s_type'], ast[value]['s_type']))
         exit(1)
-    
+
 
 ################################################################################
 # expr
