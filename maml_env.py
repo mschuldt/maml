@@ -4,7 +4,7 @@ class env:
         self.names = {}
         self.parent = parent
         self.global_names = set()
-        self.types = build_int_types
+        self.types = built_in_types
         self.n_names = 0
         self.label_counter = -1
         self.funcTypes = {}
@@ -97,6 +97,8 @@ class env:
             self.returnType = returnType
 
 
-build_int_types = {'true' : 'int',
+built_in_types = {'true' : 'int',
                    'false' : 'int',
                    'none': 'int'}
+
+
