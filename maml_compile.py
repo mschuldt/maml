@@ -260,6 +260,7 @@ def _(ast, env):
                        ", got '{}'".format(ast['targets'][0]['id'],
                                            ast['targets'][0]['s_type'],
                                            ast['value']['s_type']))
+    ast['s_type'] = 'None'
 
 
 ###############################################################################
@@ -437,6 +438,7 @@ def _(ast, env):
         check_types(node, env)
     for node in ast['else']:
         check_types(node, env)
+    ast['s_type'] = 'None'
 
 ###############################################################################
 # while
@@ -467,6 +469,7 @@ def _(ast):
 def _(ast, env):
     for node in ast['body']:
         check_types(node, env)
+    ast['s_type'] = 'None'
 
 ###############################################################################
 # compare
@@ -505,7 +508,7 @@ comparison_ops = {'>': OP_GT,
                   'is': OP_IS}
 
 ###############################################################################
-# str
+# function
 
 
 @code_gen('function')
@@ -517,9 +520,6 @@ def _(ast, btc, env, top):
         argNum += 1
     env.createFuncTypes(ast['name'], argTypes, ast['returns']['id'])
     not_implemented_error(ast)
-
-###############################################################################
-# 'function'
 
 
 @ast_check('function')
@@ -597,7 +597,7 @@ def check_types(ast, env):
     if fn:
         fn(ast, env)
     else:
-        print("Error: ast node '{}' has no type analysis function"
+        print("Error: ast node '{}' has no @type_check type analysis function"
               .format(ast['type']))
         exit(1)
 
@@ -633,6 +633,10 @@ def compile_str(code: str) -> list:
     for a in ast:
         if type_checking:
             check_types(a, env)
+            if not a.get('s_type'):
+                print("Error: node '{}' was not annotated with static type"
+                      .format(a['type']))
+                exit(1)
         gen_bytecode(a, bytecode, env)
     # TODO: CHECK TYPES
     # COMPILE
@@ -646,6 +650,10 @@ def compile_ast(ast: list) -> list:
     for a in ast:
         if type_checking:
             check_types(a, env)
+            if not a.get('s_type'):
+                print("Error: node '{}' was not annotated with static type"
+                      .format(a['type']))
+                exit(1)
         gen_bytecode(a, bytecode, env)
     # TODO: CHECK TYPES
     # COMPILE
