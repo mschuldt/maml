@@ -9,6 +9,8 @@ class env:
         self.label_counter = -1
         self.funcTypes = {}
         self.allow_type_reassign = allow_type_reassign
+        self.while_start_labels = []
+        self.while_end_labels = []
         # TODO: track the size of the variable arrays in the Arduino
 
     def get_store_index(self, name):
@@ -107,6 +109,23 @@ class env:
             return self.parent.is_declared(name)
         return name in self.types
 
+    def start_while(self, start_label, end_label):
+        self.while_start_labels.append(start_label)
+        self.while_end_labels.append(end_label)
+
+    def end_while(self):
+        if not self.while_start_labels:
+            print("Error: env: ending while loop but label stack is empty")
+            exit()
+        self.while_start_labels.pop()
+        self.while_end_labels.pop()
+
+    def get_while_start_labele(self):
+        self.while_start_labels[len(self.while_end_labels)-1]
+
+    def get_end_start_labele(self):
+        self.while_end_labels[len(self.while_end_labels)-1]
+
     def createFuncTypes(self, funcName, argTypes, returnType):
         self._funcTypes[funcName] = self.funcTypes(argTypes, returnType)
 
@@ -119,5 +138,3 @@ class env:
 built_in_types = {'true': 'int',
                   'false': 'int',
                   'none': 'int'}
-
-

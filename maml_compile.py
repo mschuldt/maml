@@ -447,12 +447,14 @@ def _(ast, btc, env, top):
     # [start] <test> OP_IF <jump end> <body> <jump start> [end]
     start_l = env.make_label()
     end_l = env.make_label()
+    env.start_while(start_l, end_l)
     btc.extend([SOP_LABEL, SOP_INT, start_l])
     gen_bytecode(ast['test'], btc, env, False)
     btc.extend([OP_IF, OP_JUMP, SOP_INT, end_l])
     for node in ast['body']:
         gen_bytecode(node, btc, env, top)
     btc.extend([OP_JUMP, SOP_INT, start_l, SOP_LABEL, SOP_INT, end_l])
+    env.end_while()
 
 
 @ast_check('while')
