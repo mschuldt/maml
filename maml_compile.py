@@ -4,10 +4,11 @@
 #       and have avm.c adjust the stacksize as needed ast start of
 #       block execution.
 
-type_checking = True         #enable static type checking
-auto_var_types = True        #auto detect variable type
-                             #(x = 1 becomes equivalent to x <- int; x = 1)
-allow_type_reassign = True   #enable re-declaring variable type
+
+type_checking = True        # enable static type checking
+auto_var_types = True       # auto detect variable type
+                            # (x = 1 becomes equivalent to x <- int; x = 1)
+allow_type_reassign = True  # enable re-declaring variable type
 verbose = True
 compile_decorator = 'arduino'
 
@@ -255,8 +256,10 @@ def _(ast, env):
         env.declare_type(target['id'], target['s_type'])
 
         if target['s_type'] != val_type:
-            type_error(ast, "incompatible assignment. var '{}' has type '{}', got '{}'".format(ast['targets'][0]['id'], ast['targets'][0]['s_type'], ast['value']['s_type']))
-
+            type_error(ast, "incompatible assignment. var '{}' has type '{}'" +
+                       ", got '{}'".format(ast['targets'][0]['id'],
+                                           ast['targets'][0]['s_type'],
+                                           ast['value']['s_type']))
 
 
 ###############################################################################
