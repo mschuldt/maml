@@ -1,4 +1,3 @@
-
 * Language features
 - [ ] Break and continue for while loops
 - [ ] For loops (mark unimplemented?)
@@ -9,7 +8,7 @@
 - [X] >, >=, <=, ==
 - [X] Augmented assignment
 - [X] Chained assignment (e.g. a = b = 2)
-- [-] Chained comparison (ex: 1 < 2 <= 3) __lower priority__
+- [ ] Chained comparison (ex: 1 < 2 <= 3) 
 - [ ] standard functions for working with arrays/lists + print etc
       the compiler should use the available types to output correct function
 * Compilation
@@ -47,12 +46,13 @@ traverse the ast object without converting to string and evaluating
       because the vm stops reading when it reaches \0
       and the rest of the characters are interpreted as opcodes
 - [ ] bug: in @code_gen('assign'), the assigned value should only be evaluated once
+
 * Miscellaneous
-- [ ] Functions for reporting errors (instead of using print + exit everytime )
+- [ ] Functions for reporting errors (instead of using print + exit everytime)
 - [ ] need test framework for testing invalid programs
       current version does not work because it only diffs with the
       VM output.
 - [ ] configuration file compilation + vm features
-   static type configs
-   debugging vars
-   features to include in the compiled vm
+      static type configs
+      debugging vars
+      features to include in the compiled vm

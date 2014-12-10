@@ -49,7 +49,7 @@ def Module(body):
     return body
 
 
-def arg(arg, annotation, lineno, col_offset):
+def arg(arg, annotation, lineno=None, col_offset=None):
     return {
         'arg': arg,
         'argType': annotation['id']
@@ -352,6 +352,15 @@ def While(test, body, orelse, lineno=None, col_offset=None):
             'col_offset': col_offset
             }
 
+def Break(lineno=None, col_offset=None):
+    return {'lineno': lineno,
+            'col_offset': col_offset
+        }
+
+def Continue(lineno=None, col_offset=None):
+    return {'lineno': lineno,
+            'col_offset': col_offset
+    }
 
 def AugAssign(target, op, value, lineno=None, col_offset=None):
     return {'type': 'assign',
