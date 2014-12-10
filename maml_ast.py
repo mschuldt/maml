@@ -38,9 +38,10 @@ def Compare (left, ops, comparators, lineno=None, col_offset=None):
                             's_type':t,
                             'lineno': lineno,
                             'col_offset': col_offset}
-    return {'type': ':compare',
+    return {'type': 'compare',
             'left': left,
-            'comparators' : comparators,
+            'ops': ops,
+            'comparators': comparators,
             'lineno': lineno,
             'col_offset': col_offset}
 
