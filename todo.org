@@ -2,13 +2,13 @@
 - [ ] function for reporting errors (instead of using print + exit everytime )
 * langauge features
 - [ ] chain together multiple blocks or send multiple blocks at once
-- [ ] unary op
+- [X] unary op
 - [ ] most binary ps
-- [ ] most conditionals
+- [X] most conditionals
 - [ ] for loops (mark unimplemented?)
 - [X] arithmetic expressions (a*b, a/b, a-b, a+b)
 - [X] >, >=, <=, ==
-- [ ] augmented assignment
+- [X] augmented assignment
 - [ ] chained comparison (ex: 1 < 2 <= 3)
 - [ ] break and continue for while loops
 - [ ] a = b = c ?
