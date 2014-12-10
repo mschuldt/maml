@@ -251,6 +251,37 @@ def _(ast, btc, env, top):
     gen_bytecode(ast['right'], btc, env, False)
     btc.append(bin_ops[ast['op']])
 
+valid_bin_op_types = {"+": ['int', 'float', 'str'],
+                      "*": ['int', 'float'],
+                      "-": ['int', 'float'],
+                      "/": ['int', 'float'],
+                      "//": ['int', 'float'],
+                      "**": ['int', 'float'],
+                      "^": ['int', 'float'],
+                      "|": ['int', 'float'],
+                      "&": ['int', 'float'],
+                      "%": ['int', 'float']}
+@type_check('binop')
+def _(ast, env):
+    check_types(ast['left'], env)
+    check_types(ast['right'], env)
+    t_l = ast['left']['s_type']
+    t_r = ast['right']['s_type']
+    op = ast['op']
+    if t_l not in valid_bin_op_types[op]:
+        print("Invalid type for left operand: {}. Expected {}"
+              .format(tl, reduce(lambda a,b: a + " or " + b, valid_bin_op_types[op])))
+        exit(1)
+
+    if t_r not in valid_bin_op_types[op]:
+        print("TypeError: Invalid type for left operand: {}. Expected {}"
+              .format(tr, reduce(lambda a,b: a + " or " + b, valid_bin_op_types[op])))
+        exit(1)
+    if t_l != t_r:
+        print("TypeError: type for {} do not match, '{}' and '{}'"
+              .format(t_l, t_r))
+    ast['s_type'] = t_l
+
 @ast_check('binop')
 def _(ast):
     if ast['op'] in bin_ops:
