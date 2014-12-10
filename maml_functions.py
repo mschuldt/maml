@@ -2,6 +2,7 @@
 
 function_compiler_functions = {}
 
+
 def compile(name):
     def decorator(fn):
         function_compiler_functions[name] = fn
@@ -9,19 +10,16 @@ def compile(name):
 
 
 @compile('print')
-def _(ast, env):
+def _(ast, btc, env, top):
     if ast['s_type'] == 'int':
-        pass #generate call to print_i    
+        pass  # generate call to print_i
     elif ast['s_type'] == 'str':
-        pass #generate call to print_s
+        pass  # generate call to print_s
     else:
-        pass #other
+        pass  # other
+
 
 @compile('cast')
-def _(ast, env):
+
+def _(ast, btc, env, top):
     pass #TODO
-
-    
-
-        
-        

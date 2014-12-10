@@ -4,10 +4,11 @@
 #       and have avm.c adjust the stacksize as needed ast start of
 #       block execution.
 
-type_checking = True         #enable static type checking
-auto_var_types = True        #auto detect variable type
-                             #(x = 1 becomes equivalent to x <- int; x = 1)
-allow_type_reassign = True  #enable re-declaring variable type
+
+type_checking = True        # enable static type checking
+auto_var_types = True       # auto detect variable type
+                            # (x = 1 becomes equivalent to x <- int; x = 1)
+allow_type_reassign = True  # enable re-declaring variable type
 verbose = True
 compile_decorator = 'arduino'
 
@@ -255,8 +256,10 @@ def _(ast, env):
         env.declare_type(target['id'], target['s_type'])
 
         if target['s_type'] != val_type:
-            type_error(ast, "incompatible assignment. var '{}' has type '{}', got '{}'".format(ast['targets'][0]['id'], ast['targets'][0]['s_type'], ast['value']['s_type']))
-
+            type_error(ast, "incompatible assignment. var '{}' has type '{}'" +
+                       ", got '{}'".format(ast['targets'][0]['id'],
+                                           ast['targets'][0]['s_type'],
+                                           ast['value']['s_type']))
 
 
 ###############################################################################
@@ -358,13 +361,20 @@ def _(ast, btc, env, top):
     nargs = len(ast['args'])
     for arg in ast['args']:
         gen_bytecode(arg, btc, env, False)
-    index = primitives.get(ast['func']['id'], None)
+    name = ast['func']['id']
+    index = primitives.get(name, None)
+    transform_fn = function_compiler_functions.get(name)
     if index is not None:  # Calling a primative
         # We have to use SOP_INT here so that the bytecode expansion
         # can expand the numbers
+        if transform_fn:
+            print("Error: primitive function '{}' has tranform function"
+                  .format(name))
         btc.extend([SOP_PRIM_CALL, SOP_INT, nargs, SOP_INT, index])
         if top:
             btc.append(OP_POP)
+    elif transform_fn:
+        transform_fn(ast, btc, env, top)
     else:  # Calling a user defined function
         print("Error -- not implemented: calling non-primitives ('{}')"
               .format(ast['func']['id']))

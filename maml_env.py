@@ -79,8 +79,8 @@ class env:
 
         type_ = self.types.get(name)
         if type_ and type_ != typ and not self.allow_type_reassign:
-            print("Error: cannot re-declare '{}' as type '{}'. " +
-                  "was type '{}'".format(name, typ, type_))
+            print("Error: cannot re-declare '{}' as type '{}'. was type '{}'"
+                  .format(name, typ, type_))
             exit(1)
         self.types[name] = typ
 

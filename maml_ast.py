@@ -4,32 +4,25 @@ import ast
 from sys import argv
 
 valid_types = ['int', 'str', 'float', 'func']
+#TODO: user defined types
 
-
-def get_type(ast):
-    """
-    Returns the type of ast or None if it does not describe one
-    """
-
-    format_str = "{}"
-    if ast['type'] == 'list':
-        if len(ast['elts']) == 1:
-            format_str = "[{}]"
-            ast = ast['elts'][0]
-        else:
-            return False
-    elif ast['type'] == 'tuple':
-        if len(ast['elts']) == 1:
-            format_str = "({})"
-            ast = ast['elts'][0]
-        else:
-            return False
-    if ast['type'] == 'name':
-        t = ast['id']
-        if t not in valid_types:
-            return None
-    return format_str.format(t)
-
+def create_type_obj(ast):
+    if type(ast) is dict:
+        type_ = ast['type']
+        if type_ == 'list' or type_ == 'tuple':
+            if len(ast['elts']) != 1:
+                #TODO: we could make an option to declare types such as (int, str)
+                return False
+            inner = create_type_obj(ast['elts'][0])
+            if not inner:
+                return False
+            format_str = "[{}]" if type_ == 'list' else "({})"
+            return format_str.format(inner)
+        if type_ == 'name':
+            if ast['id'] not in valid_types:
+                return False
+            return ast['id']
+    return None
 
 def Compare(left, ops, comparators, lineno=None, col_offset=None):
     if len(ops) == 1 and ops[0] == '<':
@@ -37,7 +30,7 @@ def Compare(left, ops, comparators, lineno=None, col_offset=None):
         if left['type'] == 'name':
             c = comparators[0]
             if c['type'] == 'unaryOp' and c['op'] == 'usub':
-                t = get_type(c['operand'])
+                t = create_type_obj(c['operand'])
                 if t:
                     return {'type': 'declaration',
                             'name': left['id'],
