@@ -70,12 +70,14 @@ class Maml_serial:
         f.close()
 
 
-    def find_arduino_port():
+    def find_arduino_port(self):
         def ping(s):
+            s.flushInput()
             s.write(bytes(chr(SOP_PING), 'UTF-8'))
-            n = s.read()
+            n = s.readline()
             if n:
-                return int(n) == SOP_ALIVE
+                print("received:", n)
+                return n.strip() == str(SOP_ALIVE)
 
         for port in list_serial_ports():
             print("trying port: {}...".format(port), end="")
@@ -88,7 +90,7 @@ class Maml_serial:
                 print("no")
             except serial.SerialException:
                 print("no")
-            return True
+        return False
 
 
 def expand_bytecode(bc):
