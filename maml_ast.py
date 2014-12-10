@@ -48,6 +48,12 @@ def Compare (left, ops, comparators, lineno=None, col_offset=None):
 def Module(body):
     return body
 
+def arg(arg, annotation, lineno, col_offset):
+    return {
+        'arg': arg,
+        'argType': annotation['id']
+    }
+
 def FunctionDef(name, args, body, decorator_list, returns, lineno=None, col_offset=None):
     return {'type': 'function',
             'name' : name,

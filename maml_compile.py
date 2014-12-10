@@ -272,6 +272,19 @@ def _(ast):
     if ast['kwargs']:
         syntax_error(ast, "kwargs args are not supported")
 
+@type_check('call')
+def _(ast, env):
+    functionArgs = env.funcTypes[ast['func']['id']]
+    argNum = 0
+    for elem in ast['args']:
+        check_types(elem, env)
+        if elem['s_type'] != functionArgs.argTypes[argNum]:
+            type_error(ast, "Error: argument type {} does not match received argument type {}"
+              .format(functionArgs.argTypes[argNum], elem['s_type']))
+        argNum+=1
+    ast['s_type'] = functionArgs.returnType
+
+
 ################################################################################
 # if
 
@@ -329,6 +342,12 @@ def _(ast):
 # str
 @code_gen('function')
 def _(ast, btc, env, top):
+    argTypes = {}
+    argNum = 0;
+    for elem in ast['args']:
+        argTypes[argNum] = elem['argType']
+        argNum+=1
+    env.createFuncTypes(ast['name'], argTypes, ast['returns']['id'])
     not_implemented_error(ast)
 
 ################################################################################
