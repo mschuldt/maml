@@ -1,4 +1,10 @@
 ///primitives used for testing
+
+_PRIMITIVE_
+void delay(int ms){
+  sleep(ms); //TODO: delay for milliseconds instead of seconds
+}
+
 _PRIMITIVE_
 int test_add(int a, int b){
   return a + b;
