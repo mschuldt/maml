@@ -29,6 +29,8 @@ def test():
     print_i(6 / 3) # 2
     print_i(6 / 4) # 1
     print_i(0 / 4) # 0
+
+    print_i(-1 + 2) # 1
     die()
 
 arduino.send(test)
