@@ -74,7 +74,6 @@ struct procedure{
 };
 
 void init_procedure(struct procedure* fn, int code_len, int n_locals){
-  fn->n_args = 0;
   fn->n_locals = n_locals;
   //+ 1 for the END_OF_BLOCK instruction
   fn->code = (void**)malloc(sizeof(void*)*(code_len + 1));
@@ -677,10 +676,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
       if (newblock){
         //TODO: error
       }
-      READ_INT_ARRAY()
+      //READ_INT_ARRAY()
       newfunction = (struct procedure*)malloc(sizeof(struct procedure));
-      newfunction->args = READ_INT_ARRAY();
-      newfunction->
+      //newfunction->args = READ_INT_ARRAY();
+      //newfunction->
       code_array = newfunction->code;
       break;
     case SOP_INT:
