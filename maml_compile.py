@@ -89,6 +89,10 @@ def _(ast):
 def _(ast, btc, env, top):
     btc.extend([SOP_INT, ast['n']])
 
+@type_check('int')
+def _(ast, env):
+    ast['s_type'] = 'int'
+
 ################################################################################
 # float
 @code_gen('float')
