@@ -25,6 +25,10 @@ from _prim import primitives
 #        @ast_check('X')
 #        def _(ast):
 #           ...
+#   * the type annotation and checking function is defined as
+#       @type_check('X')
+#       def _(ast, env):
+#           ...
 #   * The corresponding opcode is OP_X
 #   * maml_ast.py defines a function X (capitalized)
 #     that returns the AST node in dictionary format.
@@ -54,9 +58,9 @@ def type_check(name):
     return decorator
 
 ################################################################################
-# bytecode generation
+# bytecode generation, ast checking, and type annotation/checking
 
-# @code_gen function parameters:
+# function parameters:
 #   AST is the ast node
 #   BTC is the bytecode array
 #   ENV keeps track of variable index mappings and types
