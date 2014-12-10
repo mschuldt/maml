@@ -228,9 +228,7 @@ def _(ast, env):
         env.declare_type(target['id'], target['s_type'])
 
         if target['s_type'] != val_type:
-            #TODO ??????
-            type_error(ast, "cannot assign variable of type '{}' to type '{}'"
-                          .format(ast['targets'][0]['s_type'], ast['value']['s_type']))
+            type_error(ast, "incompatible assignment. var '{}' has type '{}', got '{}'".format(ast['targets'][0]['id'], ast['targets'][0]['s_type'], ast['value']['s_type']))
 
 
 ################################################################################
