@@ -5,6 +5,7 @@
 #     block execution.
 
 type_checking = True
+auto_var_types = True
 verbose = True
 compile_decorator = 'arduino'
 
@@ -213,12 +214,20 @@ def _(ast):
 
 @type_check('assign')
 def _(ast, env):
-    check_types(ast['targets'][0], env)
+    #TODO: this currently only works for assignment to variables
     check_types(ast['value'], env)
-    if ast['targets'][0]['s_type'] != ast['value']['s_type']:
+    target = ast['targets'][0]
+    if auto_var_types:
+        target['s_type'] = ast['value']['s_type']
+    else:
+        check_types(target, env)
+    env.declare_type(target['id'], target['s_type'])
+
+    if target['s_type'] != ast['value']['s_type']:
         print("Error: cannot assign variable of type {} to type {}"
                       .format(ast['targets']['s_type'], ast['value']['s_type']))
         exit(1)
+
 
 
 ################################################################################
