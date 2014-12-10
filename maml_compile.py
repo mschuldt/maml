@@ -4,9 +4,10 @@
 #     and have avm.c adjust the stacksize as needed ast start of
 #     block execution.
 
-type_checking = True
-auto_var_types = True
-allow_type_reassign = False
+type_checking = True         #enable static type checking
+auto_var_types = True        #auto detect variable type
+                             #(x = 1 becomes equivalent to x <- int; x = 1)
+allow_type_reassign = False  #enable re-declaring variable type
 verbose = True
 compile_decorator = 'arduino'
 
