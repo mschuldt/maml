@@ -195,11 +195,7 @@ void setup(void){
 
   loop();// variables are initialized the first time loop is called
 
-#if arduino
-  //TODO
-#else
-  printf("Ready.\n\n");
-#endif
+  SAY("Ready.\n\n");
 }
 
 void* labels[20];
