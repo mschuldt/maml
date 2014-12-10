@@ -6,7 +6,7 @@
 - [X] Arithmetic expressions (a*b, a/b, a-b, a+b)
 - [X] >, >=, <=, ==
 - [X] Augmented assignment
-- [ ] Chained comparison (ex: 1 < 2 <= 3)
+- [ ] Chained comparison (ex: 1 < 2 <= 3) __lower priority__
 - [ ] Break and continue for while loops
 - [X] Chained assignment (e.g. a = b = 2)
 
@@ -14,7 +14,8 @@
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] Any expression that can be at the top level that normally
       pushes to the stack will have to pop that element from the stack
-- [ ] Need way of declaring types of built in functions and variables
+- [ ] Declaration of built-in variable types
+- [ ] Need way of declaring types of built in functions
 
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
