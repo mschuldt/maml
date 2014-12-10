@@ -1,4 +1,3 @@
-
 avm: avm.c _opcodes.h _prim.c _prim.py
 	g++ -g -fpermissive avm.c -o avm
 #	g -std=c99 -g  avm.c -o avm
@@ -20,7 +19,9 @@ ino: avm.ino
 .PHONY: clean test ☃
 
 test: avm
-	./run_tests.sh
+	./run_tests.sh 
+	./run_false_tests.sh
+
 clean::
 	rm -f avm _prim.c _prim.py _opcodes.h avm.ino
 
