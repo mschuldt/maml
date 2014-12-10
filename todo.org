@@ -18,6 +18,8 @@
 - [ ] any expression that can be at the top level that normally
       pushes to the stack will have to pop that element from the stack
 - [ ] need way of declaring types of built in functions and variables
+- [ ] in @type_check('assign'), need to handle assignment to list indices etc
+      currently only supports assignment to variables
 * VM
 - [ ] need some way of growing the stack -> have a function or opcode to do that
 - [ ] separate function that wraps malloc and check if mem is available
