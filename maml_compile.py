@@ -36,6 +36,7 @@ from _prim import primitives
 
 _bytecode_switch_table = {}
 _ast_check_switch_table = {}
+_ast_type_check_switch_table = {}
 
 def node(name):
     def decorator(fn):
@@ -47,6 +48,10 @@ def check(name):
         _ast_check_switch_table[name] = fn
     return decorator
 
+def type_check(name):
+    def decorator(fn):
+        _ast_type_check_switch_table[name] = fn
+    return decorator
 
 ################################################################################
 # bytecode generation
@@ -64,6 +69,9 @@ def check(name):
 def _(ast, btc, env, top):
     btc.extend([SOP_STR, ast['s']])
 
+@type_check('str')
+def _(ast):
+    ast['_type'] = 'str'
 ################################################################################
 # int
 @node('int')
@@ -332,6 +340,18 @@ def make_new_env():
     return env()
 
 #TODO: should exit immediately on error, check functions should not return anyting
+
+################################################################################
+# type analysis
+
+def check_types(ast):
+    "checks for type correctness and annotates AST nodes with their type"
+    fn = _ast_type_check_switch_table(ast['type'])
+    if fn:
+        fn(ast)
+    else:
+        print("Error: ast node '{}' has no type analysis function"
+              .format(ast['type']))
 
 ################################################################################
 # error reporting functions
