@@ -20,9 +20,8 @@ to send compile and send code to a running VM
 * dependencies
  - g++ (The VM does not compile with LLVM)
  - python3
- - python-serial
- - Arduino IDE
-   http://arduino.cc/en/Main/Software
+ - pyserial  (pip3 install pyserial)
+ - Arduino IDE (http://arduino.cc/en/Main/Software)
  - Emacs
 * testing
 to run all tests in maml/tests/:
