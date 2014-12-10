@@ -155,11 +155,7 @@ def _(ast, btc, env, top):
 
 @type_check('name')
 def _(ast, env):
-    check_types(ast['id'], env)
-    if ast['id']['s_type'] != "str":
-        print("Error: cannot assign variable {}"
-                      .format(ast['id']['s_type']))
-        exit(1)
+    ast['s_type'] = env.get_type(ast['id'])
 
 ################################################################################
 # nameconstant
