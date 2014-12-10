@@ -71,7 +71,7 @@ def _(ast, btc, env, top):
 
 @type_check('str')
 def _(ast):
-    ast['_type'] = 'str'
+    ast['s_type'] = 'str'
 ################################################################################
 # int
 @node('int')
@@ -95,14 +95,29 @@ def _(ast, btc, env, top):
     btc.extend([OP_LIST, SOP_INT, len(elts)])
     #TODO: if len = 0 ==> NULL
 
+@type_check('list')
+def _(ast):
+    prev_type = None
+    for e in ast['elts']:
+        check_types(e)
+        if prev_type:
+            if prev_type != e['s_type']:
+                print("Error: list has multiple types. {} and {}"
+                      .format(prev_type, e['s_type']))
+                exit(1)
+        prev_type = e['s_type']
+    ast['s_type'] = 'l_' + prev_type
+
 ################################################################################
-# str
+# tuple
+
 @node('tuple')
 def _(ast, btc, env, top):
     pass
 
 ################################################################################
-# str
+# name
+
 #TODO: 'name' and 'assign' still need to be tested with local names
 @node('name')
 def _(ast, btc, env, top):
