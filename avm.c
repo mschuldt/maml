@@ -174,7 +174,7 @@ void setup(void){
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
-  globals = malloc(sizeof(void*)*max_globals);
+  globals = (void**)malloc(sizeof(void*)*max_globals);
 
 #if arduino // setup serial
   pinMode(2, INPUT);
