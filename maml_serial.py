@@ -27,6 +27,7 @@ class Maml_serial:
         self.port = port
         self.desktop = False
         self.vm_pid = None
+        self.serial_in = [] #lines of strings received from the serial port
 
     def send_codeblock(self, block):
         """
@@ -80,9 +81,20 @@ class Maml_serial:
         print("wrote file '{}'".format(BYTECODE_IN_FILE))
         f.close()
 
+    def read_all_lines(self, port):
+        lines = []
+        try:
+            while True:
+                line = port.readline()
+                if line:
+                    lines.append(line)
+                else:
+                    return lines
+        except:
+            return []
+
     def find_arduino_port(self):
         def ping(s):
-            s.flushInput()
             s.write(bytes(chr(SOP_PING), 'UTF-8'))
             n = s.read()
             if n:
@@ -93,8 +105,11 @@ class Maml_serial:
             try:
                 s = serial.Serial(port, 9600)
                 s.timeout = 0.1
+                lines = self.read_all_lines(s)
                 if ping(s):
                     print("yes")
+                    #save the lines from the arduino
+                    self.serial_in.extend(lines)
                     return port
                 print("no")
             except serial.SerialException:
