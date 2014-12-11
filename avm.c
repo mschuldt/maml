@@ -1,12 +1,11 @@
 // AVM - Arduino Virtual Machine
 
-//TODO: threaded code should be optional
-
 #define arduino 0
 #define SERIAL_RX_PIN 0
 #define SERIAL_INTR_NUM 0
 #define SERIAL_INTR_PIN 2 //pin that needs to be wired to SERIAL_RX_PIN
-//interrupt 0 is on pin 2
+//interrupt 0 is pin 2 on Uno and Mega2560, pin 3 on Learnardo
+
 #define DEBUG 0
 
 #define include_lists 1
@@ -595,7 +594,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
     SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
     DIE(1);//TODO: should return
   }
-
 #endif
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -613,7 +611,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
 
   int reading_str = false;
   void** code_array;
-  void* stack[5]; //?
 
   //TODO: this should be reduced on the arduino and allowed to grow/shrink
   int max_jumps = 100;
@@ -622,8 +619,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
   int n_labels = 0;
   void*** jumps = (void***)malloc(sizeof(void*)*max_jumps);
   void** labels = (void**)malloc(sizeof(void*)*max_labels);
-
-  int top = -1;
 
   char data;
   //number of bytecodes to read in
@@ -678,9 +673,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
     default:
       SAY("Error: unknown array type"); DIE(1);
     }
-    //#define REGISTER code_array[++i] = &int_regs[*(++curr)]
-#define POP stack[top--]
-#define PUSH(x) stack[++top] = (x)
 
     //#char op = CHAR_TO_INT(data);
     char op = data;
@@ -931,3 +923,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
   receiving_serial = false;
 #endif
 }
+
+//compiled size in bytes
+//10,042
+//11,898

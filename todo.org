@@ -33,6 +33,9 @@
 - [ ] Attach all kill signals to function that removes the lock file
 - [ ] Find someway of using an array for label addresses instead
       (so that we can dynamically allocate the memory and free it if needed)
+- [ ] threaded code should be optional
+- [ ] remove newlines in bytecode. interface to serial and file should be the same
+- [ ] what is the actual value of EOF? must make sure that it does not match a bytecode
 
 * AST
 Better way of transforming the ast - dont convert to dictionaries in that
