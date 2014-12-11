@@ -6,7 +6,7 @@
 C_OPCODE_FILE = "_opcodes.h"
 
 # if True, use strings instead of numbers for opcode values
-debug = True
+debug = False
 # example:
 #  when False: [22, 2, 9, 0]
 #  when True:  ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
