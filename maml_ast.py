@@ -399,7 +399,12 @@ def Subscript(value, slice, ctx, lineno=None, col_offset=None):
              'col_offset': col_offset
             }
 
-def Index(value):
+def Index(value, lineno=None, col_offset=None):
+    return { 'type': 'index',
+             'value': value,
+             'lineno': lineno,
+             'col_offset': col_offset
+    }
 
 
 def NameConstant(value, lineno=None, col_offset=None):

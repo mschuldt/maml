@@ -147,10 +147,21 @@ def _(ast, env):
 
 @code_gen('subscript')
 def _(ast, btc, env, top):
+    theArray = ast['value']
+    theIndex = ast['slice']['value']
+    gen_bytecode(theArray, btc, env, False)
+    gen_bytecode(theIndex, btc, env, False)
+    if ast['ctx'] == 'load':
+        btc.append(OP_LIST_LOAD)
+    else:
+        btc.append(OP_LIST_STORE)
 
 
 @type_check('subscript')
 def _(ast, env):
+    theArray = ast['value']['id']
+    check_types(theArray, env)
+    ast['s_type'] = theArray['s_type']
     
 
 ###############################################################################
@@ -292,6 +303,7 @@ def _(ast, btc, env, top):
 @type_check('expr')
 def _(ast, env):
     check_types(ast['value'], env)
+    print(ast['value']['type'])
     ast['s_type'] = ast['value']['s_type']
 
 ###############################################################################

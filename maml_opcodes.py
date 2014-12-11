@@ -6,7 +6,7 @@
 C_OPCODE_FILE = "_opcodes.h"
 
 # if True, use strings instead of numbers for opcode values
-debug = False
+debug = True
 # example:
 #  when False: [22, 2, 9, 0]
 #  when True:  ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
@@ -42,6 +42,8 @@ OP_IF = OP("OP_IF")
 OP_JUMP = OP("OP_JUMP")
 OP_LIST = OP("OP_LIST")
 OP_ARRAY = OP("OP_ARRAY")
+OP_LIST_LOAD = OP("OP_LIST_LOAD")
+OP_LIST_STORE = OP("OP_LIST_STORE")
 
 # bin ops
 OP_ADD = OP("OP_ADD")
