@@ -4,14 +4,15 @@ import ast
 from sys import argv
 
 valid_types = ['int', 'str', 'float', 'func']
-#TODO: user defined types
+# TODO: user defined types
+
 
 def create_type_obj(ast):
     if type(ast) is dict:
         type_ = ast['type']
         if type_ == 'list' or type_ == 'tuple':
             if len(ast['elts']) != 1:
-                #TODO: we could make an option to declare types such as (int, str)
+                # TODO: we could make an option to declare types such as (int, str)
                 return False
             inner = create_type_obj(ast['elts'][0])
             if not inner:
@@ -23,6 +24,7 @@ def create_type_obj(ast):
                 return False
             return ast['id']
     return None
+
 
 def Compare(left, ops, comparators, lineno=None, col_offset=None):
     if len(ops) == 1 and ops[0] == '<':
@@ -352,6 +354,7 @@ def While(test, body, orelse, lineno=None, col_offset=None):
             'col_offset': col_offset
             }
 
+
 def Break(lineno=None, col_offset=None):
     return {'type': 'break',
             'lineno': lineno,
@@ -386,6 +389,22 @@ def List(elts, ctx, lineno=None, col_offset=None):
             'lineno': lineno,
             'col_offset': col_offset
             }
+
+def Subscript(value, slice, ctx, lineno=None, col_offset=None):
+    return { 'type': 'subscript',
+             'value': value,
+             'slice': slice,
+             'ctx': ctx,
+             'lineno': lineno,
+             'col_offset': col_offset
+            }
+
+def Index(value, lineno=None, col_offset=None):
+    return { 'type': 'index',
+             'value': value,
+             'lineno': lineno,
+             'col_offset': col_offset
+    }
 
 
 def NameConstant(value, lineno=None, col_offset=None):

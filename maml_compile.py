@@ -143,12 +143,38 @@ def _(ast, env):
     ast['s_type'] = '[' + prev_type + ']'
 
 ###############################################################################
+# subscript
+
+@code_gen('subscript')
+def _(ast, btc, env, top):
+    theArray = ast['value']
+    theIndex = ast['slice']['value']
+    gen_bytecode(theArray, btc, env, False)
+    gen_bytecode(theIndex, btc, env, False)
+    if ast['ctx'] == 'load':
+        btc.append(OP_LIST_LOAD)
+    else:
+        btc.append(OP_LIST_STORE)
+
+
+@type_check('subscript')
+def _(ast, env):
+    theArray = ast['value']['id']
+    check_types(theArray, env)
+    ast['s_type'] = theArray['s_type']
+    
+
+###############################################################################
 # tuple
 
 
 @code_gen('tuple')
 def _(ast, btc, env, top):
-    pass
+    elts = ast['elts']
+    for e in elts:
+        gen_bytecode(e, btc, env, False)
+    print("compiling 'tuple', len(elts) = {}".format(len(elts)))
+    btc.extend([OP_ARRAY, SOP_INT, len(elts)])
 
 
 @type_check('tuple')
