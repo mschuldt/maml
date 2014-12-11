@@ -449,12 +449,7 @@ int main(){
 volatile boolean receiving_serial = false;
 #endif
 
-/* when this runs on the Arduino, 'serial_in' will be called
-   multiple times while a single string of bytecodes is being
-   transferred. When it runs on Linux, it will only be called
-   once to read bytecodes in from a file. Bytecodes are communicated
-   using a persistent file for debugging purposes.
-*/
+
 #if arduino
 #define SKIP(ch, msg) if (Serial.read() != ch){         \
     Serial.print("Error -- skip: unexpected char");     \
@@ -467,7 +462,9 @@ volatile boolean receiving_serial = false;
   }
 #endif
 
-//TODO: equivalent functions for Arduino
+////////////////////////////////////////////////////////////////////////////////
+// read_byte
+
 #if arduino
 int read_byte(){
   while (!Serial.available()){
@@ -475,92 +472,106 @@ int read_byte(){
   }
   return Serial.read();
 }
+#define READ_BYTE() read_byte()
 #else
 int read_byte(FILE* fp){
   return fgetc(fp);
 }
+#define READ_BYTE() read_byte(fp)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+// read_int
 
 #if arduino
-int read_int(){
-  Serial.println("reading_int...");
-  char integer[10];
-  int i=0;
-  char ch;
-  while ((ch = read_byte()) != NUM_TERMINATOR){
-    Serial.print("read: ");
-    Serial.println(ch);
-    integer[i++] = ch;
-  }
-  Serial.println("out of while loop");
-  integer[i] = '\0';
-  Serial.println("almost done...");
-  return atoi(integer);
-}
+int read_int()
 #else
-int read_int(FILE* fp){
-  char integer[10];
-  int i=0;
-  char ch;
-  while ((ch = fgetc(fp)) != NUM_TERMINATOR){
-    integer[i++] = ch;
-    SKIP('\n', "(read_int)");
+  int read_int(FILE* fp)
+#endif
+{
+    char integer[10];
+    int i=0;
+    char ch;
+    while ((ch = fgetc(fp)) != NUM_TERMINATOR){
+      integer[i++] = ch;
+    }
+    integer[i] = '\0';
+    return atoi(integer);
   }
-  SKIP('\n', "(read_int)");
-  integer[i] = '\0';
-  return atoi(integer);
-}
+#if arduino
+#define READ_INT() read_int()
+#else
+#define READ_INT() read_int(fp)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+// read_string
+
 #if arduino
-struct string* read_string(){
-  //TODO
-}
+struct string* read_string()
 #else
-struct string* read_string(FILE* fp){
-  int n = read_int(fp);
+  struct string* read_string(FILE* fp)
+#endif
+{
+  int n = READ_INT();
   //TODO: check that we have enough mem
   char* s = (char*)malloc(sizeof(char)*n+1);
   struct string *str = (struct string*)malloc(sizeof(struct string));
   str->s = s;
   str->len = n;
   int i = 0;
-  while (*s++ = fgetc(fp)){
+  while (*s++ = READ_BYTE()){
     if (++i > n){
       SAY("Error: max string size exceeded\n"); DIE(1);
     }
-    SKIP('\n', "(read_int)");
   }
-  SKIP('\n', "(read_int)");
   *s = '\0';
   return str;
 }
-#endif
 #if arduino
-int* read_int_array(){
-  //TODO
-}
+#define READ_STRING() read_string()
 #else
-int* read_int_array(FILE* fp){
+#define READ_STRING() read_string(fp)
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+// read_int_array
+
+#if arduino
+int* read_int_array()
+#else
+  int* read_int_array(FILE* fp)
+#endif
+{
   int n = read_int(fp);
   //TODO: check that we have enough mem
   int* a = (int*)malloc(sizeof(int)*n);
   int i = 0;
-  while (*a++ = fgetc(fp)){
+  while (*a++ = READ_BYTE()){
     if (++i > n){
       SAY("Error: max int array size exceeded"); DIE(1);
     }
-    SKIP('\n', "(read_int_array)");
   }
-  SKIP('\n', "(read_int_array)");
   return a;
 }
+#if arduino
+#define READ_INT_ARRAY() read_int_array()
+#else
+#define READ_INT_ARRAY() read_int_array(fp)
 #endif
+
+////////////////////////////////////////////////////////////////////////////////
 
 //TODO: how to handle a read signal while a read is already in progress?
 
 #define CHAR_TO_INT(c) ((c) - 48)
+
+/* when this runs on the Arduino, 'serial_in' will be called
+   multiple times while a single string of bytecodes is being
+   transferred. When it runs on Linux, it will only be called
+   once to read bytecodes in from a file. Bytecodes are communicated
+   using a persistent file for debugging purposes.
+*/
 
 void serial_in(){ //serial ISR (interrupt service routine)
 #if arduino
@@ -568,11 +579,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
   receiving_serial = true;
   //for serial to work, we need to re-enable interrupts
   interrupts();
-  switch (read_byte()){
-  case SOP_PING:
-    Serial.write(SOP_ALIVE);
-    receiving_serial = false;
-  }
 
 #else
   //set lock file so that other processes will not interrupt this one
@@ -589,26 +595,20 @@ void serial_in(){ //serial ISR (interrupt service routine)
     DIE(1);//TODO: should return
   }
 
-  switch (fgetc(fp)){
+#endif
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // everything below this should use macros to read input
+  // instead of reading from the file or serial directly
+
+  switch (READ_BYTE()){
   case SOP_PING:
-    printf("Alive.");
-  }
-#endif
-
+    SAY(SOP_ALIVE);
 #if arduino
-
-#define READ_INT() read_int()
-#define READ_STRING() read_string()
-#define READ_INT_ARRAY() read_int_array()
-#define READ_BYTE() read_byte()
-#define NL //nothing
-#else
-#define READ_INT() read_int(fp)
-#define READ_STRING() read_string(fp)
-#define READ_INT_ARRAY() read_int_array(fp)
-#define READ_BYTE() read_byte(fp)
-#define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
+    receiving_serial = false;
 #endif
+    return;
+  }
 
   int reading_str = false;
   void** code_array;
@@ -639,49 +639,27 @@ void serial_in(){ //serial ISR (interrupt service routine)
   void** any_array;
 #define TYPE_ANY 1
 #define TYPE_INT 2
-#if arduino
-  Serial.println("point B");
-#endif
+  //  SAY("point B");
   while (1){//until terminator is seen
-#if arduino
-    Serial.println("point C");
-#endif
+    //    SAY("point C");
     if (total == 0){
-#if arduino
-      Serial.println("point D");
-#endif
+      //      SAY("point D");
       //the first number specifies how many bytecodes are left
       total = (int)READ_INT();
       if (total == 0){
-#if arduino
-        Serial.println("point E");
-#endif
+        //        SAY("point E");
         return;
       }
-#if arduino
-      Serial.println("point F");
-#endif
+      //      SAY("point F");
       continue;
     }
 
-#if arduino
-    Serial.println("waiting..");
-    while (!Serial.available()){
-      //wait.
-    }
-    data = Serial.read();
-    Serial.print("received: ");
-    Serial.println(data);
-#else
-    data = fgetc(fp);
-    if (data == '\n'){
-      continue;
-    }
+    data = READ_BYTE();
+
     if (data == EOF){
       printf("ERROR: no terminator in bytecode file '%s'\n", BYTECODE_IN_FILE);
       exit(1);//??
     }
-#endif
 
     switch (reading_array){
     case 0: break;
@@ -746,14 +724,12 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array = newfunction->code;
       break;
     case SOP_INT:
-      NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_INT();
       break;
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
-      NL;
       // get the primitives function pointer
-      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
+      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)");
       void* tmp;
       int index;
       // get the address for the label that calls with that # args
@@ -778,7 +754,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
         SAY("ERROR: (current) max args to primitive is 6\n");
       }
       code_array[i++] = tmp;
-      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)"); NL;
+      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)");
       //now read in function pointer
       index = READ_INT();
       if (index < 0 || index >= n_primitives){
@@ -793,14 +769,12 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = primitives[index];
       break;
     case OP_GLOBAL_LOAD:
-      NL;
       code_array[i++] = l_load_global;
-      SKIP(SOP_INT, "(in case global_load)"); NL;
+      SKIP(SOP_INT, "(in case global_load)");
       goto read_globals_index;
     case OP_GLOBAL_STORE:
-      NL;
       code_array[i++] = l_store_global;
-      SKIP(SOP_INT, "(in case global_store)"); NL;
+      SKIP(SOP_INT, "(in case global_store)");
     read_globals_index:
       index = READ_INT();
       if (index < 0 || index > max_globals){
@@ -809,63 +783,49 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = (void*)index;
       break;
     case OP_ADD:
-      NL;
       code_array[i++] = l_add;
       break;
     case OP_MULT:
-      NL;
       code_array[i++] = l_mult;
       break;
     case OP_SUB:
-      NL;
       code_array[i++] = l_sub;
       break;
     case OP_DIV:
-      NL;
       code_array[i++] = l_div;
       break;
     case OP_GT:
-      NL;
       code_array[i++] = l_gt;
       break;
     case OP_LT:
-      NL;
       code_array[i++] = l_lt;
       break;
     case OP_EQ:
-      NL;
       code_array[i++] = l_eq;
       break;
     case OP_NOT_EQ:
-      NL;
       code_array[i++] = l_notEq;
       break;
     case OP_LT_EQ:
-      NL;
       code_array[i++] = l_ltEq;
       break;
     case OP_GT_EQ:
-      NL;
       code_array[i++] = l_gtEq;
       break;
     case OP_RETURN:
-      NL;
       code_array[i++] = l_ret;
       break;
     case OP_POP:
-      NL;
       code_array[i++] = l_pop;
       break;
     case SOP_STR:
-      NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_STRING();
       break;
 #if include_lists
     case OP_LIST:
-      NL;
       code_array[i++] = l_list;
-      SKIP(SOP_INT, "(in case op_list)"); NL;
+      SKIP(SOP_INT, "(in case op_list)");
       n = READ_INT();
       if (n <= 0){
         SAY("Error: (op_list) invalid length"); DIE(1);
@@ -875,33 +835,29 @@ void serial_in(){ //serial ISR (interrupt service routine)
       break;
 #endif
     case OP_ARRAY:
-      NL;
       code_array[i++] = l_tuple;
-      SKIP(SOP_INT, "(in case op_array)"); NL;
+      SKIP(SOP_INT, "(in case op_array)");
       n = READ_INT();
       if( n <= 0 ) {
-          SAY("Error: (op_array) invalid length"); DIE(1);
+        SAY("Error: (op_array) invalid length"); DIE(1);
       }
       code_array[i++] = (void*)n;
       break;
     case OP_IF:
-      NL;
       code_array[i++] = l_if;
       break;
     case OP_JUMP:
-      NL;
       code_array[i++] = l_jump;
       if (n_jumps > max_jumps-1){ //-1 because we add 2 items each time
         //TODO: extend the jumps array
         SAY("Error: max jumps exceeded\n"); DIE(1);
       }
       jumps[n_jumps++] = &code_array[i++];
-      SKIP(SOP_INT, "(in case op_jump)"); NL;
+      SKIP(SOP_INT, "(in case op_jump)");
       jumps[n_jumps++] = (void**)READ_INT(); //TODO: store them in a separate array
       break;
     case SOP_LABEL:
-      NL;
-      SKIP(SOP_INT, "(in case op_label)"); NL;
+      SKIP(SOP_INT, "(in case op_label)");
       index = READ_INT();
       if (index < 0){
         SAY("Error: invalid label index\n");  DIE(1);
@@ -913,16 +869,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
       labels[index] = &code_array[i];
       break;
     case SOP_NULL:
-      NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = NULL;
       break;
     case SOP_ARRAY:
-      NL;
       //TODO:
       break;
     case SOP_INT_ARRAY:
-      NL;
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = READ_INT_ARRAY();
       break;

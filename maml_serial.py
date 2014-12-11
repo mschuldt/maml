@@ -77,7 +77,7 @@ class Maml_serial:
         "write BYTECODE to file"
         f = open(BYTECODE_IN_FILE, 'w')
         for c in bytecode:
-            f.write(str(c)+'\n')
+            f.write(str(c))
         print("wrote file '{}'".format(BYTECODE_IN_FILE))
         f.close()
 
