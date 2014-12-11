@@ -121,7 +121,7 @@ class env:
         self.while_end_labels.pop()
 
     def get_while_start_label(self):
-        return self.while_start_labels[len(self.while_end_labels)-1]
+        return self.while_start_labels[len(self.while_start_labels)-1]
 
     def get_while_end_label(self):
         return self.while_end_labels[len(self.while_end_labels)-1]
