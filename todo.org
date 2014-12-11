@@ -9,7 +9,7 @@
 - [X] Augmented assignment
 - [X] Chained assignment (e.g. a = b = 2)
 - [ ] Chained comparison (ex: 1 < 2 <= 3) 
-- [ ] standard functions for working with arrays/lists + print etc
+- [X] standard functions for working with arrays/lists + print etc
       the compiler should use the available types to output correct function
 
 * Compilation
