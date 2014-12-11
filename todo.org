@@ -1,5 +1,5 @@
 * Language features
-- [ ] Break and continue for while loops
+- [X] Break and continue for while loops
 - [ ] For loops (mark unimplemented?)
 - [ ] Chain together multiple blocks or send multiple blocks at once
 - [X] Unary opCode
