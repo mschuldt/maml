@@ -3,7 +3,8 @@
 //TODO: threaded code should be optional
 
 #define arduino 0
-#define SERIAL_INTR_PIN 0
+#define SERIAL_RX_PIN 0
+#define SERIAL_INTR_PIN 2 //pin that needs to be wired to SERIAL_RX_PIN
 #define DEBUG 0
 
 #define include_lists 1
@@ -179,10 +180,10 @@ void setup(void){
   globals = (void**)malloc(sizeof(void*)*max_globals);
 
 #if arduino // setup serial
-  pinMode(2, INPUT);
-  digitalWrite(2, LOW);
-  Serial.begin(9600);
+  pinMode(SERIAL_INTR_PIN, INPUT);
+  digitalWrite(SERIAL_INTR_PIN, LOW);
   attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
+  Serial.begin(9600);
 #else // setup signal interrupt
   printf("Initializing avm...\n");
   lockfile = (char*)malloc(sizeof(char)*15);
@@ -232,6 +233,7 @@ void* l_gtEq;
 #if include_lists
 void* l_list;
 #endif
+void* l_tuple;
 static int int_regs[8];
 static char* char_regs[8];
 
@@ -266,6 +268,7 @@ void loop (){
 #if include_lists
     l_list = &&list;
 #endif
+    l_tuple = &&tuple;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -405,6 +408,19 @@ void loop (){
   stack[++top] = list;
   NEXT(code);
 #endif
+ tuple:
+  D("tuple\n");
+  n = (int)*code++;
+  struct array* tuple = (struct array*)malloc(sizeof(struct array));
+  void** tmpData = (void**)malloc(sizeof(void*)*n);
+  tuple->len = n;
+  while (n) {
+    n--;
+    tmpData[n] = stack[top--];
+  }
+  tuple->data = tmpData;
+  stack[++top] = tuple;
+  NEXT(code);
  end_of_block:
   current_block = current_block->next;
   code = current_block->code;
@@ -753,7 +769,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_mult;
       break;
-     case OP_SUB:
+    case OP_SUB:
       NL;
       code_array[i++] = l_sub;
       break;
@@ -811,6 +827,16 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = (void*)n;
       break;
 #endif
+    case OP_ARRAY:
+      NL;
+      code_array[i++] = l_tuple;
+      SKIP(SOP_INT, "(in case op_array)"); NL;
+      n = READ_INT();
+      if( n <= 0 ) {
+          SAY("Error: (op_array) invalid length"); DIE(1);
+      }
+      code_array[i++] = (void*)n;
+      break;
     case OP_IF:
       NL;
       code_array[i++] = l_if;
