@@ -3,7 +3,8 @@
 //TODO: threaded code should be optional
 
 #define arduino 0
-#define SERIAL_INTR_PIN 0
+#define SERIAL_RX_PIN 0
+#define SERIAL_INTR_PIN 2 //pin that needs to be wired to SERIAL_RX_PIN
 #define DEBUG 0
 
 #define include_lists 1
@@ -179,10 +180,10 @@ void setup(void){
   globals = (void**)malloc(sizeof(void*)*max_globals);
 
 #if arduino // setup serial
-  pinMode(2, INPUT);
-  digitalWrite(2, LOW);
-  Serial.begin(9600);
+  pinMode(SERIAL_INTR_PIN, INPUT);
+  digitalWrite(SERIAL_INTR_PIN, LOW);
   attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
+  Serial.begin(9600);
 #else // setup signal interrupt
   printf("Initializing avm...\n");
   lockfile = (char*)malloc(sizeof(char)*15);
@@ -753,7 +754,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       NL;
       code_array[i++] = l_mult;
       break;
-     case OP_SUB:
+    case OP_SUB:
       NL;
       code_array[i++] = l_sub;
       break;
