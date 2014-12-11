@@ -454,14 +454,33 @@ volatile boolean receiving_serial = false;
 
 //TODO: equivalent functions for Arduino
 #if arduino
+int read_byte(){
+  while (!Serial.available()){
+    //wait.
+  }
+  return Serial.read();
+}
+#else
+int read_byte(FILE* fp){
+  return fgetc(fp);
+}
+#endif
+
+
+#if arduino
 int read_int(){
+  Serial.println("reading_int...");
   char integer[10];
   int i=0;
   char ch;
-  while ((ch = Serial.read()) != NUM_TERMINATOR){
+  while ((ch = read_byte()) != NUM_TERMINATOR){
+    Serial.print("read: ");
+    Serial.println(ch);
     integer[i++] = ch;
   }
+  Serial.println("out of while loop");
   integer[i] = '\0';
+  Serial.println("almost done...");
   return atoi(integer);
 }
 #else
@@ -530,18 +549,17 @@ int* read_int_array(FILE* fp){
 
 void serial_in(){ //serial ISR (interrupt service routine)
 #if arduino
-#define READ_INT() read_int()
-#define READ_STRING() read_string()
-#define READ_INT_ARRAY() read_int_array()
-#define NL //nothing
-#else
-#define READ_INT() read_int(fp)
-#define READ_STRING() read_string(fp)
-#define READ_INT_ARRAY() read_int_array(fp)
-#define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
-#endif
+  if (receiving_serial) return;
+  receiving_serial = true;
+  //for serial to work, we need to re-enable interrupts
+  interrupts();
+  switch (read_byte()){
+  case SOP_PING:
+    Serial.write(SOP_ALIVE);
+    receiving_serial = false;
+  }
 
-#if ! arduino
+#else
   //set lock file so that other processes will not interrupt this one
   //while it reads in the new bytecode (ugly things happen in that case)
   FILE *fp = fopen(lockfile, "w");
@@ -549,6 +567,32 @@ void serial_in(){ //serial ISR (interrupt service routine)
   fclose(fp);
   //reset signal handler (it gets unset everytime for some reason)
   signal(SIGIO, (__sighandler_t)serial_in);
+  char ch;
+  fp = fopen(BYTECODE_IN_FILE, "r");
+  if (!fp){
+    SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
+    DIE(1);//TODO: should return
+  }
+
+  switch (fgetc(fp)){
+  case SOP_PING:
+    printf("Alive.");
+  }
+#endif
+
+#if arduino
+
+#define READ_INT() read_int()
+#define READ_STRING() read_string()
+#define READ_INT_ARRAY() read_int_array()
+#define READ_BYTE() read_byte()
+#define NL //nothing
+#else
+#define READ_INT() read_int(fp)
+#define READ_STRING() read_string(fp)
+#define READ_INT_ARRAY() read_int_array(fp)
+#define READ_BYTE() read_byte(fp)
+#define NL (fgetc(fp) != '\n' ? printf("Error: expected newline\n") : 0)
 #endif
 
   int reading_str = false;
@@ -565,19 +609,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
 
   int top = -1;
 
-#if arduino
-  if (receiving_serial) return;
-  receiving_serial = true;
-  //for serial to work, we need to re-enable interrupts
-  interrupts();
-#else
-  char ch;
-  fp = fopen(BYTECODE_IN_FILE, "r");
-  if (!fp){
-    SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
-    DIE(1);//TODO: should return
-  }
-#endif
   char data;
   //number of bytecodes to read in
   //the nth bytecode should be the terminator
@@ -593,18 +624,33 @@ void serial_in(){ //serial ISR (interrupt service routine)
   void** any_array;
 #define TYPE_ANY 1
 #define TYPE_INT 2
-
+#if arduino
+  Serial.println("point B");
+#endif
   while (1){//until terminator is seen
+#if arduino
+    Serial.println("point C");
+#endif
     if (total == 0){
+#if arduino
+      Serial.println("point D");
+#endif
       //the first number specifies how many bytecodes are left
       total = (int)READ_INT();
       if (total == 0){
+#if arduino
+        Serial.println("point E");
+#endif
         return;
       }
+#if arduino
+      Serial.println("point F");
+#endif
       continue;
     }
 
 #if arduino
+    Serial.println("waiting..");
     while (!Serial.available()){
       //wait.
     }
@@ -655,7 +701,6 @@ void serial_in(){ //serial ISR (interrupt service routine)
     }
 
     int n;
-
     switch (op){
     case SOP_PING:
 #if arduino
