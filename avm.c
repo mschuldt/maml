@@ -63,13 +63,14 @@ struct string{
 
 struct array{
   int len;
-  void* data;
+  void** data;
 };
 
 struct i_array{
   int len;
   int* data;
 };
+
 struct procedure{
   void** code;
   int n_locals;
@@ -492,7 +493,7 @@ int read_int()
     char integer[10];
     int i=0;
     char ch;
-    while ((ch = fgetc(fp)) != NUM_TERMINATOR){
+    while ((ch = READ_BYTE()) != NUM_TERMINATOR){
       integer[i++] = ch;
     }
     integer[i] = '\0';
@@ -543,7 +544,7 @@ int* read_int_array()
   int* read_int_array(FILE* fp)
 #endif
 {
-  int n = read_int(fp);
+  int n = READ_INT();
   //TODO: check that we have enough mem
   int* a = (int*)malloc(sizeof(int)*n);
   int i = 0;
