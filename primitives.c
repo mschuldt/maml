@@ -25,22 +25,31 @@ void print_s(struct string* str){
 
 _PRIMITIVE_
 void print_l(struct node *list) {
-   node *n = list;
-   while(n) {
-       void** d = n->data;
-       printf("%d ", (int)d);
-       n = n->next;
-   }
-   printf("\n");
+  struct node *n = list;
+  while(n) {
+#if arduino
+    Serial.write((int)n->data);
+    Serial.write(" ");
+#else
+    printf("%d ", (int)n->data);
+#endif
+    n = n->next;
+  }
+  SAY("\n");
 }
 
 _PRIMITIVE_
 void print_a(struct array* a) {
-   void** d = a->data;
-   for(int i = 0; i < a->len; i++) {
-       printf("%d ", (int)d[i]);
-   }
-   printf("\n");
+  void** d = a->data;
+  for(int i = 0; i < a->len; i++) {
+#if arduino
+    Serial.write((int)d[i]);
+    Serial.write(" ");
+#else
+    printf("%d ", (int)d[i]);
+#endif
+  }
+  SAY("\n");
 }
 
 
