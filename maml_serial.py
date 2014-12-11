@@ -37,7 +37,7 @@ class Maml_serial:
         bc = block.bytecode
         length = len(bc)
         exp = expand_bytecode(bc)
-        exp = list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
+        exp = [SOP_PING+1]+list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
         # end block and end file
         self._send(exp + [chr(SOP_END), chr(SOP_END)])
 
@@ -84,10 +84,9 @@ class Maml_serial:
         def ping(s):
             s.flushInput()
             s.write(bytes(chr(SOP_PING), 'UTF-8'))
-            n = s.readline()
+            n = s.read()
             if n:
-                print("received:", n)
-                return n.strip() == str(SOP_ALIVE)
+                return ord(n.strip()) == SOP_ALIVE
 
         for port in list_serial_ports():
             print("trying port: {}...".format(port), end="")
@@ -100,7 +99,7 @@ class Maml_serial:
                 print("no")
             except serial.SerialException:
                 print("no")
-        return False
+        return None
 
 
 def expand_bytecode(bc):
