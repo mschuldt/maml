@@ -387,13 +387,16 @@ def List(elts, ctx, lineno=None, col_offset=None):
             'col_offset': col_offset
             }
 
-def Subscript(value, slice, lineno=None, col_offset=None):
+def Subscript(value, slice, ctx, lineno=None, col_offset=None):
     return { 'type': 'subscript',
              'value': value,
              'slice': slice,
+             'ctx': ctx,
              'lineno': lineno,
              'col_offset': col_offset
             }
+
+def Index(value):
 
 
 def NameConstant(value, lineno=None, col_offset=None):
