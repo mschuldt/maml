@@ -162,7 +162,7 @@ def _(ast, env):
     theArray = ast['value']['id']
     check_types(theArray, env)
     ast['s_type'] = theArray['s_type']
-    
+
 
 ###############################################################################
 # tuple
@@ -324,20 +324,17 @@ def _(ast, env):
     t_r = ast['right']['s_type']
     op = ast['op']
     if t_l not in valid_bin_op_types[op]:
-        print("Invalid type for left operand: '{}'. Expected '{}'"
-              .format(tl, reduce(lambda a, b: a + " or " + b,
-                      valid_bin_op_types[op])))
-        exit(1)
+        type_error(ast, "Invalid type for left operand: '{}'. Expected '{}'"
+                   .format(tl, reduce(lambda a, b: a + " or " + b,
+                                      valid_bin_op_types[op])))
 
     if t_r not in valid_bin_op_types[op]:
-        print("TypeError: Invalid type for right operand: '{}'. Expected '{}'"
-              .format(t_r, reduce(lambda a, b: a + "' or '" + b,
-                      valid_bin_op_types[op])))
-        exit(1)
+        type_error(ast, "Invalid type for right operand: '{}'. Expected '{}'"
+                   .format(t_r, reduce(lambda a, b: a + "' or '" + b,
+                                       valid_bin_op_types[op])))
     if t_l != t_r:
-        print("TypeError: type for {} do not match, '{}' and '{}'"
-              .format(op, t_l, t_r))
-        exit(1)
+        type_error(ast, "TypeError: type for {} do not match, '{}' and '{}'"
+                   .format(op, t_l, t_r))
     ast['s_type'] = t_l
 
 
