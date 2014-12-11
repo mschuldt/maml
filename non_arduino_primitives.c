@@ -1,9 +1,23 @@
-///primitives used for testing
+_PRIMITIVE_
+void print1(struct string *fmt, void *arg){
+  char *fmt_str = fmt->s;
+  char *c = fmt_str;
+  while (*c){
+    if (*c == '%' && *(c+1) == 's'){
+      printf(fmt_str, ((struct string*)arg)->s);
+      return;
+    }
+    c++;
+  }
+  printf(fmt_str, arg);
+}
 
 _PRIMITIVE_
 void delay(int ms){
   sleep(ms); //TODO: delay for milliseconds instead of seconds
 }
+
+///primitives used for testing
 
 _PRIMITIVE_
 int test_add(int a, int b){
