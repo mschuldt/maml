@@ -1,6 +1,6 @@
 * Language features
 - [X] Break and continue for while loops
-- [ ] For loops (mark unimplemented?)
+- [-] For loops (mark unimplemented?)
 - [ ] Chain together multiple blocks or send multiple blocks at once
 - [X] Unary opCode
 - [X] Most conditionals
@@ -8,18 +8,17 @@
 - [X] >, >=, <=, ==
 - [X] Augmented assignment
 - [X] Chained assignment (e.g. a = b = 2)
-- [ ] Chained comparison (ex: 1 < 2 <= 3) 
+- [-] Chained comparison (ex: 1 < 2 <= 3)
 - [ ] standard functions for working with arrays/lists + print etc
       the compiler should use the available types to output correct function
-
+- [ ] assignment to list/vertex indices etc
+      currently only supports assignment to variables
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] Any expression that can be at the top level that normally
       pushes to the stack will have to pop that element from the stack
 - [X] Declaration of built-in variable types
 - [ ] Need way of declaring types of built in functions
-- [ ] assignment to list/vertex indices etc
-      currently only supports assignment to variables
 - [ ] decorator used for defining the translation of specific functions
 - [ ] static typing should not be optional - only auto type declarations
 - [ ] allow_type_reassign should be set to False by default
