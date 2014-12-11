@@ -303,7 +303,6 @@ def _(ast, btc, env, top):
 @type_check('expr')
 def _(ast, env):
     check_types(ast['value'], env)
-    print(ast['value']['type'])
     ast['s_type'] = ast['value']['s_type']
 
 ###############################################################################
