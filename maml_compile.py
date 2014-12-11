@@ -148,7 +148,11 @@ def _(ast, env):
 
 @code_gen('tuple')
 def _(ast, btc, env, top):
-    pass
+    elts = ast['elts']
+    for e in elts:
+        gen_bytecode(e, btc, env, False)
+    print("compiling 'tuple', len(elts) = {}".format(len(elts)))
+    btc.extend([OP_ARRAY, SOP_INT, len(elts)])
 
 
 @type_check('tuple')

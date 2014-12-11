@@ -23,6 +23,15 @@ void print_s(struct string* str){
 #endif
 }
 
+_PRIMITIVE_
+void print_a(struct array* a) {
+   void** d = a->data;
+   for(int i = 0; i < a->len; i++) {
+       printf("%d ", (int)d[i]);
+   }
+   printf("\n");
+}
+
 //TODO: way of defining function from standard lib as primitives
 _PRIMITIVE_
 int die(int code){
