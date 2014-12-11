@@ -4,7 +4,9 @@
 
 #define arduino 0
 #define SERIAL_RX_PIN 0
+#define SERIAL_INTR_NUM 0
 #define SERIAL_INTR_PIN 2 //pin that needs to be wired to SERIAL_RX_PIN
+//interrupt 0 is on pin 2
 #define DEBUG 0
 
 #define include_lists 1
@@ -182,7 +184,7 @@ void setup(void){
 #if arduino // setup serial
   pinMode(SERIAL_INTR_PIN, INPUT);
   digitalWrite(SERIAL_INTR_PIN, LOW);
-  attachInterrupt(SERIAL_INTR_PIN, serial_in, CHANGE);
+  attachInterrupt(SERIAL_INTR_NUM, serial_in, CHANGE);
   Serial.begin(9600);
 #else // setup signal interrupt
   printf("Initializing avm...\n");
