@@ -15,6 +15,7 @@
       the compiler should use the available types to output correct function
 - [ ] assignment to list/vertex indices etc
       currently only supports assignment to variables
+
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] Any expression that can be at the top level that normally
@@ -26,6 +27,7 @@
 - [ ] allow_type_reassign should be set to False by default
       currently to to True because tests fail otherwise
 - [ ] check types of comparisons like '>' in @type_check('compare')
+
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
 - [ ] Separate function that wraps malloc and check if mem is available
