@@ -72,6 +72,17 @@ class Maml_serial:
             return True
         else:
             pass  # TODO: send to arduino over serial
+    def connect(self):
+        "Verify connection or find and connect to the Arduino"
+        if self.serial and self.ping(self.serial):
+            return True
+        port = self.port = self.find_arduino_port()
+        if not port:
+            #print("Maml Serial: unable to find Arduino")
+            #exit? throw error?
+            return False
+        self.serial = serial.Serial(port, self.speed)
+        return True
 
     def _write_to_file(self, bytecode):
         "write BYTECODE to file"
@@ -93,13 +104,13 @@ class Maml_serial:
         except:
             return []
 
-    def find_arduino_port(self):
-        def ping(s):
-            s.write(bytes(chr(SOP_PING), 'UTF-8'))
-            n = s.read()
-            if n:
-                return ord(n.strip()) == SOP_ALIVE
+    def ping(self, s):
+        s.write(bytes(chr(SOP_PING), 'UTF-8'))
+        n = s.read()
+        if n:
+            return ord(n.strip()) == SOP_ALIVE
 
+    def find_arduino_port(self):
         for port in list_serial_ports():
             print("trying port: {}...".format(port), end="")
             try:
