@@ -462,6 +462,9 @@ volatile boolean receiving_serial = false;
   }
 #endif
 
+
+#define CHAR_TO_INT(c) ((c) - 48)
+
 ////////////////////////////////////////////////////////////////////////////////
 // read_byte
 
@@ -560,11 +563,11 @@ int* read_int_array()
 #define READ_INT_ARRAY() read_int_array(fp)
 #endif
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 //TODO: how to handle a read signal while a read is already in progress?
 
-#define CHAR_TO_INT(c) ((c) - 48)
 
 /* when this runs on the Arduino, 'serial_in' will be called
    multiple times while a single string of bytecodes is being
@@ -575,7 +578,9 @@ int* read_int_array()
 
 void serial_in(){ //serial ISR (interrupt service routine)
 #if arduino
-  if (receiving_serial) return;
+  if (receiving_serial){
+    return;
+  }
   receiving_serial = true;
   //for serial to work, we need to re-enable interrupts
   interrupts();
@@ -644,6 +649,9 @@ void serial_in(){ //serial ISR (interrupt service routine)
       total = (int)READ_INT();
       if (total == 0){
         //        SAY("point E");
+#if arduino
+        receiving_serial = false;
+#endif
         return;
       }
       //      SAY("point F");
@@ -677,6 +685,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     //#char op = CHAR_TO_INT(data);
     char op = data;
     if (i == total && op != SOP_END){
+    //if (i == 17 && op != SOP_END){
       SAY("ERROR: file has more bytecodes then header specified\n"); DIE(1);
     }
     if (!newfunction && !newblock
@@ -902,7 +911,9 @@ void serial_in(){ //serial ISR (interrupt service routine)
       }else if (newfunction){
         //TODO:
       }else{
-#if !arduino
+#if arduino
+        receiving_serial = false;
+#else
         fp = fopen(lockfile, "w");
         fprintf(fp, "0");
         fclose(fp);
