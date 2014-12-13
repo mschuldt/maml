@@ -50,7 +50,9 @@
 #define SAY(words) Serial.write(words)
 #else
 #define DIE(n) exit(n)
-#define SAY(words) printf(words)
+//temporarily disable while for testing arduino
+//#define SAY(words) printf(words)
+#define SAY
 #endif
 
 #define _PRIMITIVE_
@@ -203,11 +205,16 @@ void setup(void){
 
   signal(SIGIO, (__sighandler_t)serial_in);
   //TODO: catch kill signal and remove lock file
+
 #endif
 
   loop();// variables are initialized the first time loop is called
 
-  SAY("Ready.\n\n");
+#if arduino
+  Serial.print("Ready.\n\n");
+#else
+  printf("Ready.\n\n");
+#endif
 }
 
 //void* labels[20];
@@ -311,6 +318,7 @@ void loop (){
   NEXT(code);
  call_prim_1:
   D("call_1\n");
+  SAY("**call_1\n");
   stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_2:
@@ -467,12 +475,22 @@ int read_byte(){
   while (!Serial.available()){
     //wait.
   }
-  return Serial.read();
+  int x =  Serial.read();
+  if (x == SOP_PING){
+    return x;
+  }
+  Serial.print("got: ");
+  Serial.println((int)x);
+  return x;
+  //  return Serial.read();
 }
+
 #define READ_BYTE() read_byte()
 #else
 int read_byte(FILE* fp){
-  return fgetc(fp);
+  int i =  fgetc(fp);
+  //  printf("got: %d\n", i);
+  return i;
 }
 #define READ_BYTE() read_byte(fp)
 #endif
@@ -486,15 +504,36 @@ int read_int()
   int read_int(FILE* fp)
 #endif
 {
-    char integer[10];
-    int i=0;
-    char ch;
-    while ((ch = READ_BYTE()) != NUM_TERMINATOR){
-      integer[i++] = ch;
-    }
-    integer[i] = '\0';
-    return atoi(integer);
+  //SAY("read_int()");
+  char integer[10];
+  int i=0;
+  char ch;
+  char test[5];
+  while ((ch = READ_BYTE()) != NUM_TERMINATOR){
+    //      printf("ch = %d\n" ,ch);
+#if arduino
+    Serial.print("(read_int)c=");
+    sprintf(test, "%d\0", (int)ch);
+    Serial.println(test);
+#endif
+    integer[i++] = ch;
   }
+  integer[i] = '\0';
+
+  /* for (int j=0;j<i;j++){ */
+  /*   printf("%d_", integer[j]); */
+  /* } */
+  //    printf("\n");
+  int x = atoi(integer);
+
+#if arduino
+  Serial.print("read_int->");
+  Serial.print(x, DEC);
+#else
+#endif
+
+  return x;
+}
 #if arduino
 #define READ_INT() read_int()
 #else
@@ -561,7 +600,7 @@ int* read_int_array()
 #define SKIP(ch, msg) if (READ_BYTE() != ch){   \
     SAY("Error -- skip: unexpected char " msg); \
   }
-  //printf("Error: expected char '%c'"msg"\n", ch)      \
+//printf("Error: expected char '%c'"msg"\n", ch)      \
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -606,12 +645,23 @@ void serial_in(){ //serial ISR (interrupt service routine)
   // instead of reading from the file or serial directly
 
   switch (READ_BYTE()){
+    //note on THE BUG:
+    //on Arduino the first byte it sees is the ping
+    //the second is the second one in the bytecode array being sent
+    //(this is the first character of the length)
+    //it then gets thrown out here (the default case)
+    //WHERE DOES THE FIRST ONE GO?
+    //=> with a delay of 1 second before sending each one, it
+    //   receives that character
   case SOP_PING:
     SAY(SOP_ALIVE);
+    SAY("ALIVE\n");
 #if arduino
     receiving_serial = false;
 #endif
     return;
+  default:
+    SAY("NOT_ALIVE\n");
   }
 
   int reading_str = false;
@@ -639,20 +689,20 @@ void serial_in(){ //serial ISR (interrupt service routine)
 #define TYPE_ANY 1
 #define TYPE_INT 2
 
-    SAY("point D");
+  SAY("point D");
   //read in number of bytes there are left
   total = (int)READ_INT();
   SAY("total bytecodes = ");
 #if arduino
-    Serial.print(total, DEC);
+  Serial.print(total, DEC);
 #endif
-    if (total == 0){
-      SAY("point E");
+  if (total == 0){
+    SAY("point E");
 #if arduino
-      receiving_serial = false;
+    receiving_serial = false;
 #endif
-      return;
-    }
+    return;
+  }
 
   SAY("point B");
   while (1){//until terminator is seen
@@ -685,7 +735,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
     //#char op = CHAR_TO_INT(data);
     char op = data;
     if (i == total && op != SOP_END){
-    //if (i == 17 && op != SOP_END){
+      //if (i == 17 && op != SOP_END){
       SAY("ERROR: file has more bytecodes then header specified\n"); DIE(1);
     }
     if (!newfunction && !newblock
@@ -705,6 +755,9 @@ void serial_in(){ //serial ISR (interrupt service routine)
 #endif
       break;
     case SOP_START_CODEBLOCK:
+      //TODO: the length of the code block should be sent separately
+      //from the 'total' value
+      SAY("SOP_START_CODEBLOCK\n");
       //For now we are just creating and appending a new block every time
       //TODO: the next code should specify creation/replacement of a block
       //      or just its index number with the creation/replacement implied
@@ -716,6 +769,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array = newblock->code;
       break;
     case SOP_START_FUNCTION:
+      SAY("SOP_START_FUNCTION\n");
       if (newblock){
         //TODO: error
       }
@@ -726,12 +780,16 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array = newfunction->code;
       break;
     case SOP_INT:
+      SAY("SOP_INT\n");
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_INT();
       break;
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
+      SAY("SOP_PRIM_CALL\n");
       // get the primitives function pointer
+
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)");
+
       void* tmp;
       int index;
       // get the address for the label that calls with that # args
@@ -739,10 +797,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
         //TODO: put all l_call_prim_N into an array and index that
         //      then we can free that array if all code is sent
       case 0:
+        SAY("prim0\n");
         tmp = l_call_prim_0; break;
       case 1:
+        SAY("prim1\n");
         tmp = l_call_prim_1; break;
       case 2:
+        SAY("prim2\n");
         tmp = l_call_prim_2; break;
       case 3:
         tmp = l_call_prim_3; break;
@@ -756,7 +817,9 @@ void serial_in(){ //serial ISR (interrupt service routine)
         SAY("ERROR: (current) max args to primitive is 6\n");
       }
       code_array[i++] = tmp;
+
       SKIP(SOP_INT, "(in case SOP_PRIM_CALL)");
+
       //now read in function pointer
       index = READ_INT();
       if (index < 0 || index >= n_primitives){
@@ -771,10 +834,12 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = primitives[index];
       break;
     case OP_GLOBAL_LOAD:
+      SAY("OP_GLOBAL_LOAD\n");
       code_array[i++] = l_load_global;
       SKIP(SOP_INT, "(in case global_load)");
       goto read_globals_index;
     case OP_GLOBAL_STORE:
+      SAY("OP_GLOBAL_STORE\n");
       code_array[i++] = l_store_global;
       SKIP(SOP_INT, "(in case global_store)");
     read_globals_index:
@@ -785,6 +850,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = (void*)index;
       break;
     case OP_ADD:
+      SAY("OP_ADD\n");
       code_array[i++] = l_add;
       break;
     case OP_MULT:
@@ -821,11 +887,13 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = l_pop;
       break;
     case SOP_STR:
+      SAY("SOP_STR\n");
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = (void*) READ_STRING();
       break;
 #if include_lists
     case OP_LIST:
+      SAY("OP_LIST\n");
       code_array[i++] = l_list;
       SKIP(SOP_INT, "(in case op_list)");
       n = READ_INT();
@@ -837,6 +905,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       break;
 #endif
     case OP_ARRAY:
+      SAY("OP_ARRAY\n");
       code_array[i++] = l_tuple;
       SKIP(SOP_INT, "(in case op_array)");
       n = READ_INT();
@@ -846,9 +915,11 @@ void serial_in(){ //serial ISR (interrupt service routine)
       code_array[i++] = (void*)n;
       break;
     case OP_IF:
+      SAY("OP_IF\n");
       code_array[i++] = l_if;
       break;
     case OP_JUMP:
+      SAY("OP_JUMP\n");
       code_array[i++] = l_jump;
       if (n_jumps > max_jumps-1){ //-1 because we add 2 items each time
         //TODO: extend the jumps array
@@ -859,6 +930,7 @@ void serial_in(){ //serial ISR (interrupt service routine)
       jumps[n_jumps++] = (void**)READ_INT(); //TODO: store them in a separate array
       break;
     case SOP_LABEL:
+      SAY("SOP_LABEL\n");
       SKIP(SOP_INT, "(in case op_label)");
       index = READ_INT();
       if (index < 0){
@@ -871,17 +943,21 @@ void serial_in(){ //serial ISR (interrupt service routine)
       labels[index] = &code_array[i];
       break;
     case SOP_NULL:
+      SAY("SOP_NULL\n");
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = NULL;
       break;
     case SOP_ARRAY:
+      SAY("SOP_ARRAY\n");
       //TODO:
       break;
     case SOP_INT_ARRAY:
+      SAY("SOP_INT_ARRAY\n");
       code_array[i++] = (void*) l_load_const;
       code_array[i++] = READ_INT_ARRAY();
       break;
     case SOP_END:
+      SAY("SOP_END\n");
       //TODO: reset jump/label variables at start of block/function transfer
       if (newblock || newfunction){
         /*
@@ -904,13 +980,22 @@ void serial_in(){ //serial ISR (interrupt service routine)
       }
       if (newblock){
         //printf("appending new codeblock\n");
+        SAY("appending new codeblock\n");
         code_array[i] = l_end_of_block;
+        ///
+        //noInterrupts();
+        ///
         append_codeblock(newblock);
+        SAY("appended codeblock\n");
+
+        //interrupts();
+
         newblock = NULL;
         code_array = NULL;
       }else if (newfunction){
         //TODO:
       }else{
+        SAY("returning from serial_in\n");
 #if arduino
         receiving_serial = false;
 #else
