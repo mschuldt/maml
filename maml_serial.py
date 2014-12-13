@@ -153,11 +153,9 @@ class Maml_serial:
             return 0
         if check_connection:
             self.connect()
-        timeout = self.timeout
-        if timeout:
+        timeout = self.serial.timeout
+        if _timeout:
             self.serial.timeout = _timeout
-        else:
-            self.serial.timeout = 0.5
         count = 0
         while True:
             line = self.serial.readline()
