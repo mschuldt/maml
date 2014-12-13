@@ -457,19 +457,6 @@ volatile boolean receiving_serial = false;
 #endif
 
 
-#if arduino
-#define SKIP(ch, msg) if (Serial.read() != ch){         \
-    Serial.print("Error -- skip: unexpected char");     \
-  }
-
-#else
-#define SKIP(ch, msg) if (fgetc(fp) != ch){             \
-    printf("Error: expected char '%c'"msg"\n", ch);     \
-    exit(1);                                            \
-  }
-#endif
-
-
 #define CHAR_TO_INT(c) ((c) - 48)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,6 +556,12 @@ int* read_int_array()
 #else
 #define READ_INT_ARRAY() read_int_array(fp)
 #endif
+
+
+#define SKIP(ch, msg) if (READ_BYTE() != ch){   \
+    SAY("Error -- skip: unexpected char " msg); \
+  }
+  //printf("Error: expected char '%c'"msg"\n", ch)      \
 
 
 ////////////////////////////////////////////////////////////////////////////////
