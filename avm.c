@@ -173,6 +173,11 @@ int n_primitives;
 #include "non_arduino_primitives.c"
 #endif
 
+int max_jumps = 100;
+int max_labels = 100;
+void*** jumps;
+void** labels;
+
 void setup(void){
 #include "_prim.c"
 
@@ -180,6 +185,8 @@ void setup(void){
   blockchain_end = NULL;
   n_codeblocks = 0;
   globals = (void**)malloc(sizeof(void*)*max_globals);
+  jumps = (void***)malloc(sizeof(void*)*max_jumps);
+  labels =  (void**)malloc(sizeof(void*)*max_labels);
 
 #if arduino // setup serial
   pinMode(SERIAL_INTR_PIN, INPUT);
@@ -203,7 +210,7 @@ void setup(void){
   SAY("Ready.\n\n");
 }
 
-void* labels[20];
+//void* labels[20];
 char initialized = false;
 void* l_load_const;
 void* l_addii;
@@ -618,12 +625,10 @@ void serial_in(){ //serial ISR (interrupt service routine)
   void** code_array;
 
   //TODO: this should be reduced on the arduino and allowed to grow/shrink
-  int max_jumps = 100;
-  int max_labels = 100;
+
   int n_jumps = 0;
   int n_labels = 0;
-  void*** jumps = (void***)malloc(sizeof(void*)*max_jumps);
-  void** labels = (void**)malloc(sizeof(void*)*max_labels);
+
 
   char data;
   //number of bytecodes to read in
