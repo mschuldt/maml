@@ -34,7 +34,6 @@ class Maml_serial:
         """
         Send BLOCK to vm on arduino or desktop
         """
-
         # TODO: how to handle disconnection and other errors?
         bc = block.bytecode
         length = len(bc)
@@ -140,7 +139,7 @@ class Maml_serial:
         "write BYTECODE to serial, assumes serial is open"
         for c in bytecode:
             print("send> " + str((c if type(c) == str else chr(c)).encode('ascii')))
-            #sleep(1)
+            sleep(1)
             self.serial.write((c if type(c) == str else chr(c)).encode('ascii'))
             self.read_lines();
 
