@@ -414,6 +414,14 @@ def NameConstant(value, lineno=None, col_offset=None):
             'col_offset': col_offset
             }
 
+def IfExp (test, body, orelse, lineno=None, col_offset=None):
+    return {'type': 'if-exp',
+            'test': test,
+            'body': body,
+            'orelse': orelse,
+            'lineno': lineno,
+            'col_offset': col_offset
+    }
 
 def make_ast(code):
     return eval(ast.dump(ast.parse(code), include_attributes=True))

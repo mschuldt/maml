@@ -464,6 +464,17 @@ def _(ast, env):
     ast['s_type'] = 'None'
 
 ###############################################################################
+
+# if-exp
+@code_gen('if-exp')
+def _(ast, btc, env, top):
+    not_implemented_error(ast)
+
+@type_check('if-exp')
+def _(ast, env):
+    pass
+
+###############################################################################
 # while
 
 
