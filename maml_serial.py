@@ -1,4 +1,3 @@
-
 VM_PROCESS_NAME = 'avm'
 # NOTE: If this are changed, their value in avm.c must be also changed.
 NUM_TERMINATOR = 'x'
@@ -28,6 +27,8 @@ class Maml_serial:
         self.desktop = False
         self.vm_pid = None
         self.serial_in = [] #lines of strings received from the serial port
+        self.serial = None
+        self.timeout = 0.3
 
     def send_codeblock(self, block):
         """
@@ -38,6 +39,7 @@ class Maml_serial:
         bc = block.bytecode
         length = len(bc)
         exp = expand_bytecode(bc)
+        print("***num bytecodes = " + str(length+1))
         exp = [SOP_PING+1]+list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
         # end block and end file
         self._send(exp + [chr(SOP_END), chr(SOP_END)])
@@ -71,18 +73,60 @@ class Maml_serial:
             kill(self.vm_pid, VM_SIGNAL)
             return True
         else:
-            pass  # TODO: send to arduino over serial
+            print("sending to arduino...")
+            if self.connect():
+                print("sending bytecode: ", bytecode)
+                self._write_to_serial(bytecode)
+                return True
+            print("Error: cannot send code, disconnected from Arduino")
+            #exit(1)
+
+    # def _send(self, bytecode):
+    #     """
+    #     Send fully expanded BYTECODE
+    #     """
+
+    #     if self.desktop:
+    #         if not self.vm_pid:
+    #             self.vm_pid = find_vm_pid()
+    #             if not self.vm_pid:
+    #                 return False  # find_vm_pid prints the error message
+    #         # TODO: check that vm is still alive
+    #         while True:
+    #             f = open("{}.lock".format(self.vm_pid), 'r')
+    #             if f.read(1) == '0':
+    #                 break
+    #             print("VM is locked")
+    #             # TODO: after some number of iterations, report failure
+    #             f.close()
+    #             sleep(0.2)
+
+    #         self._write_to_file(bytecode)
+    #         print("sending vm interrupt...")
+    #         kill(self.vm_pid, VM_SIGNAL)
+    #         return True
+    #     else:
+    #         pass  # TODO: send to arduino over serial
+
     def connect(self):
         "Verify connection or find and connect to the Arduino"
+        print("Serial.connect()")
         if self.serial and self.ping(self.serial):
             return True
         port = self.port = self.find_arduino_port()
         if not port:
-            #print("Maml Serial: unable to find Arduino")
+            print("Maml Serial: unable to find Arduino")
             #exit? throw error?
             return False
         self.serial = serial.Serial(port, self.speed)
+        self.serial.timeout = self.timeout
         return True
+
+    def close(self):
+        "cloose connection to serial port"
+        if self.serial:
+            self.serial.close()
+        self.serial = self.port = None
 
     def _write_to_file(self, bytecode):
         "write BYTECODE to file"
@@ -92,11 +136,56 @@ class Maml_serial:
         print("wrote file '{}'".format(BYTECODE_IN_FILE))
         f.close()
 
-    def read_all_lines(self, port):
+    def _write_to_serial(self, bytecode):
+        "write BYTECODE to serial, assumes serial is open"
+        for c in bytecode:
+            print("send> " + str((c if type(c) == str else chr(c)).encode('ascii')))
+            #sleep(1)
+            self.serial.write((c if type(c) == str else chr(c)).encode('ascii'))
+            self.read_lines();
+
+            print("received===========",self.serial_in)
+            self.serial_in = []
+
+    def read_lines(self, check_connection=False, _timeout=None):
+        "read available lines from Arduino, returns number lines read"
+        if not self.serial:
+            return 0
+        if check_connection:
+            self.connect()
+        timeout = self.timeout
+        if timeout:
+            self.serial.timeout = _timeout
+        else:
+            self.serial.timeout = 0.5
+        count = 0
+        while True:
+            line = self.serial.readline()
+            if line:
+                self.serial_in.append(line)
+                count += 1
+            else:
+                self.serial.timeout = timeout
+                return count
+
+    # def read_all_lines(self, port):
+    #     lines = []
+    #     try:
+    #         while True:
+    #             line = port.readline()
+    #             if line:
+    #                 lines.append(line)
+    #             else:
+    #                 return lines
+    #     except:
+    #         return []
+
+    def _read_lines_from_serial(self, s):
+        "reads and returns lines from serial port S"
         lines = []
         try:
             while True:
-                line = port.readline()
+                line = s.readline()
                 if line:
                     lines.append(line)
                 else:
@@ -104,26 +193,61 @@ class Maml_serial:
         except:
             return []
 
+
     def ping(self, s):
-        s.write(bytes(chr(SOP_PING), 'UTF-8'))
+        lines = self._read_lines_from_serial(s)
+        #print("ping lines = ", lines)
+        #print("sop ping = " + str(chr(SOP_PING).encode('ascii')))
+        s.write(chr(SOP_PING).encode('ascii'))
+        #s.write(bytes(chr(SOP_PING), 'UTF-8'))
+
         n = s.read()
         if n:
+            #save the lines from the arduino
+            self.serial_in.extend(lines)
+            #print("ping got: " + str(n))
             return ord(n.strip()) == SOP_ALIVE
 
+    # def find_arduino_port(self):
+    #     def ping(s):
+    #         s.write(chr(SOP_PING).encode('ascii'))
+    #         n = s.read()
+    #         if n:
+    #             return ord(n.strip()) == SOP_ALIVE
+
+    #     for port in list_serial_ports():
+    #         print("trying port: {}...".format(port), end="")
+    #         try:
+    #             s = serial.Serial(port, 9600)
+    #             s.timeout = 0.1
+    #             lines = self._read_lines_from_serial(s)
+    #             if ping(s):
+    #                 print("yes")
+    #                 #save the lines from the arduino
+    #                 self.serial_in.extend(lines)
+    #                 return port
+    #             print("no")
+    #         except serial.SerialException:
+    #             print("no")
+    #     return None
+
     def find_arduino_port(self):
-        for port in list_serial_ports():
+        print("finding port")
+        if self.serial and self.ping(self.serial):
+            return self.port
+        for port in list_serial_ports():#['/dev/ttyACM1']:#list_serial_ports():
             print("trying port: {}...".format(port), end="")
             try:
                 s = serial.Serial(port, 9600)
-                s.timeout = 0.1
-                lines = self.read_all_lines(s)
-                if ping(s):
+                s.timeout = 0.5
+                if self.ping(s):
                     print("yes")
-                    #save the lines from the arduino
-                    self.serial_in.extend(lines)
+                    s.close()
                     return port
+                s.close()
                 print("no")
             except serial.SerialException:
+                s.close()
                 print("no")
         return None
 
