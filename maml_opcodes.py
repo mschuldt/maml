@@ -89,7 +89,7 @@ OP("OP_LOAD_CONST")  # This opcode exists only in avm.c
 def print_opcodes():
     max_len = max(map(lambda x: len(x[0]), opcodes))
     for name, num in opcodes:
-        print(name, " "*(max_len - len(name)) + str(num))
+        print(name, " "*(max_len - len(name)) + str(num) + "  " + chr(num))
 
 if __name__ == '__main__':
     assert not debug, "disable debug mode when not debugging"
