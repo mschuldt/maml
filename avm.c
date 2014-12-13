@@ -645,23 +645,25 @@ void serial_in(){ //serial ISR (interrupt service routine)
   void** any_array;
 #define TYPE_ANY 1
 #define TYPE_INT 2
-  //  SAY("point B");
-  while (1){//until terminator is seen
-    //    SAY("point C");
-    if (total == 0){
-      //      SAY("point D");
-      //the first number specifies how many bytecodes are left
-      total = (int)READ_INT();
-      if (total == 0){
-        //        SAY("point E");
+
+    SAY("point D");
+  //read in number of bytes there are left
+  total = (int)READ_INT();
+  SAY("total bytecodes = ");
 #if arduino
-        receiving_serial = false;
+    Serial.print(total, DEC);
 #endif
-        return;
-      }
-      //      SAY("point F");
-      continue;
+    if (total == 0){
+      SAY("point E");
+#if arduino
+      receiving_serial = false;
+#endif
+      return;
     }
+
+  SAY("point B");
+  while (1){//until terminator is seen
+    SAY("point C");
 
     data = READ_BYTE();
 
