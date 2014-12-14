@@ -232,12 +232,12 @@ void maml_HardwareSerial::_rx_complete_irq(void)
     //      and just override this method?
 
     ////////////////////////////////////////////////////////////////////////////
-    // maml
+    // maml:
     if (!busy){
       busy = true;
       byte_in(c);
       while (available()){
-        byte_in(c);
+        byte_in(read());
       }
       busy = false;
       return;
