@@ -254,7 +254,7 @@ void setup(void){
 
 //void* labels[20];
 char initialized = false;
-void* l_load_const;
+void* l_const;
 void* l_addii;
 void* l_addi;
 void* l_add;
@@ -291,7 +291,7 @@ static char* char_regs[8];
 void loop (){
   if (!initialized){
     initialized = true;
-    l_load_const = &&load_const;
+    l_const = &&load_const;
     l_add = &&add;
     l_mult = &&mult;
     l_div = &&div;
@@ -552,6 +552,10 @@ void byte_in(unsigned char c){
       in_string_struct->s = in_string_s;
       in_string_struct->len = in_string_len;
       return;
+    case OP_CONST:
+      code_array[code_i++] = (void*) l_const;
+      code_array[code_i++] = INPUT_STACK_POP();
+      return;
     case SOP_INT:
       //TODO: when compiling, check that number literals are not too big.
       reading_state = integer;
@@ -740,7 +744,7 @@ void byte_in(unsigned char c){
       }
     case SOP_NULL:
       SAY("SOP_NULL\n");
-      code_array[code_i++] = (void*) l_load_const;
+      code_array[code_i++] = (void*) l_const;
       code_array[code_i++] = NULL;
       return;
     case SOP_ARRAY:
@@ -749,7 +753,7 @@ void byte_in(unsigned char c){
       return;
     case SOP_INT_ARRAY:
       SAY("SOP_INT_ARRAY\n");
-      code_array[code_i++] = (void*) l_load_const;
+      code_array[code_i++] = (void*) l_const;
       code_array[code_i++] = INPUT_STACK_POP();
       return;
     case SOP_END:

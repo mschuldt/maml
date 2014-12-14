@@ -44,6 +44,7 @@ OP_LIST = OP("OP_LIST")
 OP_ARRAY = OP("OP_ARRAY")
 OP_LIST_LOAD = OP("OP_LIST_LOAD")
 OP_LIST_STORE = OP("OP_LIST_STORE")
+OP_CONST = OP("OP_LOAD")
 
 # bin ops
 OP_ADD = OP("OP_ADD")
@@ -82,9 +83,6 @@ SOP_PRIM_CALL = OP("SOP_PRIM_CALL")
 SOP_LABEL = OP("SOP_LABEL")
 SOP_NULL = OP("SOP_NULL")
 SOP_END = OP("SOP_END")
-
-OP("OP_LOAD_CONST")  # This opcode exists only in avm.c
-
 
 def print_opcodes():
     max_len = max(map(lambda x: len(x[0]), opcodes))
