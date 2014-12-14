@@ -34,7 +34,7 @@ void print_l(struct node *list) {
 #endif
     n = n->next;
   }
-  SAY("\n");
+  serial_out("\n");
 }
 
 _PRIMITIVE_
@@ -48,7 +48,7 @@ void print_a(struct array* a) {
     printf("%d ", (int)d[i]);
 #endif
   }
-  SAY("\n");
+  serial_out("\n");
 }
 
 
