@@ -16,7 +16,7 @@
 #include <string.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-//  HardwareSerial.h 
+//  HardwareSerial.h
 
 // Define constants and variables for buffering incoming serial data.  We're
 // using a ring buffer (I think), in which head is the index of the location
@@ -141,9 +141,9 @@ extern void serialEventRun(void) __attribute__((weak));
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// HardwareSerial_private.h 
+/// HardwareSerial_private.h
 
-// this next line disables the entire HardwareSerial.cpp, 
+// this next line disables the entire HardwareSerial.cpp,
 // this is so I can support Attiny series and any other chip without a uart
 #if defined(HAVE_HWSERIAL0) || defined(HAVE_HWSERIAL1) || defined(HAVE_HWSERIAL2) || defined(HAVE_HWSERIAL3)
 
@@ -216,8 +216,10 @@ maml_HardwareSerial::maml_HardwareSerial(
 {
 }
 
-// Actual interrupt handlers //////////////////////////////////////////////////////////////
+// Actual interrupt handlers //////////////////////////////////////////////////////
 
+
+int busy  = false;
 void maml_HardwareSerial::_rx_complete_irq(void)
 {
   if (bit_is_clear(*_ucsra, UPE0)) {
@@ -225,12 +227,28 @@ void maml_HardwareSerial::_rx_complete_irq(void)
     // room
     unsigned char c = *_udr;
     rx_buffer_index_t i;
+
+    //TODO: can w just inherit from the HardwareSerial class instead
+    //      and just override this method?
+
+    ////////////////////////////////////////////////////////////////////////////
+    // maml
+    if (!busy){
+      busy = true;
+      byte_in(c);
+      while (available()){
+        byte_in(c);
+      }
+      busy = false;
+      return;
+    }
+    ////////////////////////////////////////////////////////////////////////////
     i = (unsigned int)(_rx_buffer_head + 1) % SERIAL_RX_BUFFER_SIZE;
-    
+
     // if we should be storing the received character into the location
     // just before the tail (meaning that the head would advance to the
     // current location of the tail), we're about to overflow the buffer
-    // and so we don't write the character or advance the head.      
+    // and so we don't write the character or advance the head.
     if (i != _rx_buffer_tail) {
       _rx_buffer[_rx_buffer_head] = c;
       _rx_buffer_head = i;
@@ -247,7 +265,7 @@ void maml_HardwareSerial::_rx_complete_irq(void)
 // HardwareSerial.cpp
 
 
-// this next line disables the entire HardwareSerial.cpp, 
+// this next line disables the entire HardwareSerial.cpp,
 // this is so I can support Attiny series and any other chip without a uart
 #if defined(HAVE_HWSERIAL0) || defined(HAVE_HWSERIAL1) || defined(HAVE_HWSERIAL2) || defined(HAVE_HWSERIAL3)
 
@@ -344,7 +362,7 @@ void maml_HardwareSerial::begin(unsigned long baud, byte config)
   config |= 0x80; // select UCSRC register (shared with UBRRH)
 #endif
   *_ucsrc = config;
-  
+
   sbi(*_ucsrb, RXEN0);
   sbi(*_ucsrb, TXEN0);
   sbi(*_ucsrb, RXCIE0);
@@ -361,7 +379,7 @@ void maml_HardwareSerial::end()
   cbi(*_ucsrb, TXEN0);
   cbi(*_ucsrb, RXCIE0);
   cbi(*_ucsrb, UDRIE0);
-  
+
   // clear any received data
   _rx_buffer_head = _rx_buffer_tail;
 }
@@ -439,8 +457,8 @@ size_t maml_HardwareSerial::write(uint8_t c)
     return 1;
   }
   tx_buffer_index_t i = (_tx_buffer_head + 1) % SERIAL_TX_BUFFER_SIZE;
-	
-  // If the output buffer is full, there's nothing for it other than to 
+
+  // If the output buffer is full, there's nothing for it other than to
   // wait for the interrupt handler to empty it a bit
   while (i == _tx_buffer_tail) {
     if (bit_is_clear(SREG, SREG_I)) {
@@ -457,10 +475,10 @@ size_t maml_HardwareSerial::write(uint8_t c)
 
   _tx_buffer[_tx_buffer_head] = c;
   _tx_buffer_head = i;
-	
+
   sbi(*_ucsrb, UDRIE0);
   _written = true;
-  
+
   return 1;
 }
 
