@@ -11,7 +11,7 @@ _prim.c _prim.py: primitives.c non_arduino_primitives.c process_primitives.el
 	./process_primitives.el
 
 
-avm.ino: avm.c _opcodes.h _prim.c _prim.py build_ino_file.el
+avm.ino: avm.c _opcodes.h _prim.c _prim.py build_ino_file.el maml_HardwareSerial.cpp
 	./build_ino_file.el
 
 ino: avm.ino

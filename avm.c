@@ -185,6 +185,11 @@ struct frame *current_frame = NULL;
 //if these names are changed, also change them in process_primitives.el
 void** primitives; //this is filled by auto-generated code in _prim.c
 int n_primitives;
+
+#if arduino
+#include "maml_HardwareSerial.cpp"
+#endif
+
 #include "primitives.c"
 #if ! arduino
 #include "non_arduino_primitives.c"

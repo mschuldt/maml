@@ -2,7 +2,8 @@
 
 (setq files '("_opcodes.h"
               "primitives.c"
-              "_prim.c"))
+              "_prim.c"
+              "maml_HardwareSerial.cpp"))
 
 (find-file "avm.c")
 (re-search-forward "#define +arduino +\\(0\\)")
