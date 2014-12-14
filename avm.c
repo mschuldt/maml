@@ -865,8 +865,8 @@ void read_file(void){
   char ch;
   fp = fopen(BYTECODE_IN_FILE, "r");
   if (!fp){
-    SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
-    DIE(1);//TODO: should return
+    printf("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
+    exit(1);//TODO: should return
   }
   //read until file is empty
 

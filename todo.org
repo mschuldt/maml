@@ -36,9 +36,9 @@
 - [ ] Find someway of using an array for label addresses instead
       (so that we can dynamically allocate the memory and free it if needed)
 - [ ] threaded code should be optional
-- [ ] remove newlines in bytecode. interface to serial and file should be the same
-- [ ] what is the actual value of EOF? must make sure that it does not match a bytecode
-
+- [X] remove newlines in bytecode. interface to serial and file should be the same
+- [X] what is the actual value of EOF? must make sure that it does not match a bytecode
+- [ ] need some kind of character escaping for sending ping signals etc
 * AST
 Better way of transforming the ast - dont convert to dictionaries in that
 traverse the ast object without converting to string and evaluating
@@ -55,6 +55,8 @@ traverse the ast object without converting to string and evaluating
       and the rest of the characters are interpreted as opcodes
 - [ ] bug: in @code_gen('assign'), the assigned value should only be evaluated once
 
+* types
+  - [ ] some way of typecasting
 * Miscellaneous
 - [ ] Functions for reporting errors (instead of using print + exit everytime)
 - [X] need test framework for testing invalid programs
