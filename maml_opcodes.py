@@ -89,7 +89,12 @@ def print_opcodes():
     for name, num in opcodes:
         print(name, " "*(max_len - len(name)) + str(num) + "  " + chr(num))
 
+
 if __name__ == '__main__':
+    from sys import argv
+    if len(argv) == 2 and argv[1] == '-print':
+        print_opcodes();
+        exit(0)
     assert not debug, "disable debug mode when not debugging"
     print("re-generating C opcode file...", end="")
     f = open(C_OPCODE_FILE, "w")
@@ -104,6 +109,7 @@ if __name__ == '__main__':
     f.write("\n#endif\n")
     f.close()
     print("done")
+    exit(0)
 else:
     del i
     del OP
