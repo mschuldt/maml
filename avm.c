@@ -243,12 +243,9 @@ void setup(void){
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void*)malloc(sizeof(void*)*5);//?
 
-#if arduino // setup serial
-  pinMode(SERIAL_INTR_PIN, INPUT);
-  digitalWrite(SERIAL_INTR_PIN, LOW);
-  attachInterrupt(SERIAL_INTR_NUM, serial_in, CHANGE);
-  Serial.begin(9600);
-#else // setup signal interrupt
+#if arduino // setup signal interrupt
+   maml_serial.begin(9600);
+#else
   printf("Initializing avm...\n");
   lockfile = (char*)malloc(sizeof(char)*15);
   sprintf(lockfile, "%d.lock", getpid());
