@@ -9,7 +9,7 @@ _PRIMITIVE_
 int print_i(int n){
 #if arduino
   maml_serial.print(n, DEC);
-  delay(1000);
+  delay(500);
 #else
   printf("%d\n", n);
 #endif
@@ -19,6 +19,7 @@ _PRIMITIVE_
 void print_s(struct string* str){
 #if arduino
   maml_serial.print(str->s);
+  delay(500);
 #else
   printf("%s\n", str->s);
 #endif
