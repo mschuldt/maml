@@ -7,3 +7,5 @@ avm.ino
 
 tests/*.test_out
 tests/*.bc
+false_tests/*.err_out
+false_tests/*.bc
