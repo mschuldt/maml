@@ -324,7 +324,7 @@ def _(ast, env):
     op = ast['op']
     if t_l not in valid_bin_op_types[op]:
         type_error(ast, "Invalid type for left operand: '{}'. Expected '{}'"
-                   .format(tl, reduce(lambda a, b: a + " or " + b,
+                   .format(t_l, reduce(lambda a, b: a + " or " + b,
                                       valid_bin_op_types[op])))
 
     if t_r not in valid_bin_op_types[op]:
