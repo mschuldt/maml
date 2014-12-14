@@ -7,6 +7,7 @@
 //interrupt 0 is pin 2 on Uno and Mega2560, pin 3 on Learnardo
 
 #define DEBUG 0
+#define DEBUG2 0
 
 #define include_lists 1
 
@@ -32,6 +33,12 @@
 #else
 #define D(...)
 #endif
+#if DEBUG2
+#define D2(...) printf(__VA_ARGS__);
+#else
+#define D2(...)
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +60,12 @@
 //temporarily disable while for testing arduino
 //#define SAY(words) printf(words)
 #define SAY
+#endif
+
+#if arduino
+#define serial_out(x) maml_serial.write(x)
+#else
+#define serial_out(x) printf(x)
 #endif
 
 #define _PRIMITIVE_
@@ -182,7 +195,7 @@ int n_primitives;
 
 enum Reading_state {done, integer, string, array, code};
 Reading_state reading_state;
-int input_length;
+int expected_length;
 void** code_array;
 int code_i = 0;//index of next bytecode in 'code_array'
 int n_jumps;
@@ -353,7 +366,6 @@ void loop (){
   NEXT(code);
  call_prim_1:
   D("call_1\n");
-  SAY("**call_1\n");
   stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_2:
@@ -502,66 +514,71 @@ int main(){
 //TODO: how to handle a read signal while a read is already in progress?
 
 
-#if arduino
-#define serial_out(x) maml_serial.write(x)
-#else
-#define serial_out(x) printf(x)
-#endif
-
 void byte_in(unsigned char c){
+  D2("byte_in = %d\n", c);
   //processes the next byte of input
-
   switch (reading_state){
     ///start by reading the length of the code to be received
   case string:
+    D2("reading_state:string\n");
     if (c){
+      //TODO: 'in_string_len' holds the max length of 'in_string_s',
+      // check that it does not exceed it
       *in_string_s++ = c;
     }else{
       *in_string_s = '\0';
       INPUT_STACK_PUSH(in_string_struct);
       reading_state = done;
-      printf("read string: %s\n", in_string_s);
+      D2("read string -----> %s\n", in_string_struct->s);
     }
     return;
 
   case integer:
+    D2("reading_state:integer\n");
     if (c != NUM_TERMINATOR){
       in_integer[in_integer_i++] = c;
     }else{
       in_integer[in_integer_i++] = '\0';
       INPUT_STACK_PUSH(atoi(in_integer));
       reading_state = done;
-      printf("read integer: %s\n", in_string_s);
+      D2("read integer -----> %s\n", in_integer);
     }
     return;
 
   case array:
-    serial_out("TODO: case array");
-    break;
+    serial_out("TODO: case array\n");
+    return;
 
   case done://c is a bytecode
+    D2("case done");
     switch (c){
     case SOP_PING:
+      D2("SOP_PING\n");
       serial_out(SOP_ALIVE);
       return;
     case SOP_STR:
+      D2("SOP_STR\n");
       reading_state = string;
       in_string_len = (int)INPUT_STACK_POP();
+      D2("reading string len ===>>> %d\n", in_string_len);
       in_string_struct = (struct string*)malloc(sizeof(struct string));
       in_string_s = (char*)malloc(sizeof(char)*in_string_len+1);
       in_string_struct->s = in_string_s;
       in_string_struct->len = in_string_len;
       return;
     case OP_CONST:
+      D2("OP_CONST\n");
       code_array[code_i++] = (void*) l_const;
       code_array[code_i++] = INPUT_STACK_POP();
       return;
     case SOP_INT:
+      D2("SOP_INT\n");
       //TODO: when compiling, check that number literals are not too big.
       reading_state = integer;
       in_integer_i = 0;
       return;
     case SOP_START_CODEBLOCK:
+      D2("SOP_START_CODEBLOCK\n");
       n_jumps = 0;
       n_labels = 0;
       //TODO: the length of the code block should be sent separately
@@ -574,14 +591,17 @@ void byte_in(unsigned char c){
       if (newfunction){
         //TODO: (error)
       }
-
+      //TODO: keep track of the number of bytecodes written into
+      //      code array and compare to 'expected_length' in sop_end
+      expected_length = INPUT_STACK_POP();
+      D2("expected length --> %d\n", expected_length);
       newblock = (struct codeblock*)malloc(sizeof(struct codeblock));
-      init_codeblock(newblock, input_length);//--> fix: input_length
+      init_codeblock(newblock, expected_length);
       code_array = newblock->code;
       code_i = 0;
       return;
     case SOP_START_FUNCTION:
-      SAY("SOP_START_FUNCTION\n");
+      D2("SOP_START_FUNCTION\n");
       if (newblock){
         //TODO: error
       }
@@ -594,13 +614,13 @@ void byte_in(unsigned char c){
 
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
       {
-        SAY("SOP_PRIM_CALL\n");
+        D2("SOP_PRIM_CALL\n");
         // get the primitives function pointer
 
         void* tmp;
-        int index;
+        int index = (int)INPUT_STACK_POP(); //pop arg count
         // get the address for the label that calls with that # args
-        switch ((int)INPUT_STACK_POP()){
+        switch (index){
           //TODO: put all l_call_prim_N into an array and index that
           //      then we can free that array if all code is sent
         case 0:
@@ -619,11 +639,13 @@ void byte_in(unsigned char c){
           tmp = l_call_prim_6; break;
         default:
           serial_out("ERROR: (current) max args to primitive is 6\n");
+          D2("got %d arg index\n", index);
         }
         code_array[code_i++] = tmp;
 
         //now read in function pointer
         index = (int)INPUT_STACK_POP();
+        D2("primative function index -------> %d\n", index);
         if (index < 0 || index >= n_primitives){
 #if arduino
           serial_out("Error: invalid index for primitives array\n");
@@ -757,7 +779,7 @@ void byte_in(unsigned char c){
       code_array[code_i++] = INPUT_STACK_POP();
       return;
     case SOP_END:
-      SAY("SOP_END\n");
+      D2("SOP_END\n");
       //TODO: reset jump/label variables at start of block/function transfer
       if (newblock || newfunction){
         /*
@@ -780,29 +802,30 @@ void byte_in(unsigned char c){
       }
       if (newblock){
         //printf("appending new codeblock\n");
-        SAY("appending new codeblock\n");
+        D2("appending new codeblock\n");
         code_array[code_i] = l_end_of_block;
 
         append_codeblock(newblock);
-        SAY("appended codeblock\n");
+        D2("appended codeblock\n");
 
         newblock = NULL;
         code_array = NULL;
 
       }else if (newfunction){
-        //TODO:
+        D2("TODO: newfunction case in SOP_END");
       }else{
-        //return;
+        D2("end of input\n");
       }
       return;
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
+      D2("unknown bytecode = %d\n", c);
 
     }//end bytecode switch
-
+    return;
   default:
-    serial_out("error: invalid reading state");
+    serial_out("error: invalid reading state\n");
 
   }//end reading state switch
 
@@ -834,7 +857,7 @@ void read_file(void){
   fprintf(fp, "1");
   fclose(fp);
   //reset signal handler (it gets unset everytime for some reason)
-  signal(SIGIO, (__sighandler_t)read_file);
+
   char ch;
   fp = fopen(BYTECODE_IN_FILE, "r");
   if (!fp){
@@ -843,13 +866,15 @@ void read_file(void){
   }
   //read until file is empty
 
-  while ((ch = fgetc(fp) != EOF)){
+  while ((ch = fgetc(fp)) != EOF){
     byte_in(ch);
   }
 
   fp = fopen(lockfile, "w");
   fprintf(fp, "0");
   fclose(fp);
+
+  signal(SIGIO, (__sighandler_t)read_file);
 }
 #endif
 
