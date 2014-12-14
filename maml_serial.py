@@ -14,7 +14,7 @@ from time import sleep
 import platform
 from glob import glob
 import serial
-
+from sys import stdout
 
 class Maml_serial:
     """
@@ -29,6 +29,7 @@ class Maml_serial:
         self.serial_in = [] #lines of strings received from the serial port
         self.serial = None
         self.timeout = 0.3
+        self.serial_delay = 0.005 #time to delay between sending bytes
 
     def send_codeblock(self, block):
         """
@@ -140,13 +141,15 @@ class Maml_serial:
     def _write_to_serial(self, bytecode):
         "write BYTECODE to serial, assumes serial is open"
         for c in bytecode:
-            print("send> " + str((c if type(c) == str else chr(c)).encode('ascii')))
-            sleep(1)
+            #print("send> " + str((c if type(c) == str else chr(c)).encode('ascii')))
+            sleep(self.serial_delay)
             self.serial.write((c if type(c) == str else chr(c)).encode('ascii'))
-            self.read_lines();
-
-            print("received===========",self.serial_in)
-            self.serial_in = []
+            print(".", end="")
+            stdout.flush()
+            #self.read_lines();
+            #print("received===========",self.serial_in)
+            #self.serial_in = []
+        print("done sending")
 
     def read_lines(self, check_connection=False, _timeout=None):
         "read available lines from Arduino, returns number lines read"
