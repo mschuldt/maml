@@ -1,5 +1,5 @@
 VM_PROCESS_NAME = 'avm'
-# NOTE: If this are changed, their value in avm.c must be also changed.
+# NOTE: If these are changed, their value in avm.c must be also changed.
 NUM_TERMINATOR = 'x'
 BYTECODE_IN_FILE = '_bc.txt'
 
@@ -39,7 +39,9 @@ class Maml_serial:
         length = len(bc)
         exp = expand_bytecode(bc)
         print("***num bytecodes = " + str(length+1))
-        exp = [SOP_PING+1]+list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
+        #exp = [SOP_PING+1]+list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
+        #TODO: this bytecode should be generated elsewhere
+        exp = [chr(SOP_INT)] + list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
         # end block and end file
         self._send(exp + [chr(SOP_END), chr(SOP_END)])
 
@@ -257,26 +259,27 @@ def expand_bytecode(bc):
 
     def expand_int(n):
         # TODO: better protocol for sending numbers, this is pretty dumb
-        return list(str(n)) + [NUM_TERMINATOR]
+        return [chr(SOP_INT)] + list(str(n)) + [NUM_TERMINATOR]
 
     while i < length:
         c = bc[i]
-        long_code.append(chr(c))
+
         if c == SOP_INT:
             i += 1
             long_code.extend(expand_int(bc[i]))
         elif c == SOP_STR:
             i += 1
             s = bc[i]
-            long_code.extend(expand_int(len(s)) + list(s) + [chr(0)])
+            long_code.extend(expand_int(len(s)) + [chr(SOP_STR)] + list(s) + [chr(0)])
         elif c == SOP_ARRAY or c == SOP_INT_ARRAY:
             i += 1
             s = bc[i]
             # Types: 0 -> int
             #        1 -> void*
             long_code.extend(expand_int(len(s)) + expand_int(c == SOP_ARRAY) +
-                             s)
-
+                             s)#TODO
+        else:
+            long_code.append(chr(c))
         i += 1
     return long_code
 
@@ -327,7 +330,7 @@ def list_serial_ports():
         return glob.glob('/dev/tty*') + glob.glob('/dev/cu*')
     elif system_name == "Linux":
         # + glob('/dev/ttyS*')
-        return glob('/dev/ttyUSB*') + glob('/dev/ttyACM*')
+        return glob('/dev/ttyACM*') + glob('/dev/ttyUSB*')
     else:
         print("Error: unknown system: " + system_name)
         exit(1)
