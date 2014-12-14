@@ -1,12 +1,14 @@
-#define _PRIMITIVE_
-
+#define _PRIMITIVE_                             \
+  /*
+      The 'Serial' object is BANNED! Use 'maml_serial' instead.
+  */
 //TODO have the preprocesser extra the number and type of args
 //     use that to check for errors while compiling
 
 _PRIMITIVE_
 int print_i(int n){
 #if arduino
-  Serial.print(n, DEC);
+  maml_serial.print(n, DEC);
   delay(1000);
 #else
   printf("%d\n", n);
@@ -16,7 +18,7 @@ int print_i(int n){
 _PRIMITIVE_
 void print_s(struct string* str){
 #if arduino
-  Serial.print(str->s);
+  maml_serial.print(str->s);
 #else
   printf("%s\n", str->s);
 #endif
@@ -27,8 +29,8 @@ void print_l(struct node *list) {
   struct node *n = list;
   while(n) {
 #if arduino
-    Serial.write((int)n->data);
-    Serial.write(" ");
+    maml_serial.write((int)n->data);
+    maml_serial.write(" ");
 #else
     printf("%d ", (int)n->data);
 #endif
@@ -42,8 +44,8 @@ void print_a(struct array* a) {
   void** d = a->data;
   for(int i = 0; i < a->len; i++) {
 #if arduino
-    Serial.write((int)d[i]);
-    Serial.write(" ");
+    maml_serial.write((int)d[i]);
+    maml_serial.write(" ");
 #else
     printf("%d ", (int)d[i]);
 #endif

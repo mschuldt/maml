@@ -54,7 +54,7 @@
 
 #if arduino
 #define DIE //?
-#define SAY(words) Serial.write(words)
+#define SAY(words) maml_serial.write(words)
 #else
 #define DIE(n) exit(n)
 //temporarily disable while for testing arduino
@@ -218,7 +218,7 @@ int reading_length = false;
 
 void** input_stack;
 unsigned char input_stack_top = 0;
-#define INPUT_STACK_PUSH(x) input_stack[input_stack_top++] = (x)
+#define INPUT_STACK_PUSH(x) input_stack[input_stack_top++] = (void*)(x)
 #define INPUT_STACK_POP() input_stack[--input_stack_top]
 
 //TODO: these can can be combined to reduce memory
@@ -233,7 +233,7 @@ int in_integer_i;
 
 void setup(void){
 #include "_prim.c"
-
+  
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
@@ -241,7 +241,7 @@ void setup(void){
   jumps = (void***)malloc(sizeof(void*)*max_jumps);
   labels =  (void**)malloc(sizeof(void*)*max_labels);
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
-  input_stack = (void*)malloc(sizeof(void*)*5);//?
+  input_stack = (void**)malloc(sizeof(void*)*5);//?
 
 #if arduino // setup signal interrupt
    maml_serial.begin(9600);
@@ -261,7 +261,7 @@ void setup(void){
   loop();// variables are initialized the first time loop is called
 
 #if arduino
-  Serial.print("Ready.\n\n");
+  maml_serial.print("Ready.\n\n");
 #else
   printf("Ready.\n\n");
 #endif
@@ -570,7 +570,7 @@ void byte_in(unsigned char c){
       return;
     case OP_CONST:
       D2("OP_CONST\n");
-      code_array[code_i++] = (void*) l_const;
+      code_array[code_i++] = l_const;
       code_array[code_i++] = INPUT_STACK_POP();
       return;
     case SOP_INT:
@@ -595,7 +595,7 @@ void byte_in(unsigned char c){
       }
       //TODO: keep track of the number of bytecodes written into
       //      code array and compare to 'expected_length' in sop_end
-      expected_length = INPUT_STACK_POP();
+      expected_length = (int)INPUT_STACK_POP();
       D2("expected length --> %d\n", expected_length);
       newblock = (struct codeblock*)malloc(sizeof(struct codeblock));
       init_codeblock(newblock, expected_length);
@@ -669,7 +669,7 @@ void byte_in(unsigned char c){
         SAY("OP_GLOBAL_STORE\n");
         code_array[code_i++] = l_store_global;
       read_globals_index:
-        int index = INPUT_STACK_POP();
+        int index = (int)INPUT_STACK_POP();
         if (index < 0 || index > max_globals){
           SAY("Error: (op_load_global) invalid global variable index\n"); DIE(1);
         }
