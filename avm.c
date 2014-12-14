@@ -34,7 +34,11 @@
 #define D(...)
 #endif
 #if DEBUG2
+#if arduino
+#define D2(...) serial_out(__VA_ARGS__);
+#else
 #define D2(...) printf(__VA_ARGS__);
+#endif
 #else
 #define D2(...)
 #endif
@@ -233,7 +237,7 @@ int in_integer_i;
 
 void setup(void){
 #include "_prim.c"
-  
+
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
@@ -244,7 +248,7 @@ void setup(void){
   input_stack = (void**)malloc(sizeof(void*)*5);//?
 
 #if arduino // setup signal interrupt
-   maml_serial.begin(9600);
+  maml_serial.begin(9600);
 #else
   printf("Initializing avm...\n");
   lockfile = (char*)malloc(sizeof(char)*15);
@@ -367,7 +371,6 @@ void loop (){
   stack[++top] = ((void* (*)(void))(*code))();
   NEXT(code);
  call_prim_1:
-  D("call_1\n");
   stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_2:
@@ -406,11 +409,11 @@ void loop (){
   NEXT(code);
  load_global:
   D("load_global\n")
-    stack[++top] = globals[(int)*code++];
+  stack[++top] = globals[(int)*code++];
   NEXT(code);
  store_global:
   D("store_global\n")
-    globals[(int)*code++] = stack[top--];
+  globals[(int)*code++] = stack[top--];
   NEXT(code);
  _if:
   D("if\n");
@@ -422,11 +425,10 @@ void loop (){
   code = (void**)*code;
   NEXT(code);
  add:
-  D("add\n");
-  stack[top-1] = (void*)((int)stack[top] + (int)stack[--top]);
+  stack[top-1] = (void*)((long)stack[top-1] + (long)stack[top--]);
   NEXT(code);
  sub:
-  D("add\n");
+  D("SUB\n");
   stack[top-1] = (void*)((int)stack[top-1] - (int)stack[top--]);
   NEXT(code);
  mult:
@@ -442,9 +444,11 @@ void loop (){
   stack[top-1] = (void*) ((int)(stack[top]) < ((int)stack[--top]));
   NEXT(code);
  lt:
-  // use > because items on stack are reversed
-  stack[top-1] = (void*) ((int)(stack[top]) > ((int)stack[--top]));
+  //This works on the desktop, but not the arduino(why?):
+  // stack[top-1] = (void*) ((long)(stack[top]) > ((long)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top-1]) < ((long)stack[top--]));
   NEXT(code);
+
  eq:
   stack[top-1] = (void*) ((int)(stack[top]) == ((int)stack[--top]));
   NEXT(code);
@@ -517,7 +521,6 @@ int main(){
 
 
 void byte_in(unsigned char c){
-  D2("byte_in = %d\n", c);
   //processes the next byte of input
   switch (reading_state){
     ///start by reading the length of the code to be received
@@ -555,7 +558,7 @@ void byte_in(unsigned char c){
     D2("case done");
     switch (c){
     case SOP_PING:
-      D2("SOP_PING\n");
+      //serial_out("SOP_PING\n");
       serial_out(SOP_ALIVE);
       return;
     case SOP_STR:
@@ -569,7 +572,6 @@ void byte_in(unsigned char c){
       in_string_struct->len = in_string_len;
       return;
     case OP_CONST:
-      D2("OP_CONST\n");
       code_array[code_i++] = l_const;
       code_array[code_i++] = INPUT_STACK_POP();
       return;
@@ -884,3 +886,6 @@ void read_file(void){
 //compiled size in bytes
 //10,042
 //11,898
+//9,626
+//
+//Global variables use 812 bytes (9%) of dynamic memory
