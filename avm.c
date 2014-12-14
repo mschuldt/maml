@@ -57,6 +57,9 @@
 
 #define _PRIMITIVE_
 
+void read_file(void);
+
+
 struct string{
   int len;
   char* s;
@@ -151,7 +154,6 @@ struct node* cdr(struct node* list){
 }
 #endif
 
-void serial_in();
 
 // 'setup' and 'loop' are used so that this code will
 // work with the standard Arduino IDE as well
@@ -175,10 +177,41 @@ int n_primitives;
 #include "non_arduino_primitives.c"
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+//variables used by 'byte_in' to build input
+
+enum Reading_state {done, integer, string, array, code};
+Reading_state reading_state;
+int input_length;
+void** code_array;
+int code_i = 0;//index of next bytecode in 'code_array'
+int n_jumps;
+int n_labels;
+//TODO: this should be reduced on the arduino and allowed to grow/shrink
 int max_jumps = 100;
 int max_labels = 100;
 void*** jumps;
 void** labels;
+
+struct codeblock* newblock = NULL;
+struct procedure* newfunction = NULL;
+
+int reading_length = false;
+
+void** input_stack;
+unsigned char input_stack_top = 0;
+#define INPUT_STACK_PUSH(x) input_stack[input_stack_top++] = (x)
+#define INPUT_STACK_POP() input_stack[--input_stack_top]
+
+//TODO: these can can be combined to reduce memory
+//for reading strings
+struct string* in_string_struct;
+int in_string_len;
+char* in_string_s;
+//for reading numbers
+char* in_integer;
+int in_integer_i;
+
 
 void setup(void){
 #include "_prim.c"
@@ -189,6 +222,8 @@ void setup(void){
   globals = (void**)malloc(sizeof(void*)*max_globals);
   jumps = (void***)malloc(sizeof(void*)*max_jumps);
   labels =  (void**)malloc(sizeof(void*)*max_labels);
+  in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
+  input_stack = (void*)malloc(sizeof(void*)*5);//?
 
 #if arduino // setup serial
   pinMode(SERIAL_INTR_PIN, INPUT);
@@ -203,7 +238,7 @@ void setup(void){
   fprintf(fp, "0");
   fclose(fp);
 
-  signal(SIGIO, (__sighandler_t)serial_in);
+  signal(SIGIO, (__sighandler_t)read_file);
   //TODO: catch kill signal and remove lock file
 
 #endif
@@ -460,314 +495,87 @@ int main(){
 }
 #endif
 
-#if arduino
-volatile boolean receiving_serial = false;
-#endif
-
-
 #define CHAR_TO_INT(c) ((c) - 48)
-
-////////////////////////////////////////////////////////////////////////////////
-// read_byte
-
-#if arduino
-int read_byte(){
-  while (!Serial.available()){
-    //wait.
-  }
-  int x =  Serial.read();
-  if (x == SOP_PING){
-    return x;
-  }
-  Serial.print("got: ");
-  Serial.println((int)x);
-  return x;
-  //  return Serial.read();
-}
-
-#define READ_BYTE() read_byte()
-#else
-int read_byte(FILE* fp){
-  int i =  fgetc(fp);
-  //  printf("got: %d\n", i);
-  return i;
-}
-#define READ_BYTE() read_byte(fp)
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-// read_int
-
-#if arduino
-int read_int()
-#else
-  int read_int(FILE* fp)
-#endif
-{
-  //SAY("read_int()");
-  char integer[10];
-  int i=0;
-  char ch;
-  char test[5];
-  while ((ch = READ_BYTE()) != NUM_TERMINATOR){
-    //      printf("ch = %d\n" ,ch);
-#if arduino
-    Serial.print("(read_int)c=");
-    sprintf(test, "%d\0", (int)ch);
-    Serial.println(test);
-#endif
-    integer[i++] = ch;
-  }
-  integer[i] = '\0';
-
-  /* for (int j=0;j<i;j++){ */
-  /*   printf("%d_", integer[j]); */
-  /* } */
-  //    printf("\n");
-  int x = atoi(integer);
-
-#if arduino
-  Serial.print("read_int->");
-  Serial.print(x, DEC);
-#else
-#endif
-
-  return x;
-}
-#if arduino
-#define READ_INT() read_int()
-#else
-#define READ_INT() read_int(fp)
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-// read_string
-
-#if arduino
-struct string* read_string()
-#else
-  struct string* read_string(FILE* fp)
-#endif
-{
-  int n = READ_INT();
-  //TODO: check that we have enough mem
-  char* s = (char*)malloc(sizeof(char)*n+1);
-  struct string *str = (struct string*)malloc(sizeof(struct string));
-  str->s = s;
-  str->len = n;
-  int i = 0;
-  while (*s++ = READ_BYTE()){
-    if (++i > n){
-      SAY("Error: max string size exceeded\n"); DIE(1);
-    }
-  }
-  *s = '\0';
-  return str;
-}
-#if arduino
-#define READ_STRING() read_string()
-#else
-#define READ_STRING() read_string(fp)
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-// read_int_array
-
-#if arduino
-int* read_int_array()
-#else
-  int* read_int_array(FILE* fp)
-#endif
-{
-  int n = READ_INT();
-  //TODO: check that we have enough mem
-  int* a = (int*)malloc(sizeof(int)*n);
-  int i = 0;
-  while (*a++ = READ_BYTE()){
-    if (++i > n){
-      SAY("Error: max int array size exceeded"); DIE(1);
-    }
-  }
-  return a;
-}
-#if arduino
-#define READ_INT_ARRAY() read_int_array()
-#else
-#define READ_INT_ARRAY() read_int_array(fp)
-#endif
-
-
-#define SKIP(ch, msg) if (READ_BYTE() != ch){   \
-    SAY("Error -- skip: unexpected char " msg); \
-  }
-//printf("Error: expected char '%c'"msg"\n", ch)      \
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 //TODO: how to handle a read signal while a read is already in progress?
 
 
-/* when this runs on the Arduino, 'serial_in' will be called
-   multiple times while a single string of bytecodes is being
-   transferred. When it runs on Linux, it will only be called
-   once to read bytecodes in from a file. Bytecodes are communicated
-   using a persistent file for debugging purposes.
-*/
-
-void serial_in(){ //serial ISR (interrupt service routine)
 #if arduino
-  if (receiving_serial){
-    return;
-  }
-  receiving_serial = true;
-  //for serial to work, we need to re-enable interrupts
-  interrupts();
-
+#define serial_out(x) maml_serial.write(x)
 #else
-  //set lock file so that other processes will not interrupt this one
-  //while it reads in the new bytecode (ugly things happen in that case)
-  FILE *fp = fopen(lockfile, "w");
-  fprintf(fp, "1");
-  fclose(fp);
-  //reset signal handler (it gets unset everytime for some reason)
-  signal(SIGIO, (__sighandler_t)serial_in);
-  char ch;
-  fp = fopen(BYTECODE_IN_FILE, "r");
-  if (!fp){
-    SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
-    DIE(1);//TODO: should return
-  }
+#define serial_out(x) printf(x)
 #endif
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // everything below this should use macros to read input
-  // instead of reading from the file or serial directly
+void byte_in(unsigned char c){
+  //processes the next byte of input
 
-  switch (READ_BYTE()){
-    //note on THE BUG:
-    //on Arduino the first byte it sees is the ping
-    //the second is the second one in the bytecode array being sent
-    //(this is the first character of the length)
-    //it then gets thrown out here (the default case)
-    //WHERE DOES THE FIRST ONE GO?
-    //=> with a delay of 1 second before sending each one, it
-    //   receives that character
-  case SOP_PING:
-    SAY(SOP_ALIVE);
-    SAY("ALIVE\n");
-#if arduino
-    receiving_serial = false;
-#endif
+  switch (reading_state){
+    ///start by reading the length of the code to be received
+  case string:
+    if (c){
+      *in_string_s++ = c;
+    }else{
+      *in_string_s = '\0';
+      INPUT_STACK_PUSH(in_string_struct);
+      reading_state = done;
+      printf("read string: %s\n", in_string_s);
+    }
     return;
-  default:
-    SAY("NOT_ALIVE\n");
-  }
 
-  int reading_str = false;
-  void** code_array;
-
-  //TODO: this should be reduced on the arduino and allowed to grow/shrink
-
-  int n_jumps = 0;
-  int n_labels = 0;
-
-
-  char data;
-  //number of bytecodes to read in
-  //the nth bytecode should be the terminator
-  int total = 0;
-  int i = 0;//index of next bytecode in 'code_array'
-  struct codeblock* newblock = NULL;
-  struct procedure* newfunction = NULL;
-
-  int reading_array = 0;
-  int array_index = 0;
-  int array_len = 0;
-  int* int_array;
-  void** any_array;
-#define TYPE_ANY 1
-#define TYPE_INT 2
-
-  SAY("point D");
-  //read in number of bytes there are left
-  total = (int)READ_INT();
-  SAY("total bytecodes = ");
-#if arduino
-  Serial.print(total, DEC);
-#endif
-  if (total == 0){
-    SAY("point E");
-#if arduino
-    receiving_serial = false;
-#endif
+  case integer:
+    if (c != NUM_TERMINATOR){
+      in_integer[in_integer_i++] = c;
+    }else{
+      in_integer[in_integer_i++] = '\0';
+      INPUT_STACK_PUSH(atoi(in_integer));
+      reading_state = done;
+      printf("read integer: %s\n", in_string_s);
+    }
     return;
-  }
 
-  SAY("point B");
-  while (1){//until terminator is seen
-    SAY("point C");
+  case array:
+    serial_out("TODO: case array");
+    break;
 
-    data = READ_BYTE();
-
-    if (data == EOF){
-      printf("ERROR: no terminator in bytecode file '%s'\n", BYTECODE_IN_FILE);
-      exit(1);//??
-    }
-
-    switch (reading_array){
-    case 0: break;
-    case TYPE_ANY:
-      if (array_index >= array_len){
-        //TODO:
-      }
-      //TODO:
-      break;
-    case TYPE_INT:
-      if (array_index >= array_len){
-
-      }
-      break;
-    default:
-      SAY("Error: unknown array type"); DIE(1);
-    }
-
-    //#char op = CHAR_TO_INT(data);
-    char op = data;
-    if (i == total && op != SOP_END){
-      //if (i == 17 && op != SOP_END){
-      SAY("ERROR: file has more bytecodes then header specified\n"); DIE(1);
-    }
-    if (!newfunction && !newblock
-        && ! (op == SOP_START_CODEBLOCK)
-        && ! (op == SOP_START_FUNCTION)
-        && ! (op == SOP_END)){
-      SAY("ERROR: block or lambda has not been specified\n"); DIE(1);
-    }
-
-    int n;
-    switch (op){
+  case done://c is a bytecode
+    switch (c){
     case SOP_PING:
-#if arduino
-      Serial.println(SOP_ALIVE);
-#else
-      printf("Alive\n");
-#endif
-      break;
+      serial_out(SOP_ALIVE);
+      return;
+    case SOP_STR:
+      reading_state = string;
+      in_string_len = (int)INPUT_STACK_POP();
+      in_string_struct = (struct string*)malloc(sizeof(struct string));
+      in_string_s = (char*)malloc(sizeof(char)*in_string_len+1);
+      in_string_struct->s = in_string_s;
+      in_string_struct->len = in_string_len;
+      return;
+    case SOP_INT:
+      //TODO: when compiling, check that number literals are not too big.
+      reading_state = integer;
+      in_integer_i = 0;
+      return;
     case SOP_START_CODEBLOCK:
+      n_jumps = 0;
+      n_labels = 0;
       //TODO: the length of the code block should be sent separately
       //from the 'total' value
-      SAY("SOP_START_CODEBLOCK\n");
+      //serial_out("SOP_START_CODEBLOCK\n");
+
       //For now we are just creating and appending a new block every time
       //TODO: the next code should specify creation/replacement of a block
       //      or just its index number with the creation/replacement implied
       if (newfunction){
         //TODO: (error)
       }
+
       newblock = (struct codeblock*)malloc(sizeof(struct codeblock));
-      init_codeblock(newblock, total);
+      init_codeblock(newblock, input_length);//--> fix: input_length
       code_array = newblock->code;
-      break;
+      code_i = 0;
+      return;
     case SOP_START_FUNCTION:
       SAY("SOP_START_FUNCTION\n");
       if (newblock){
@@ -778,184 +586,172 @@ void serial_in(){ //serial ISR (interrupt service routine)
       //newfunction->args = READ_INT_ARRAY();
       //newfunction->
       code_array = newfunction->code;
-      break;
-    case SOP_INT:
-      SAY("SOP_INT\n");
-      code_array[i++] = (void*) l_load_const;
-      code_array[i++] = (void*) READ_INT();
-      break;
+      return;
+
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
-      SAY("SOP_PRIM_CALL\n");
-      // get the primitives function pointer
+      {
+        SAY("SOP_PRIM_CALL\n");
+        // get the primitives function pointer
 
-      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)");
+        void* tmp;
+        int index;
+        // get the address for the label that calls with that # args
+        switch ((int)INPUT_STACK_POP()){
+          //TODO: put all l_call_prim_N into an array and index that
+          //      then we can free that array if all code is sent
+        case 0:
+          tmp = l_call_prim_0; break;
+        case 1:
+          tmp = l_call_prim_1; break;
+        case 2:
+          tmp = l_call_prim_2; break;
+        case 3:
+          tmp = l_call_prim_3; break;
+        case 4:
+          tmp = l_call_prim_4; break;
+        case 5:
+          tmp = l_call_prim_5; break;
+        case 6:
+          tmp = l_call_prim_6; break;
+        default:
+          serial_out("ERROR: (current) max args to primitive is 6\n");
+        }
+        code_array[code_i++] = tmp;
 
-      void* tmp;
-      int index;
-      // get the address for the label that calls with that # args
-      switch (READ_INT()){
-        //TODO: put all l_call_prim_N into an array and index that
-        //      then we can free that array if all code is sent
-      case 0:
-        SAY("prim0\n");
-        tmp = l_call_prim_0; break;
-      case 1:
-        SAY("prim1\n");
-        tmp = l_call_prim_1; break;
-      case 2:
-        SAY("prim2\n");
-        tmp = l_call_prim_2; break;
-      case 3:
-        tmp = l_call_prim_3; break;
-      case 4:
-        tmp = l_call_prim_4; break;
-      case 5:
-        tmp = l_call_prim_5; break;
-      case 6:
-        tmp = l_call_prim_6; break;
-      default:
-        SAY("ERROR: (current) max args to primitive is 6\n");
-      }
-      code_array[i++] = tmp;
-
-      SKIP(SOP_INT, "(in case SOP_PRIM_CALL)");
-
-      //now read in function pointer
-      index = READ_INT();
-      if (index < 0 || index >= n_primitives){
+        //now read in function pointer
+        index = (int)INPUT_STACK_POP();
+        if (index < 0 || index >= n_primitives){
 #if arduino
-        SAY("Error: invalid index for primitives array\n");
+          serial_out("Error: invalid index for primitives array\n");
 #else
-        printf("Error: invalid index for primitives array. max: %d, got %d\n",
-               index, n_primitives);
-        exit(1);
+          printf("Error: invalid index for primitives array. max: %d, got %d\n",
+                 index, n_primitives);
+          exit(1);
 #endif
+        }
+        code_array[code_i++] = primitives[index];
+        return;
       }
-      code_array[i++] = primitives[index];
-      break;
     case OP_GLOBAL_LOAD:
       SAY("OP_GLOBAL_LOAD\n");
-      code_array[i++] = l_load_global;
-      SKIP(SOP_INT, "(in case global_load)");
+      code_array[code_i++] = l_load_global;
       goto read_globals_index;
     case OP_GLOBAL_STORE:
-      SAY("OP_GLOBAL_STORE\n");
-      code_array[i++] = l_store_global;
-      SKIP(SOP_INT, "(in case global_store)");
-    read_globals_index:
-      index = READ_INT();
-      if (index < 0 || index > max_globals){
-        SAY("Error: (op_load_global) invalid global variable index\n"); DIE(1);
+      {
+        SAY("OP_GLOBAL_STORE\n");
+        code_array[code_i++] = l_store_global;
+      read_globals_index:
+        int index = INPUT_STACK_POP();
+        if (index < 0 || index > max_globals){
+          SAY("Error: (op_load_global) invalid global variable index\n"); DIE(1);
+        }
+        code_array[code_i++] = (void*)index;
+        return;
       }
-      code_array[i++] = (void*)index;
-      break;
     case OP_ADD:
       SAY("OP_ADD\n");
-      code_array[i++] = l_add;
-      break;
+      code_array[code_i++] = l_add;
+      return;
     case OP_MULT:
-      code_array[i++] = l_mult;
-      break;
+      code_array[code_i++] = l_mult;
+      return;
     case OP_SUB:
-      code_array[i++] = l_sub;
-      break;
+      code_array[code_i++] = l_sub;
+      return;
     case OP_DIV:
-      code_array[i++] = l_div;
-      break;
+      code_array[code_i++] = l_div;
+      return;
     case OP_GT:
-      code_array[i++] = l_gt;
-      break;
+      code_array[code_i++] = l_gt;
+      return;
     case OP_LT:
-      code_array[i++] = l_lt;
-      break;
+      code_array[code_i++] = l_lt;
+      return;
     case OP_EQ:
-      code_array[i++] = l_eq;
-      break;
+      code_array[code_i++] = l_eq;
+      return;
     case OP_NOT_EQ:
-      code_array[i++] = l_notEq;
-      break;
+      code_array[code_i++] = l_notEq;
+      return;
     case OP_LT_EQ:
-      code_array[i++] = l_ltEq;
-      break;
+      code_array[code_i++] = l_ltEq;
+      return;
     case OP_GT_EQ:
-      code_array[i++] = l_gtEq;
-      break;
+      code_array[code_i++] = l_gtEq;
+      return;
     case OP_RETURN:
-      code_array[i++] = l_ret;
-      break;
+      code_array[code_i++] = l_ret;
+      return;
     case OP_POP:
-      code_array[i++] = l_pop;
-      break;
-    case SOP_STR:
-      SAY("SOP_STR\n");
-      code_array[i++] = (void*) l_load_const;
-      code_array[i++] = (void*) READ_STRING();
-      break;
+      code_array[code_i++] = l_pop;
+      return;
 #if include_lists
     case OP_LIST:
-      SAY("OP_LIST\n");
-      code_array[i++] = l_list;
-      SKIP(SOP_INT, "(in case op_list)");
-      n = READ_INT();
-      if (n <= 0){
-        SAY("Error: (op_list) invalid length"); DIE(1);
+      {
+        SAY("OP_LIST\n");
+        code_array[code_i++] = l_list;
+        int n = (int)INPUT_STACK_POP();
+        if (n <= 0){
+          SAY("Error: (op_list) invalid length"); DIE(1);
+        }
+        //TODO: give warning if we don't currently have enough memory
+        code_array[code_i++] = (void*)n;
+        return;
       }
-      //TODO: give warning if we don't currently have enough memory
-      code_array[i++] = (void*)n;
-      break;
 #endif
     case OP_ARRAY:
-      SAY("OP_ARRAY\n");
-      code_array[i++] = l_tuple;
-      SKIP(SOP_INT, "(in case op_array)");
-      n = READ_INT();
-      if( n <= 0 ) {
-        SAY("Error: (op_array) invalid length"); DIE(1);
+      {
+        SAY("OP_ARRAY\n");
+        code_array[code_i++] = l_tuple;
+        int n = (int)INPUT_STACK_POP();
+        if ( n <= 0 ) {
+          SAY("Error: (op_array) invalid length"); DIE(1);
+        }
+        code_array[code_i++] = (void*)n;
+        return;
       }
-      code_array[i++] = (void*)n;
-      break;
     case OP_IF:
       SAY("OP_IF\n");
-      code_array[i++] = l_if;
-      break;
+      code_array[code_i++] = l_if;
+      return;
     case OP_JUMP:
       SAY("OP_JUMP\n");
-      code_array[i++] = l_jump;
+      code_array[code_i++] = l_jump;
       if (n_jumps > max_jumps-1){ //-1 because we add 2 items each time
         //TODO: extend the jumps array
         SAY("Error: max jumps exceeded\n"); DIE(1);
       }
-      jumps[n_jumps++] = &code_array[i++];
-      SKIP(SOP_INT, "(in case op_jump)");
-      jumps[n_jumps++] = (void**)READ_INT(); //TODO: store them in a separate array
-      break;
+      jumps[n_jumps++] = &code_array[code_i++];
+      jumps[n_jumps++] = (void**)INPUT_STACK_POP(); //TODO: store them in a separate array
+      return;
     case SOP_LABEL:
-      SAY("SOP_LABEL\n");
-      SKIP(SOP_INT, "(in case op_label)");
-      index = READ_INT();
-      if (index < 0){
-        SAY("Error: invalid label index\n");  DIE(1);
+      {
+        SAY("SOP_LABEL\n");
+        int index = (int)INPUT_STACK_POP();
+        if (index < 0){
+          SAY("Error: invalid label index\n");  DIE(1);
+        }
+        if (index > max_labels){
+          //TODO: extend the labels array
+          SAY("Error: max labels exceeded\n");  DIE(1);
+        }
+        labels[index] = &code_array[code_i];
+        return;
       }
-      if (index > max_labels){
-        //TODO: extend the labels array
-        SAY("Error: max labels exceeded\n");  DIE(1);
-      }
-      labels[index] = &code_array[i];
-      break;
     case SOP_NULL:
       SAY("SOP_NULL\n");
-      code_array[i++] = (void*) l_load_const;
-      code_array[i++] = NULL;
-      break;
+      code_array[code_i++] = (void*) l_load_const;
+      code_array[code_i++] = NULL;
+      return;
     case SOP_ARRAY:
       SAY("SOP_ARRAY\n");
       //TODO:
-      break;
+      return;
     case SOP_INT_ARRAY:
       SAY("SOP_INT_ARRAY\n");
-      code_array[i++] = (void*) l_load_const;
-      code_array[i++] = READ_INT_ARRAY();
-      break;
+      code_array[code_i++] = (void*) l_load_const;
+      code_array[code_i++] = INPUT_STACK_POP();
+      return;
     case SOP_END:
       SAY("SOP_END\n");
       //TODO: reset jump/label variables at start of block/function transfer
@@ -967,8 +763,8 @@ void serial_in(){ //serial ISR (interrupt service routine)
           printf("%d, ", code_array[k]);
           }
         */
-        for (int j=0; j < n_jumps; j+=2){
-          *(jumps[j]) = labels[(int)jumps[j+1]];
+        for (int i=0; i < n_jumps; i+=2){
+          *(jumps[i]) = labels[(int)jumps[i+1]];
         }
         /*
           printf("\nafter conversion:\n:");
@@ -981,44 +777,78 @@ void serial_in(){ //serial ISR (interrupt service routine)
       if (newblock){
         //printf("appending new codeblock\n");
         SAY("appending new codeblock\n");
-        code_array[i] = l_end_of_block;
-        ///
-        //noInterrupts();
-        ///
+        code_array[code_i] = l_end_of_block;
+
         append_codeblock(newblock);
         SAY("appended codeblock\n");
 
-        //interrupts();
-
         newblock = NULL;
         code_array = NULL;
+
       }else if (newfunction){
         //TODO:
       }else{
-        SAY("returning from serial_in\n");
-#if arduino
-        receiving_serial = false;
-#else
-        fp = fopen(lockfile, "w");
-        fprintf(fp, "0");
-        fclose(fp);
-#endif
-        return; //end of file
+        //return;
       }
-      break;
+      return;
     default: //bytecode
       //TODO:
-#if arduino
-      SAY("ERROR: unrecognized bytecode\n");
-#else
-      printf("ERROR: unrecognized bytecode: '%d'\n", op);
-#endif
+      serial_out("ERROR: unrecognized bytecode\n");
+
+    }//end bytecode switch
+
+  default:
+    serial_out("error: invalid reading state");
+
+  }//end reading state switch
+
+  //TODO: opcode for verifying that everything is sent to the Arduino
+  //      and another for resetting the reading state
+  //      -> how can that be possible? => use values outside standard ascii range?
+
+  /*
+    char op = data;
+    if (i == total && op != SOP_END){
+    //if (i == 17 && op != SOP_END){
+    SAY("ERROR: file has more bytecodes then header specified\n"); DIE(1);
     }
-  }
-#if arduino
-  receiving_serial = false;
-#endif
+    if (!newfunction && !newblock
+    && ! (op == SOP_START_CODEBLOCK)
+    && ! (op == SOP_START_FUNCTION)
+    && ! (op == SOP_END)){
+    SAY("ERROR: block or lambda has not been specified\n"); DIE(1);
+    }
+  */
 }
+
+
+#if !arduino
+void read_file(void){
+  //set lock file so that other processes will not interrupt this one
+  //while it reads in the new bytecode (ugly things happen in that case)
+  FILE *fp = fopen(lockfile, "w");
+  fprintf(fp, "1");
+  fclose(fp);
+  //reset signal handler (it gets unset everytime for some reason)
+  signal(SIGIO, (__sighandler_t)read_file);
+  char ch;
+  fp = fopen(BYTECODE_IN_FILE, "r");
+  if (!fp){
+    SAY("ERROR: failed to open bytecode file '" BYTECODE_IN_FILE "'\n");
+    DIE(1);//TODO: should return
+  }
+  //read until file is empty
+
+  while ((ch = fgetc(fp) != EOF)){
+    byte_in(ch);
+  }
+
+  fp = fopen(lockfile, "w");
+  fprintf(fp, "0");
+  fclose(fp);
+}
+#endif
+
 
 //compiled size in bytes
 //10,042
