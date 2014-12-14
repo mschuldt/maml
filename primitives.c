@@ -64,3 +64,18 @@ int die(int code){
 #endif
   exit(code);
 }
+
+
+#if !arduino
+#include <time.h>
+double cps_div_1000 = CLOCKS_PER_SEC / 1000.0;
+#endif
+
+_PRIMITIVE_
+ long milliseconds(void){
+#if arduino
+   return millis();
+#else
+   return (clock() / cps_div_1000);
+#endif
+ }
