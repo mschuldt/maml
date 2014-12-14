@@ -409,11 +409,11 @@ void loop (){
   NEXT(code);
  load_global:
   D("load_global\n")
-  stack[++top] = globals[(int)*code++];
+  stack[++top] = globals[(long)*code++];
   NEXT(code);
  store_global:
   D("store_global\n")
-  globals[(int)*code++] = stack[top--];
+  globals[(long)*code++] = stack[top--];
   NEXT(code);
  _if:
   D("if\n");
@@ -429,19 +429,19 @@ void loop (){
   NEXT(code);
  sub:
   D("SUB\n");
-  stack[top-1] = (void*)((int)stack[top-1] - (int)stack[top--]);
+  stack[top-1] = (void*)((long)stack[top-1] - (long)stack[top--]);
   NEXT(code);
  mult:
   D("mult\n");
-  stack[top-1] = (void*)((int)stack[top-1] * (int)stack[top--]);
+  stack[top-1] = (void*)((long)stack[top-1] * (long)stack[top--]);
   NEXT(code);
  div:
   D("div\n");
-  stack[top-1] = (void*)((int)stack[top-1] / (int)stack[top--]);
+  stack[top-1] = (void*)((long)stack[top-1] / (long)stack[top--]);
   NEXT(code);
  gt:
   // use < because items on stack are reversed
-  stack[top-1] = (void*) ((int)(stack[top]) < ((int)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
   NEXT(code);
  lt:
   //This works on the desktop, but not the arduino(why?):
@@ -450,18 +450,18 @@ void loop (){
   NEXT(code);
 
  eq:
-  stack[top-1] = (void*) ((int)(stack[top]) == ((int)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top]) == ((long)stack[--top]));
   NEXT(code);
  notEq:
-  stack[top-1] = (void*) ((int)(stack[top]) != ((int)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top]) != ((long)stack[--top]));
   NEXT(code);
  ltEq:
   // use > because items on stack are reversed
-  stack[top-1] = (void*) ((int)(stack[top]) >= ((int)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top]) >= ((long)stack[--top]));
   NEXT(code);
  gtEq:
   // use < because items on stack are reversed
-  stack[top-1] = (void*) ((int)(stack[top]) <= ((int)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top]) <= ((long)stack[--top]));
   NEXT(code);
 #if include_lists
  list:
@@ -887,5 +887,7 @@ void read_file(void){
 //10,042
 //11,898
 //9,626
-//
+//9,782
 //Global variables use 812 bytes (9%) of dynamic memory
+//794
+
