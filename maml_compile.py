@@ -81,8 +81,7 @@ def type_check(name):
 
 @code_gen('str')
 def _(ast, btc, env, top):
-    btc.extend([SOP_STR, ast['s']])
-
+    btc.extend([SOP_STR, ast['s'], OP_CONST])
 
 @ast_check('str')
 def _(ast):
@@ -101,7 +100,7 @@ def _(ast, env):
 
 @code_gen('int')
 def _(ast, btc, env, top):
-    btc.extend([SOP_INT, ast['n']])
+    btc.extend([SOP_INT, ast['n'], OP_CONST])
 
 
 @type_check('int')
@@ -126,7 +125,7 @@ def _(ast, btc, env, top):
     for e in elts:
         gen_bytecode(e, btc, env, False)
     print("compiling 'list', len(elts) = {}".format(len(elts)))
-    btc.extend([OP_LIST, SOP_INT, len(elts)])
+    btc.extend([SOP_INT, len(elts), OP_LIST])
     # TODO: if len = 0 ==> NULL
 
 
@@ -174,7 +173,7 @@ def _(ast, btc, env, top):
     for e in elts:
         gen_bytecode(e, btc, env, False)
     print("compiling 'tuple', len(elts) = {}".format(len(elts)))
-    btc.extend([OP_ARRAY, SOP_INT, len(elts)])
+    btc.extend([SOP_INT, len(elts), OP_ARRAY])
 
 
 @type_check('tuple')
@@ -217,7 +216,7 @@ def _(ast, btc, env, top):
     else:
         globalp, index = env.get_load_index(name)
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
-        btc.extend([op, SOP_INT, index])
+        btc.extend([SOP_INT, index, op])
 
 
 @type_check('name')
@@ -231,7 +230,7 @@ def _(ast, env):
 @code_gen('nameconstant')
 def _(ast, btc, env, top):
     if ast['value']:
-        btc.extend([SOP_INT, 1])
+        btc.extend([SOP_INT, 1, OP_INT])
     else:
         btc.append(SOP_NULL)
 
@@ -249,7 +248,7 @@ def _(ast, btc, env, top):
         gen_bytecode(ast['value'], btc, env, False)
         globalp, index = env.get_store_index(target['id'])
         op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
-        btc.extend([op, SOP_INT, index])
+        btc.extend([SOP_INT, index, op])
 
 
 @ast_check('assign')
@@ -394,7 +393,7 @@ def _(ast, btc, env, top):
         if transform_fn:
             print("Error: primitive function '{}' has tranform function"
                   .format(name))
-        btc.extend([SOP_PRIM_CALL, SOP_INT, nargs, SOP_INT, index])
+        btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
         if top:
             btc.append(OP_POP)
     elif transform_fn:
@@ -445,13 +444,13 @@ def _(ast, btc, env, top):
     false_l = env.make_label()  # Marks beginning of false code
     done_l = env.make_label()  # Marks end of false code
     gen_bytecode(ast['test'], btc, env, False)
-    btc.extend([OP_IF, OP_JUMP, SOP_INT, false_l])
+    btc.extend([OP_IF, SOP_INT, false_l, OP_JUMP])
     for node in ast['body']:
         gen_bytecode(node, btc, env, top)
-    btc.extend([OP_JUMP, SOP_INT, done_l, SOP_LABEL, SOP_INT, false_l])
+    btc.extend([SOP_INT, done_l, OP_JUMP, SOP_INT, false_l, SOP_LABEL])
     for node in ast['else']:
         gen_bytecode(node, btc, env, top)
-    btc.extend([SOP_LABEL, SOP_INT, done_l])
+    btc.extend([SOP_INT, done_l, SOP_LABEL])
 
 
 @type_check('if')
@@ -484,12 +483,12 @@ def _(ast, btc, env, top):
     start_l = env.make_label()
     end_l = env.make_label()
     env.start_while(start_l, end_l)
-    btc.extend([SOP_LABEL, SOP_INT, start_l])
+    btc.extend([SOP_INT, start_l, SOP_LABEL])
     gen_bytecode(ast['test'], btc, env, False)
-    btc.extend([OP_IF, OP_JUMP, SOP_INT, end_l])
+    btc.extend([OP_IF, SOP_INT, end_l, OP_JUMP])
     for node in ast['body']:
         gen_bytecode(node, btc, env, top)
-    btc.extend([OP_JUMP, SOP_INT, start_l, SOP_LABEL, SOP_INT, end_l])
+    btc.extend([SOP_INT, start_l, OP_JUMP, SOP_INT, end_l, SOP_LABEL])
     env.end_while()
 
 
@@ -510,7 +509,7 @@ def _(ast, env):
 
 @code_gen('continue')
 def _ast(ast, btc, env, top):
-    btc.extend([OP_JUMP, SOP_INT, env.get_while_start_label()])
+    btc.extend([SOP_INT, env.get_while_start_label(), OP_JUMP])
 
 @type_check('continue')
 def _ast(ast, env):
@@ -523,7 +522,7 @@ def _ast(ast, env):
 
 @code_gen('break')
 def _ast(ast, btc, env, top):
-    btc.extend([OP_JUMP, SOP_INT, env.get_while_end_label()])
+    btc.extend([SOP_INT, env.get_while_end_label(), OP_JUMP])
 
 @type_check('break')
 def _ast(ast, env):
