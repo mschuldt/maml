@@ -34,8 +34,10 @@ do
 
     rm -f $error_out
 
-    python3 maml.py $file > ${file}.err_out
-
+    python3 maml.py $file 2> ${error_out}
+    tail -n 1 $error_out > ${error_out}.tmp
+    mv ${error_out}.tmp $error_out
+    
     wait
 
     diff $expect $error_out > /dev/null
