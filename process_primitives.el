@@ -6,7 +6,7 @@
 ;;output: _prim.c, _prim.py
 
 (setq primitives_files '("primitives.c" "avm.c")
-      non_arduino_files '("non_arduino_primitives.c")
+      non_arduino_files '("desktop_only_primitives.c")
       c_out "_prim.c"
       py_out "_prim.py"
       token "_DEFUN_"
