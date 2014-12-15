@@ -72,7 +72,7 @@
 #define serial_out(x) printf(x)
 #endif
 
-#define _PRIMITIVE_
+#define _DEFUN_
 
 void read_file(void);
 
@@ -154,18 +154,18 @@ struct node{
   struct node* next;
 };
 
-_PRIMITIVE_
+_DEFUN_
 struct node* cons(void* d, struct node* list){
   struct node* _new = (struct node*)malloc(sizeof(struct node));
   _new->data = d;
   _new->next = list;
   return _new;
 }
-_PRIMITIVE_
+_DEFUN_
 void* car(struct node* list){
   return list->data;
 }
-_PRIMITIVE_
+_DEFUN_
 struct node* cdr(struct node* list){
   return list->next;
 }

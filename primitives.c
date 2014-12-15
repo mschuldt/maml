@@ -1,11 +1,11 @@
-#define _PRIMITIVE_                             \
   /*
       The 'Serial' object is BANNED! Use 'maml_serial' instead.
   */
+
 //TODO have the preprocesser extra the number and type of args
 //     use that to check for errors while compiling
 
-_PRIMITIVE_
+_DEFUN_
 int print_i(int n){
 #if arduino
   maml_serial.print(n, DEC);
@@ -15,7 +15,7 @@ int print_i(int n){
 #endif
 }
 
-_PRIMITIVE_
+_DEFUN_
 void print_s(struct string* str){
 #if arduino
   maml_serial.print(str->s);
@@ -25,7 +25,7 @@ void print_s(struct string* str){
 #endif
 }
 
-_PRIMITIVE_
+_DEFUN_
 void print_l(struct node *list) {
   struct node *n = list;
   while(n) {
@@ -40,7 +40,7 @@ void print_l(struct node *list) {
   serial_out("\n");
 }
 
-_PRIMITIVE_
+_DEFUN_
 void print_a(struct array* a) {
   void** d = a->data;
   for(int i = 0; i < a->len; i++) {
@@ -56,7 +56,7 @@ void print_a(struct array* a) {
 
 
 //TODO: way of defining function from standard lib as primitives
-_PRIMITIVE_
+_DEFUN_
 int die(int code){
 #if !arduino
   remove(lockfile);
@@ -71,7 +71,7 @@ int die(int code){
 double cps_div_1000 = CLOCKS_PER_SEC / 1000.0;
 #endif
 
-_PRIMITIVE_
+_DEFUN_
  long milliseconds(void){
 #if arduino
    return millis();

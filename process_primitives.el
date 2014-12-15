@@ -9,7 +9,7 @@
       non_arduino_files '("non_arduino_primitives.c")
       c_out "_prim.c"
       py_out "_prim.py"
-      token "_PRIMITIVE_"
+      token "_DEFUN_"
       re (format"^%s[ \n\t]+\\([a-zA-Z0-9\*_]+[ \t\n]+\\)+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*(" token))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
