@@ -89,7 +89,7 @@ def _(ast, btc, env, top):
 @ast_check('str')
 def _(ast):
     if ast['s'].find('\0') != -1:
-        print ("Error: null terminators not allowed in strings.")
+        raise MamlSyntaxError("Null terminators not allowed in strings.")
         exit(1)
 
 
@@ -139,7 +139,7 @@ def _(ast, env):
         check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
-                raise MamlTypeError("Error: list has multiple types. {} and {}"
+                raise MamlTypeError("List has multiple types. {} and {}"
                            .format(prev_type, e['s_type']))
         prev_type = e['s_type']
     ast['s_type'] = '[' + prev_type + ']'
@@ -186,7 +186,7 @@ def _(ast, env):
         check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
-                raise MamlTypeError("Error: tuple has multiple types. {} and {}"
+                raise MamlTypeError("Tuple has multiple types. {} and {}"
                            .format(prev_type, e['s_type']))
         prev_type = e['s_type']
     ast['s_type'] = '(' + prev_type + ')'
@@ -335,7 +335,7 @@ def _(ast, env):
                    .format(t_r, reduce(lambda a, b: a + "' or '" + b,
                                        valid_bin_op_types[op])))
     if t_l != t_r:
-        raise MamlTypeError("TypeError: type for {} do not match, '{}' and '{}'"
+        raise MamlTypeError("Type for {} do not match, '{}' and '{}'"
                    .format(op, t_l, t_r))
     ast['s_type'] = t_l
 
@@ -394,7 +394,7 @@ def _(ast, btc, env, top):
         # We have to use SOP_INT here so that the bytecode expansion
         # can expand the numbers
         if transform_fn:
-            print("Error: primitive function '{}' has tranform function"
+            raise MamlSyntaxError("primitive function '{}' has tranform function"
                   .format(name))
         btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
         if top:
@@ -402,9 +402,8 @@ def _(ast, btc, env, top):
     elif transform_fn:
         transform_fn(ast, btc, env, top)
     else:  # Calling a user defined function
-        print("Error -- not implemented: calling non-primitives ('{}')"
+        raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
               .format(ast['func']['id']))
-        exit(1)
 
 
 @type_check('call')
@@ -432,7 +431,7 @@ def _(ast, env):
     for elem in ast['args']:
         check_types(elem, env)
         if elem['s_type'] != functionArgs.argTypes[argNum]:
-            raise MamlTypeError("Error: argument type {} does not match received "
+            raise MamlTypeError("argument type {} does not match received "
                        + "argument type {}"
                        .format(functionArgs.argTypes[argNum], elem['s_type']))
         argNum += 1
@@ -635,9 +634,8 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
         fn(ast, btc, env, top)
         return btc
     else:
-        print("Error -- gen_bytecode(): unknown AST node type: '{}'"
+        raise MamlNotImplementedError("gen_bytecode(): unknown AST node type: '{}'"
               .format(ast['type']))
-        exit(1)
 
 
 def make_new_env():
@@ -659,9 +657,8 @@ def check_types(ast, env):
     if fn:
         fn(ast, env)
     else:
-        print("Error: ast node '{}' has no @type_check type analysis function"
+        raise MamlNotImplementedError("ast node '{}' has no @type_check type analysis function"
               .format(ast['type']))
-        exit(1)
 
 
 ###############################################################################
@@ -675,9 +672,8 @@ def compile_str(code: str) -> list:
         if type_checking:
             check_types(a, env)
             if not a.get('s_type'):
-                print("Error: node '{}' was not annotated with static type"
+                raise MamlTypeError("node '{}' was not annotated with static type"
                       .format(a['type']))
-                exit(1)
         gen_bytecode(a, bytecode, env)
     # TODO: CHECK TYPES
     # COMPILE
@@ -692,9 +688,8 @@ def compile_ast(ast: list) -> list:
         if type_checking:
             check_types(a, env)
             if not a.get('s_type'):
-                print("Error: node '{}' was not annotated with static type"
+                raise MamlTypeError("node '{}' was not annotated with static type"
                       .format(a['type']))
-                exit(1)
         gen_bytecode(a, bytecode, env)
     # TODO: CHECK TYPES
     # COMPILE
