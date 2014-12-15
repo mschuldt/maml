@@ -72,6 +72,7 @@
 #define serial_out(x) printf(x)
 #endif
 
+#define _DECL_(...)
 #define _DEFUN_
 
 void read_file(void);

@@ -6,19 +6,26 @@
 ;;output: _prim.c, _prim.py
 
 (setq primitives_files '("primitives.c" "avm.c")
-      non_arduino_files '("desktop_only_primitives.c")
+      desktop_files '("desktop_only_primitives.c")
+      arduino_files '("arduino_only_primitives.c")
       c_out "_prim.c"
       py_out "_prim.py"
       token "_DEFUN_"
-      re (format"^%s[ \n\t]+\\([a-zA-Z0-9\*_]+[ \t\n]+\\)+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*(" token))
+      function_re (format"^%s[ \n\t]+\\([a-zA-Z0-9\*_]+[ \t\n]+\\)+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*(" token)
+      declaration_re "^[ \t]*_DECL_(\\([A-Za-z][A-Za-z0-9]*\\).*)[ \t]*$"
+      )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun process_primitives (file)
   (let (names)
     (find-file file)
-    (while (re-search-forward  re nil :noerror)
+    ;;TODO: extract/process types and parameter list length
+    (while (re-search-forward function_re nil :noerror)
       (setq names (cons (match-string 2) names)))
+    (goto-char 1)
+    (while (re-search-forward declaration_re nil :noerror)
+      (setq names (cons (match-string 1) names)))
     names))
 
 (defun write_py (names &optional start indent)
@@ -36,13 +43,18 @@
             names (cdr names)))))
 
 (setq names nil
-      na_names nil)
+      desktop_names nil
+      arduino_names nil)
+
 (dolist (file primitives_files)
   (setq names (append (process_primitives file) names)))
-(dolist (file non_arduino_files)
-  (setq na_names (append (process_primitives file) na_names)))
+(dolist (file desktop_files)
+  (setq desktop_names (append (process_primitives file) desktop_names)))
+(dolist (file arduino_files)
+  (setq arduino_names (append (process_primitives file) arduino_names)))
 (setq l_names (length names)
-      l_na_names (length na_names))
+      l_arduino_names (length arduino_names)
+      l_desktop_names (length desktop_names))
 
 (find-file py_out)
 (erase-buffer)
@@ -51,7 +63,8 @@
 primitives = {}\n")
 (write_py names)
 ;;TODO: need some variable that is set when not compiling for arduino
-(write_py na_names l_names t)
+(write_py desktop_names l_names t)
+(write_py arduino_names (+ l_names l_desktop_names) t)
 (save-buffer)
 
 
@@ -65,9 +78,11 @@ n_primitives = %s;
 n_primitives = %s;
 #endif
 primitives = (void**)malloc(sizeof(void*)*n_primitives);
-" l_names (+ l_names l_na_names)))
+" (+ l_names l_arduino_names) (+ l_names l_desktop_names)))
 (write_c names)
-(insert "#if ! arduino\n")
-(write_c na_names l_names)
+(insert "#if  arduino\n")
+(write_c arduino_names l_names)
+(insert "#else\n")
+(write_c desktop_names l_names)
 (insert "#endif\n")
 (save-buffer)
