@@ -20,6 +20,9 @@ from functools import reduce
 from operator import add
 from sys import argv
 from _prim import primitives
+from maml_syntaxError import *
+from maml_typeError import *
+from maml_notimpError import *
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
@@ -113,7 +116,7 @@ def _(ast, env):
 
 @code_gen('float')
 def _(ast, btc, env, top):
-    not_implemented_error(ast)
+    raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
 
 ###############################################################################
 # list
@@ -136,7 +139,7 @@ def _(ast, env):
         check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
-                type_error(ast, "Error: list has multiple types. {} and {}"
+                raise MamlTypeError("Error: list has multiple types. {} and {}"
                            .format(prev_type, e['s_type']))
         prev_type = e['s_type']
     ast['s_type'] = '[' + prev_type + ']'
@@ -183,7 +186,7 @@ def _(ast, env):
         check_types(e, env)
         if prev_type:
             if prev_type != e['s_type']:
-                type_error(ast, "Error: tuple has multiple types. {} and {}"
+                raise MamlTypeError("Error: tuple has multiple types. {} and {}"
                            .format(prev_type, e['s_type']))
         prev_type = e['s_type']
     ast['s_type'] = '(' + prev_type + ')'
@@ -256,14 +259,14 @@ def _(ast):
     targets = ast['targets']
     # if len(targets) > 1:
     #    #example: 'a,b=x'
-    #    syntax_error(ast, "unpacking is not supported")
+    #    raise MamlSyntaxError("unpacking is not supported")
     #    return False
     if targets[0]['type'] == 'starred':
         # example: '*a=x'
-        syntax_error(ast, "starred assignment is not supported")
+        raise MamlSyntaxError("starred assignment is not supported")
         return False
     if ast['targets'][0]['type'] == 'tuple':
-        syntax_error(ast, "tuple assignment is not supported")
+        raise MamlSyntaxError("tuple assignment is not supported")
     return True
 
 
@@ -281,7 +284,7 @@ def _(ast, env):
         env.declare_type(target['id'], target['s_type'])
 
         if target['s_type'] != val_type:
-            type_error(ast, "incompatible assignment. var '{}' has type '{}'" +
+            raise MamlTypeError("incompatible assignment. var '{}' has type '{}'" +
                        ", got '{}'".format(ast['targets'][0]['id'],
                                            ast['targets'][0]['s_type'],
                                            ast['value']['s_type']))
@@ -323,16 +326,16 @@ def _(ast, env):
     t_r = ast['right']['s_type']
     op = ast['op']
     if t_l not in valid_bin_op_types[op]:
-        type_error(ast, "Invalid type for left operand: '{}'. Expected '{}'"
+        raise MamlTypeError("Invalid type for left operand: '{}'. Expected '{}'"
                    .format(tl, reduce(lambda a, b: a + " or " + b,
                                       valid_bin_op_types[op])))
 
     if t_r not in valid_bin_op_types[op]:
-        type_error(ast, "Invalid type for right operand: '{}'. Expected '{}'"
+        raise MamlTypeError("Invalid type for right operand: '{}'. Expected '{}'"
                    .format(t_r, reduce(lambda a, b: a + "' or '" + b,
                                        valid_bin_op_types[op])))
     if t_l != t_r:
-        type_error(ast, "TypeError: type for {} do not match, '{}' and '{}'"
+        raise MamlTypeError("TypeError: type for {} do not match, '{}' and '{}'"
                    .format(op, t_l, t_r))
     ast['s_type'] = t_l
 
@@ -413,11 +416,11 @@ def _(ast, env):
 @ast_check('call')
 def _(ast):
     if ast['keywords']:
-        syntax_error(ast, "keyword args are not supported")
+        raise MamlSyntaxError("keyword args are not supported")
     if ast['starargs']:
-        syntax_error(ast, "starargs are not supported")
+        raise MamlSyntaxError("starargs are not supported")
     if ast['kwargs']:
-        syntax_error(ast, "kwargs args are not supported")
+        raise MamlSyntaxError("kwargs args are not supported")
 
 
 @type_check('call')
@@ -429,7 +432,7 @@ def _(ast, env):
     for elem in ast['args']:
         check_types(elem, env)
         if elem['s_type'] != functionArgs.argTypes[argNum]:
-            type_error(ast, "Error: argument type {} does not match received "
+            raise MamlTypeError("Error: argument type {} does not match received "
                        + "argument type {}"
                        .format(functionArgs.argTypes[argNum], elem['s_type']))
         argNum += 1
@@ -467,7 +470,7 @@ def _(ast, env):
 # if-exp
 @code_gen('if-exp')
 def _(ast, btc, env, top):
-    not_implemented_error(ast)
+    raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
 
 @type_check('if-exp')
 def _(ast, env):
@@ -495,7 +498,7 @@ def _(ast, btc, env, top):
 @ast_check('while')
 def _(ast):
     if ast['orelse']:
-        syntax_error(ast, "while loop else thing is not supported")
+        raise MamlSyntaxError("while loop else thing is not supported")
 
 
 @type_check('while')
@@ -554,7 +557,7 @@ def _(ast, env):
 @ast_check('compare')
 def _(ast):
     if len(ast['ops']) > 1:  # ex: x < 1 < 1
-        syntax_error(ast, "chained comparison is (currently) not supported")
+        raise MamlSyntaxError("chained comparison is (currently) not supported")
 
 comparison_ops = {'>': OP_GT,
                   '<': OP_LT,
@@ -578,7 +581,7 @@ def _(ast, btc, env, top):
         argTypes[argNum] = elem['argType']
         argNum += 1
     env.createFuncTypes(ast['name'], argTypes, ast['returns']['id'])
-    not_implemented_error(ast)
+    raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
 
 
 @ast_check('function')
@@ -595,7 +598,7 @@ def _(ast):
 
 @code_gen('return')
 def _(ast, btc, env, top):
-    not_implemented_error(ast)
+    raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
 
 ###############################################################################
 # pass
@@ -660,27 +663,6 @@ def check_types(ast, env):
               .format(ast['type']))
         exit(1)
 
-
-###############################################################################
-# error reporting functions
-
-
-def syntax_error(ast, message):
-    print("SYNTAX ERROR[{}:{}]: {}"
-          .format(ast['lineno'], ast['col_offset'], message))
-    exit(1)
-
-
-def not_implemented_error(ast):
-    print("ERROR[{}:{}]: node type '{}' is not implemented"
-          .format(ast['lineno'], ast['col_offset'], ast['type']))
-    exit(1)
-
-
-def type_error(ast, message):
-    print("TYPE ERROR[{}:{}]: {}"
-          .format(ast['lineno'], ast['col_offset'], message))
-    exit(1)
 
 ###############################################################################
 
