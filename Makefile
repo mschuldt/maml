@@ -7,7 +7,7 @@ all: avm ino
 _opcodes.h: maml_opcodes.py
 	./maml_opcodes.py
 
-_prim.c _prim.py: primitives.c non_arduino_primitives.c process_primitives.el
+_prim.c _prim.py: primitives.c arduino_only_primitives.c desktop_only_primitives.c process_primitives.el
 	./process_primitives.el
 
 

@@ -195,8 +195,10 @@ int n_primitives;
 #endif
 
 #include "primitives.c"
-#if ! arduino
-#include "non_arduino_primitives.c"
+#if arduino
+#include "arduino_only_primitives.c"
+#else
+#include "desktop_only_primitives.c"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
