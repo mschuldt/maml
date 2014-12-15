@@ -1,1 +1,1 @@
-Error: null terminators not allowed in strings.
+maml_syntaxError.MamlSyntaxError: 'Null terminators not allowed in strings.'

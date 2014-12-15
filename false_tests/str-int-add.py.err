@@ -1,1 +1,1 @@
-TYPE ERROR[5:4]: TypeError: type for + do not match, 'str' and 'int'
+maml_typeError.MamlTypeError: "Type for + do not match, 'str' and 'int'"
