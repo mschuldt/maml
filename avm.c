@@ -1,13 +1,11 @@
 // AVM - Arduino Virtual Machine
 
-#define arduino 0
-
 #define ENABLE_PAUSES 1
+#define INCLUDE_LISTS 1
+#define ARDUINO 0
 
 #define DEBUG 0
 #define DEBUG2 0
-
-#define include_lists 1
 
 //NOTE: If these are changed, their value in maml_serial.py must be also changed.
 #define BYTECODE_IN_FILE "_bc.txt"
@@ -17,7 +15,7 @@
 
 #include "_opcodes.h"
 
-#if ! arduino
+#if ! ARDUINO
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -36,7 +34,7 @@
 #define D(...)
 #endif
 #if DEBUG2
-#if arduino
+#if ARDUINO
 #define D2(...) serial_out(__VA_ARGS__);
 #else
 #define D2(...) printf(__VA_ARGS__);
@@ -58,7 +56,7 @@
 #define NULL 0
 #endif
 
-#if arduino
+#if ARDUINO
 #define DIE //?
 #define SAY(words) maml_serial.write(words)
 #else
@@ -68,7 +66,7 @@
 #define SAY
 #endif
 
-#if arduino
+#if ARDUINO
 #define serial_out(x) maml_serial.write(x)
 #else
 #define serial_out(x) printf(x)
@@ -136,7 +134,7 @@ void init_codeblock(struct codeblock* block, int code_len){
 }
 long paused = NULL;
 
-#if arduino
+#if ARDUINO
 #include "maml_HardwareSerial.cpp"
 #endif
 void append_codeblock(struct codeblock* block){
@@ -174,7 +172,7 @@ void remove_codeblock(struct codeblock* block){
   n_codeblocks--;
 }
 
-#if include_lists
+#if INCLUDE_LISTS
 struct node{
   void* data;
   struct node* next;
@@ -203,7 +201,7 @@ struct node* cdr(struct node* list){
 
 void loop();
 
-#if !arduino
+#if !ARDUINO
 char* lockfile;
 #endif
 
@@ -219,7 +217,7 @@ int n_primitives;
 
 
 #include "primitives.c"
-#if arduino
+#if ARDUINO
 #include "arduino_only_primitives.c"
 #else
 #include "desktop_only_primitives.c"
@@ -274,7 +272,7 @@ void setup(void){
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
 
-#if arduino // setup signal interrupt
+#if ARDUINO // setup signal interrupt
   maml_serial.begin(9600);
 #else
   printf("Initializing avm...\n");
@@ -291,7 +289,7 @@ void setup(void){
 
   loop();// variables are initialized the first time loop is called
 
-#if arduino
+#if ARDUINO
   maml_serial.print("Ready.\n\n");
 #else
   printf("Ready.\n\n");
@@ -328,7 +326,7 @@ void* l_eq;
 void* l_notEq;
 void* l_ltEq;
 void* l_gtEq;
-#if include_lists
+#if INCLUDE_LISTS
 void* l_list;
 #endif
 void* l_tuple;
@@ -365,7 +363,7 @@ void loop (){
     l_ltEq = &&ltEq;
     l_gtEq = &&gtEq;
     l_sub = &&sub;
-#if include_lists
+#if INCLUDE_LISTS
     l_list = &&list;
 #endif
     l_tuple = &&tuple;
@@ -497,7 +495,7 @@ void loop (){
   // use < because items on stack are reversed
   stack[top-1] = (void*) ((long)(stack[top-1]) >= ((long)stack[top--]));
   NEXT(code);
-#if include_lists
+#if INCLUDE_LISTS
  list:
   D("list\n");
   n = (int)*code++;
@@ -543,7 +541,7 @@ void loop (){
   NEXT(code);
 }
 
-#if arduino
+#if ARDUINO
 #else
 int main(){
   setup();
@@ -697,7 +695,7 @@ void byte_in(unsigned char c){
         index = (int)INPUT_STACK_POP();
         D2("primative function index -------> %d\n", index);
         if (index < 0 || index >= n_primitives){
-#if arduino
+#if ARDUINO
           serial_out("Error: invalid index for primitives array\n");
 #else
           printf("Error: invalid index for primitives array. max: %d, got %d\n",
@@ -761,7 +759,7 @@ void byte_in(unsigned char c){
     case OP_POP:
       code_array[code_i++] = l_pop;
       return;
-#if include_lists
+#if INCLUDE_LISTS
     case OP_LIST:
       {
         SAY("OP_LIST\n");
@@ -931,7 +929,7 @@ void byte_in(unsigned char c){
 }
 
 
-#if !arduino
+#if !ARDUINO
 void read_file(void){
   //set lock file so that other processes will not interrupt this one
   //while it reads in the new bytecode (ugly things happen in that case)
@@ -966,6 +964,7 @@ void read_file(void){
 //11,898
 //9,626
 //9,782
+//11,366
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
-
+//858
