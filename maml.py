@@ -7,6 +7,7 @@ from functools import reduce
 from sys import argv
 from maml_serial import Maml_serial
 from maml_env import env
+from maml_opcodes import *
 
 allow_type_reassign = True  # enable re-declaring variable type
 
@@ -163,10 +164,18 @@ class Arduino:
         """
         Compile and send the code 'VAR=VALUE' to the arduino
         """
-        exp = expand_bytecode([OP_SET, ])
+        globalp, index = self.env.get_store_index(var)
+        assert globalp, "how is this not in the global env?"
 
-
-        pass
+        typ = type(value)
+        if typ is str:
+            sop_code = SOP_STR
+        elif typ is int:
+            sop_code = SOP_INT
+        else:
+            print("Error: Arduino.set currently only accepts str and int values")
+            return
+        self.serial.send_code([sop_code, value, SOP_INT, index, OP_SET])
 
     def get(self, var):
         """

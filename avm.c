@@ -837,6 +837,15 @@ void byte_in(unsigned char c){
       /* } */
       /* delay(10000); */
       return;
+    case OP_SET:
+      {
+        int index = (int)INPUT_STACK_POP();
+        if (index < 0 || index > max_globals){
+          SAY("Error: (op_set) invalid global variable index\n"); DIE(1);
+        }
+        globals[index] = INPUT_STACK_POP();
+        return;
+      }
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");

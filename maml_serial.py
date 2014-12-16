@@ -32,6 +32,13 @@ class Maml_serial:
         #self.serial_delay = 0.005 #time to delay between sending bytes
         self.serial_delay = 0.005 #time to delay between sending bytes
 
+    def send_code(self, code):
+        """
+        sends unexpanded code to the arduino.
+        this is intended for sending single opcode instructions.
+        """
+        self._send(expand_bytecode(code))
+
     def send_codeblock(self, block):
         """
         Send BLOCK to vm on arduino or desktop
