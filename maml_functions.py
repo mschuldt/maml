@@ -12,9 +12,15 @@ def compile(name):
 @compile('print')
 def _(ast, btc, env, top):
     if ast['s_type'] == 'int':
-        pass  # generate call to print_i
+        print_i(ast['n'])  # generate call to print_i
+    elif ast['s_type'] == 'float':
+        print_i(ast['n'])
     elif ast['s_type'] == 'str':
-        pass  # generate call to print_s
+        print_s(ast['s']) # generate call to print_s
+    elif ast['s_type'] == 'list':
+        print_l(ast['elts'])
+    elif ast['s_type'] == 'tuple':
+        print_a(ast['elts'])
     else:
         pass  # other
 
