@@ -393,7 +393,7 @@ void loop (){
   NEXT(code);
  call_prim_0:
   D("call_0\n");
-  stack[++top] = ((void* (*)(void))(*code))();
+  stack[++top] = ((void* (*)(void))(*code++))();
   //stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_1:
