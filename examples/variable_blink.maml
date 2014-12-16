@@ -1,0 +1,21 @@
+# -*- python -*-
+
+#run with:
+#   python3 -i maml.py -a variable_blink.maml
+
+arduino = Arduino(desktop=False)
+
+@block
+def vblink():
+    pinMode(13, 1)
+    delay_time = 10
+    increment = 100
+    threshold = 600
+    while delay_time <= threshold:
+        digitalWrite(13, 1)
+        _delay(delay_time)
+        digitalWrite(13, 0)
+        _delay(delay_time)
+        delay_time += increment
+
+arduino.send(vblink)

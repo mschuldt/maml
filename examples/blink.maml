@@ -1,0 +1,16 @@
+# -*- python -*-
+
+#run with:
+#   python3 -i maml.py -a blink.maml
+
+arduino = Arduino(desktop=False)
+
+@block
+def blink():
+    pinMode(13, 1)
+    digitalWrite(13, 1)
+    _delay(100)
+    digitalWrite(13, 0)
+    _delay(100)
+
+arduino.send(blink)    
