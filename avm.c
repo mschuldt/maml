@@ -887,7 +887,11 @@ void byte_in(unsigned char c){
         if (index < 0 || index > max_globals){
           SAY("Error: (op_get) invalid global variable index\n"); DIE(1);
         }
+#if ARDUINO
         maml_serial.println((int)globals[index]);
+#else
+        printf("%d\n",(int)globals[index]);
+#endif
         return;
       }
     case OP_PAUSE:
