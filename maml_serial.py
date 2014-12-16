@@ -127,6 +127,7 @@ class Maml_serial:
             return False
         self.serial = serial.Serial(port, self.speed)
         self.serial.timeout = self.timeout
+        sleep(2)
         return True
 
     def close(self):
