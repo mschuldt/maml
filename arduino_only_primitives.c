@@ -13,3 +13,17 @@ _DEFUN_
 void _delay(int n){
   delay(n);
 }
+
+_DEFUN_
+int get_distance(){
+  pinMode(53, OUTPUT);
+  digitalWrite(53, LOW);
+  delayMicroseconds(2);
+  digitalWrite(53, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(53, LOW);
+
+  pinMode(53, INPUT);
+
+  return pulseIn(53, HIGH) / 29 / 2;
+}
