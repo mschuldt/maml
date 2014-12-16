@@ -395,3 +395,97 @@ can only jump to labels in the same block/function
     attachInterrupt(0, _isr_fn_i, CHANGE)
     _isr_v_i = name
 #+END_SRC
+* static type analysis
+
+#+Begin_SRC text
+primitive values (int, str, etc) declare their own types?
+
+traverse ast tree bottom up.
+define type analysis functions with decorators in the same way as
+ we did the @node and @check
+ -> @type_check
+ each one recursively checks its children and then checks itself
+
+
+x <- int
+x = car(lst)
+
+how to declare 'car' as accepting type [X] and returning X?
+ 
+[[(int)]]
+
+seporate class for types?
+
+
+format for function types?
+ a1,a2,...,an:ret
+
+declaring primitive types?
+
+def f(a:int, b:X, c:list)-> [X]:
+def car(list:[X])->X:
+
+cast(car(list), int)
+
+'any' type equivalent to NULL or Object
+
+?
+from a function type annotations create a transformation function
+that takes the arguments in a call to that function and returns the
+type of the call expression
+
+def car(list:[X])->X:
+   ...
+=> 
+
+func def:
+  parameters [([X])], (Y), ([Z])
+  returns [(x), [Y]]
+internal rep
+ parameters: [ [ '[','(','[', 'X' ]
+               [ '(', 'Y']        ]
+               [ '(','[', 'Z'     ] ]
+ 
+
+constructing type objects from type strings or ASTs:
+match first character:
+  [,( -> trim first+last char, create list/tuple object
+         and pass the remainder to it for recursive construction
+  anything else  -> type name
+
+to check the types when calling a function:
+ pair up the type objects and traverse them, checking for equality,
+ when a variable type is found (like X), save its value in some
+ dictionary. To construct the output type, lookup the variables in that dict
+ 
+
+  while constructing, if any type is unknown (like X), then 
+ 
+
+class type_list:
+class type_tuple:
+
+OK FINE WE DON'T HAVE TIME FOR THIS 
+
+#+END_SRC
+* specific function translation
+#+Begin_SRC text
+@function_code_gen('fname')
+def _(ast):
+    #type/function specific translation of 'fname'
+#+END_SRC
+* break and continue
+#+Begin_SRC text
+while a
+  while b
+     while c
+      ...
+  break
+    while x
+       ..
+  x()
+
+in maml_env.py have two stack for the current while loop start/end labels
+'break' or 'continue' look up these labels to know where to jump to 
+
+#+END_SRC

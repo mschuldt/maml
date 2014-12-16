@@ -1,38 +1,47 @@
 * usage
 to compile, send, and run a file on the desktop:
 #+Begin_SRC text
-./run.sh filename.py
+./run.sh filename.maml
 #+END_SRC
 to start the VM:
 #+Begin_SRC text
 ./avm
 #+END_SRC
-to send compile and send code to a running VM
+to compile and send code to a running VM on the desktop
 #+Begin_SRC text
-./maml_compile.py filename.py
+./maml.py -d filename.maml
 #+END_SRC
-* building
+
+to compile and send code to an Arduino
+#+Begin_SRC text
+./maml.py -a filename.maml
+#+END_SRC
+if you want to interact with it:
+#+Begin_SRC text
+python3 -i maml.py -a filename.maml
+#+END_SRC
+* building the VM
 - make
   build the virtual machine for use on the desktop
 
 - make ino
-  generate a .ino file that can be copied into the Arduino IDE
+  generates the file 'avm.ino' that can be copied into the Arduino IDE
 * dependencies
  - g++ (The VM does not compile with LLVM)
  - python3
  - pyserial  (pip3 install pyserial)
- - Arduino IDE (http://arduino.cc/en/Main/Software)
+ - Arduino IDE 1.5.8 (http://arduino.cc/en/Main/Software)
  - Emacs
 * testing
-to run all tests in maml/tests/:
+to run all tests in maml/tests/ and maml/false_tests:
 #+Begin_SRC text
   make test
 #+END_SRC
-** using gdb
+** using gdb to debug the VM
 start avm process with gdb
 then inject code in separate terminal by running python file:
 #+Begin_SRC text
- ./maml.py filename.py
+ ./maml.py filename.maml
 #+END_SRC
 using ./run.sh will not work because it creates its own avm subprocess
 ** testing bytecode compilation
@@ -53,36 +62,86 @@ Now maml_compile will print something like
       ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
 #+END_SRC
 
-* features
-features in the order they where implemented
-** main
-- defining/calling c primitive functions
-- global variables
-- if/elif/else conditions
-- conditionals
-- while loops
-- strings
-- lists
+* API
+instantiate the arduino object (required)
+set desktop=True if the VM is running on the Desktop, defaults to False
+#+Begin_SRC python
+arduino = Arduino(desktop=True)
+#+END_SRC
+Define a block that is executed once on the VM
+#+Begin_SRC python
+@block(once)
+def blockname():
+   ...
+#+END_SRC
+Define a block that is inserted into the VM mainloop and repeatedly executed
+#+Begin_SRC python
+@block(chain)
+def blockname():
+   ...
+#+END_SRC
+Send a block to the VM
+#+Begin_SRC python
+arduino.send(blockname)
+#+END_SRC
+set a variable on the VM
+#+Begin_SRC python
+arduino.set("variableName", value)
+#+END_SRC
+Get the value of a variable in the VM (currently only supports integers)
+#+Begin_SRC python
+arduino.get("variableName")
+#+END_SRC
+Pause or Resume The VM
+#+Begin_SRC python
+arduino.pause()
+arduino.resume()
+#+END_SRC
+Dump all variable values in the VM as well as the values on the stack
+#+Begin_SRC python
+arduino.dump()
+#+END_SRC
 
-** all
-- integers
-- addition
+* features
+some features in the ~order they where implemented
+
+- arithmetic   
 - communication to vm on desktop using files and signals
 - defining/calling c primitive functions
 - global variables
-- jumps and labels  
 - if/elif/else conditions
 - conditionals
 - while loops
 - strings
-- None and False
-- linked lists
-- list literals
+- (linked) lists
+- array and list literals
+- type declarations checking (currently buggy and disabled)
+- getting/setting values from the VM
+- dumping all variable and stack values from the VM
+- pausing and resuming the VM
   
 * defining new c primitives
-TODO
-primitives.c vs non_arduino_primitives.c
+primitives are separated into files depending on their compile target.
+- primitives.c                for both Desktop and Arduino
+- arduino_only_primitives.c   not compiled for desktop   
+- desktop_only_primitives.c   not compiled for desktop   
+
+primitive functions are defined as normal but with the
+_DEFUN_ tag above them.
+declare primitives with the _DECL_ tag. See the files for examples.
 * internals
+** serial protocol
+** bytecode and opcode format
+Operands are mixed in with opcodes. All opcode operands come before the
+opcodes in the bytecode when it is transmitted to the arduino but 
+comp after the operands in the threaded code that is generated within the VM.
+
+TODO: opcode formats
+** lsdjlskjd
+if an opcode has integer operands it must insert SOP_INT before the number.
+This allows the number to be serialized. In serial_in, SOP_INT must
+be explicitly skipped with SKIP before calling READ_INT.
+
 ** adding a new opcode / VM case
 using 'pop' as an example.
 
@@ -123,13 +182,6 @@ SOP_PRIM_CALL for and example of that.
       code_array[i++] = l_pop;
       break;      
 #+END_SRC
-** opcode format
-Operands are mixed in with opcodes. An opcodes operands come after the opcode
-in the bytecode array. 
-** lsdjlskjd
-if an opcode has integer operands it must insert SOP_INT before the number.
-This allows the number to be serialized. In serial_in, SOP_INT must
-be explicitly skipped with SKIP before calling READ_INT.
 
 ** adding new feature
 using 'if' as an example.
@@ -232,4 +284,8 @@ TODO
 *** vm case
 TODO
 * .lock files
-TODO
+When running the VM on the desktop, it creates a while PID.lock
+where PID is the process id of the VM. This prevents the compiler
+from interrupting the VM at a bad time to inject code. 
+These should be cleaned up by the VM but often are not - you may delete them safely
+after the VM terminates
