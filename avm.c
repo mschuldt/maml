@@ -877,6 +877,15 @@ void byte_in(unsigned char c){
         globals[index] = INPUT_STACK_POP();
         return;
       }
+    case OP_GET:
+      {
+        int index = (int)INPUT_STACK_POP();
+        if (index < 0 || index > max_globals){
+          SAY("Error: (op_get) invalid global variable index\n"); DIE(1);
+        }
+        maml_serial.println((int)globals[index]);
+        return;
+      }
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
