@@ -1,20 +1,21 @@
-
-#run with:
+# run with:
 #   python3 -i maml.py -a distance.maml
 
 arduino = Arduino(desktop=False)
+
 
 @block(once)
 def setup():
     on_p = 0
     pinMode(13, 1)
-    
+
+
 @block(chain)
 def delay_and_update():
     d = 0
     while True:
-        delay = get_distance()*3 #distance in cm
-        if d > delay:
+        distance = get_distance() * 3  # distance in cm
+        if d > distance:
             on_p = 1 - on_p
             digitalWrite(13, on_p)
             break
@@ -23,4 +24,3 @@ def delay_and_update():
 
 arduino.send(setup)
 arduino.send(delay_and_update)
-
