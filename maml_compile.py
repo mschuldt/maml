@@ -19,7 +19,7 @@ from maml_functions import function_compiler_functions
 from functools import reduce
 from operator import add
 from sys import argv
-from _prim import primitives
+from _prim import desktop_primitives, arduino_primitives
 from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
@@ -681,7 +681,9 @@ def compile_str(code: str) -> list:
 
 
 # TODO: instead of handling errors like gcc, just terminate after the first one
-def compile_ast(ast: list) -> list:
+def compile_ast(ast, desktop_p):
+    global primitives
+    primitives = (desktop_primitives if desktop_p else arduino_primitives)
     env = make_new_env()
     bytecode = []
     for a in ast:
@@ -697,6 +699,8 @@ def compile_ast(ast: list) -> list:
 
 
 if __name__ == '__main__':
+    #TODO: this needs to be updated to read the -[a|d] arg and
+    #      call compile_ast with desktop_p
     if len(argv) != 2:
         print('Usage:')
         print('  ./maml-compile.py <filename>.py')

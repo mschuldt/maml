@@ -106,7 +106,7 @@ def function(fn):
     # by returning the codeblock, we bind it to the value of `block_name'
     return codeblock
 
-    
+
 
 class Arduino:
     def __init__(self, desktop=False):
@@ -205,22 +205,28 @@ def update_compiled_code(code):
                 name = decorators[0]['id']
                 if name == _block_decorator:
                     # print("compiling block '{}'".format(ast['name']))
-                    _compiled_code[ast['name']] = compile_ast(ast['body'])
+                    _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p)
                 elif name == _function_decorator:
                     pass  # TODO
 
 
 if __name__ == '__main__':
     err = False
-    if len(argv) != 2:
+    if len(argv) != 3:
         err = True
-    filename = argv[1]
-    sp = filename.split(".")
-    if len(sp) < 2 or sp[-1] != 'py':
-        err = True
+    else:
+        target = argv[1]
+        if target != "-a" and target != "-d":
+            err = True
+        else:
+            desktop_p = (target == '-d')
+        filename = argv[2]
+        sp = filename.split(".")
+        if len(sp) < 2 or sp[-1] != 'maml':
+            err = True
     if err:
         print('Usage:')
-        print('  ./maml.py <filename>.py')
+        print('  ./maml.py -[a|d] <filename>.maml')
         exit(1)
 
     try:
@@ -228,6 +234,7 @@ if __name__ == '__main__':
     except IOError:
         print("Error: where is '{}'?".format(filename))
         exit(1)
+
 
     code = f.read()
     f.close()

@@ -28,10 +28,17 @@
       (setq names (cons (match-string 1) names)))
     names))
 
-(defun write_py (names &optional start indent)
+(defun write_py (names &optional target start)
   (let ((c (or start 0)))
     (while names
-      (insert (format "primitives['%s'] = %s\n" (car names) c))
+      (if (null target)
+          (insert (format "desktop_primitives['%s'] = %s
+arduino_primitives['%s'] = %s\n" (car names) c (car names) c))
+        (insert (format "%s_primitives['%s'] = %s\n"
+                        (if (eq target :desktop)
+                            "desktop"
+                          "arduino")
+                        (car names) c)))
       (setq c (1+ c)
             names (cdr names)))))
 
@@ -60,11 +67,12 @@
 (erase-buffer)
 (insert "###### This file is auto-generated, do not modify. #####
 
-primitives = {}\n")
+desktop_primitives = {}
+arduino_primitives = {}\n")
 (write_py names)
 ;;TODO: need some variable that is set when not compiling for arduino
-(write_py desktop_names l_names t)
-(write_py arduino_names (+ l_names l_desktop_names) t)
+(write_py desktop_names :desktop l_names)
+(write_py arduino_names :arduino l_names)
 (save-buffer)
 
 
