@@ -7,15 +7,15 @@ arduino = Arduino(desktop=True)
 @block(once)
 def b1():
     print_i(11)
-    delay(1)
+#    delay(100)
 @block(once)    
 def b2():
     print_i(22)
-    delay(1)
+#    delay(100)
 @block(once)    
 def b3():
     print_i(33)
-    delay(1)
+#    delay(100)
 @block(once)    
 def b4():
     print_i(44)
