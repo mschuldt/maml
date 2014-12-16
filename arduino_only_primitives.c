@@ -9,3 +9,7 @@ _DECL_(delay, int)
 
 
 
+_DEFUN_
+void _delay(int n){
+  delay(n);
+}
