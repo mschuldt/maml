@@ -20,7 +20,7 @@ if [ $1 ] ; then
     files=$1
 else
     cd tests/
-    files=$(ls *.py) #because ls tests/*py includes the directory
+    files=$(ls *.maml) #because ls tests/*py includes the directory
     cd ..
 fi
 
@@ -38,7 +38,7 @@ do
     ./avm > $test_out &
     pid=$!
 
-    python3 maml.py $file
+    python3 maml.py -d $file
 
     wait
 

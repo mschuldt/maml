@@ -20,7 +20,7 @@ if [ $1 ] ; then
     files=$1
 else
     cd false_tests/
-    files=$(ls *.py)  # because ls false_tests/*py includes the directory
+    files=$(ls *.maml)  # because ls false_tests/*py includes the directory
     cd ..
 fi
 
@@ -34,7 +34,7 @@ do
 
     rm -f $error_out
 
-    python3 maml.py $file 2> ${error_out}
+    python3 maml.py -d $file 2> ${error_out}
     tail -n 1 $error_out > ${error_out}.tmp
     mv ${error_out}.tmp $error_out
     
