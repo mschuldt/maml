@@ -8,7 +8,7 @@ arduino = Arduino(desktop=False)
 def setup():
     on_p = 0
     pinMode(13, 1)
-
+    led_on = 1
 
 @block(chain)
 def delay_and_update():
@@ -17,10 +17,15 @@ def delay_and_update():
         distance = get_distance() * 3  # distance in cm
         if d > distance:
             on_p = 1 - on_p
-            digitalWrite(13, on_p)
+            digitalWrite(13, on_p*led_on)
             break
         _delay(10)
         d += 10
 
 arduino.send(setup)
 arduino.send(delay_and_update)
+
+# now you can interactively change the variable values in the VM:
+#>>> arduino.set("led_on", 0)
+#>>> arduino.set("led_on", 1)
+#>>> arduino.get("distance")
