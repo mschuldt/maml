@@ -31,6 +31,7 @@ class Maml_serial:
         self.timeout = 0.01
         #self.serial_delay = 0.005 #time to delay between sending bytes
         self.serial_delay = 0.005 #time to delay between sending bytes
+        self.verbose = True
 
     def send_code(self, code):
         """
@@ -80,9 +81,11 @@ class Maml_serial:
             kill(self.vm_pid, VM_SIGNAL)
             return True
         else:
-            print("sending to arduino...")
+            if self.verbose:
+                print("sending to arduino...")
             if self.connect():
-                print("sending bytecode: ", bytecode)
+                if self.verbose:
+                    print("sending bytecode: ", bytecode)
                 self._write_to_serial(bytecode)
                 return True
             print("Error: cannot send code, disconnected from Arduino")
@@ -117,7 +120,7 @@ class Maml_serial:
 
     def connect(self):
         "Verify connection or find and connect to the Arduino"
-        print("Serial.connect()")
+        #print("Serial.connect()")
         if self.serial and self.ping(self.serial):
             return True
         port = self.port = self.find_arduino_port()
@@ -150,12 +153,14 @@ class Maml_serial:
             #print("send> " + str((c if type(c) == str else chr(c)).encode('ascii')))
             sleep(self.serial_delay)
             self.serial.write((c if type(c) == str else chr(c)).encode('ascii'))
-            print(".", end="")
+            if self.verbose:
+                print(".", end="")
             stdout.flush()
             # self.read_lines();
             # print("received===========",self.serial_in)
             # self.serial_in = []
-        print("done sending")
+        if self.verbose:
+            print("done sending")
 
     def update(self, check_connection=False, _timeout=None):
         "read available lines from Arduino, returns number lines read"
