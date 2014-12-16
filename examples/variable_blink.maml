@@ -5,12 +5,16 @@
 
 arduino = Arduino(desktop=False)
 
-@block
-def vblink():
+@block(once)
+def setup():
     pinMode(13, 1)
-    delay_time = 10
+    delay_start = 10
     increment = 100
     threshold = 600
+
+@block(chain)
+def vblink():
+    delay_time = delay_start
     while delay_time <= threshold:
         digitalWrite(13, 1)
         _delay(delay_time)
@@ -18,4 +22,13 @@ def vblink():
         _delay(delay_time)
         delay_time += increment
 
+
+s = arduino.serial
+s.update()
+s.serial_in
+arduino.send(setup)
 arduino.send(vblink)
+
+# how you can interactively change the variable values:
+#>>> arduino.set("threshold", 300)
+#>>> arduino.set("increment", 50)

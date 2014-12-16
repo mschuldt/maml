@@ -5,12 +5,16 @@
 
 arduino = Arduino(desktop=False)
 
-@block
-def blink():
+@block(once)
+def setup():
     pinMode(13, 1)
+
+@block(chain)
+def blink():
     digitalWrite(13, 1)
     _delay(100)
     digitalWrite(13, 0)
     _delay(100)
 
-arduino.send(blink)    
+arduino.send(setup)
+arduino.send(blink)
