@@ -223,10 +223,15 @@ class Arduino:
         Returns the value of variable VAR from the Arduino environment
         """
         if var in self.env.names:
-            self.serial.update()
             globalp, index = self.env.get_store_index(var)
+            was_paused = self.paused
+            if not was_paused:
+                self.pause()
+            self.serial.update()
             self.serial.send_code([SOP_INT, index, OP_GET])
             ret = self.serial.update()
+            if not was_paused:
+                self.resume()
             if len(ret) > 0:
                 return int(ret[0].strip())
             return None
