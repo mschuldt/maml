@@ -246,13 +246,29 @@ class Arduino:
         was_paused = self.paused
         if not was_paused:
             self.pause()
+        was_verbose = self.serial.verbose
+        self.serial.verbose = False
 
-        print("Variables:")
-        for v in self.env.names:
-            print(v, self.get(v))
+        print("\n_________VM DUMP___________")
+        print("\n___Variables:___")
+        if self.env.names:
+            m = max(map(len, self.env.names)) + 2
+            for v in self.env.names:
+                print("{}:{}{}".format(v, " "*(m-len(v)), self.get(v)))
+        else:
+            print("None")
+
+        self.serial.update()
+        self.serial.send_code([OP_DUMP_STACK])
+        print("\n___Stack:___");
+        for x in self.serial.update():
+            x = str(x.strip())[1:]
+            ind, val = x.split(" ")
+            print ("{}: {}".format(ind, val))
 
         if not was_paused:
             self.resume()
+        self.serial.verbose = was_verbose
 
     def pause(self):
         """
@@ -292,6 +308,7 @@ class Arduino:
         """
 
         # what statuses can it have?
+        # => disconnected, running, paused
         pass
 
     def _send_to_board(self, code):

@@ -901,6 +901,13 @@ void byte_in(unsigned char c){
       serial_out("resuming...\n");
       paused = NULL;
       return;
+    case OP_DUMP_STACK:
+      for (int i = 0; i <= top; i++){
+        maml_serial.print(i);
+        maml_serial.print(" ");
+        maml_serial.println((int)stack[i]);
+      }
+      return;
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
