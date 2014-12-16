@@ -166,15 +166,15 @@ class Maml_serial:
         timeout = self.serial.timeout
         if _timeout:
             self.serial.timeout = _timeout
-        count = 0
+        lines = []
         while True:
             line = self.serial.readline()
             if line:
-                self.serial_in.append(line)
-                count += 1
+                lines.append(line)
             else:
                 self.serial.timeout = timeout
-                return count
+                self.serial_in.extend(lines)
+                return lines
 
     # def read_all_lines(self, port):
     #     lines = []
