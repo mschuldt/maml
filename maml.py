@@ -173,7 +173,7 @@ class Arduino:
         self.blocks = []
         self.desktop = desktop
         self.serial.desktop = desktop
-
+        self.paused = False
 
     def set_vm_pid(self, pid):
         """set the pid of the vm processes (only used when self.desktop == True)
@@ -222,8 +222,34 @@ class Arduino:
         """
         Returns the value of variable VAR from the Arduino environment
         """
+        if var in self.env.names:
+            self.serial.update()
+            globalp, index = self.env.get_store_index(var)
+            self.serial.send_code([SOP_INT, index, OP_GET])
+            ret = self.serial.update()
+            if len(ret) > 0:
+                return int(ret[0].strip())
+            return None
+        else:
+            print("Error: variable '{}' does not exist in the global env"
+                  .format(var))
 
-        pass
+    def pause(self):
+        """
+        Pause the VM.
+        """
+        self.serial.send_code([OP_PAUSE])
+        self.paused = True
+
+    def resume(self):
+        """
+        resume the VM if paused.
+        """
+        if self.paused:
+            self.serial.send_code([OP_RESUME])
+            self.paused = False
+        else:
+            print("Error: Cannot resume a non-paused VM")
 
     def add_block(self, block):
         self.blocks.append(block)

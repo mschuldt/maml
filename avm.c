@@ -6,6 +6,8 @@
 #define SERIAL_INTR_PIN 2 //pin that needs to be wired to SERIAL_RX_PIN
 //interrupt 0 is pin 2 on Uno and Mega2560, pin 3 on Learnardo
 
+#define ENABLE_PAUSES 1
+
 #define DEBUG 0
 #define DEBUG2 0
 
@@ -26,7 +28,11 @@
 #include <unistd.h>
 #endif
 
+#if ENABLE_PAUSES
+#define NEXT(code) while (paused){delay(500);}; goto *(*code++)
+#else
 #define NEXT(code) goto *(*code++)
+#endif
 
 #if DEBUG
 #define D(...) printf(__VA_ARGS__);
@@ -132,6 +138,7 @@ void init_codeblock(struct codeblock* block, int code_len){
   block->code = (void**)malloc(sizeof(void*)*(code_len + 1));
   block->prev = block->next = NULL;
 }
+long paused = NULL;
 
 #if arduino
 #include "maml_HardwareSerial.cpp"
@@ -258,6 +265,7 @@ char* in_integer;
 int in_integer_i;
 
 
+
 void setup(void){
 #include "_prim.c"
 
@@ -328,6 +336,7 @@ void* l_gtEq;
 void* l_list;
 #endif
 void* l_tuple;
+
 static int int_regs[8];
 static char* char_regs[8];
 
@@ -551,6 +560,7 @@ int main(){
 #endif
 
 #define CHAR_TO_INT(c) ((c) - 48)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -886,6 +896,13 @@ void byte_in(unsigned char c){
         maml_serial.println((int)globals[index]);
         return;
       }
+    case OP_PAUSE:
+      paused = true;
+      return;
+    case OP_RESUME:
+      serial_out("resuming...\n");
+      paused = NULL;
+      return;
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
