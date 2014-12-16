@@ -249,7 +249,7 @@ class Maml_serial:
                 s.close()
                 print("no")
             except serial.SerialException:
-                s.close()
+                #s.close()
                 print("no")
         return None
 
