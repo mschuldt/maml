@@ -9,6 +9,8 @@ from maml_serial import Maml_serial
 from maml_env import env
 from maml_opcodes import *
 
+#TODO: this value is also set in maml_compile.py
+#      we need a global config file for all of these
 allow_type_reassign = True  # enable re-declaring variable type
 
 
@@ -51,11 +53,12 @@ class FunctionByteCode():
 
 
 class A_block:
-    def __init__(self, code):
+    def __init__(self, code, block_type):
         self.bytecode = code
         # these attributes are set when this block is sent to the Arduino
         self.block_index = None
         self.in_arduino = False
+        self.block_type = block_type
 
     def update_code(self, code):
         if self.bytecode != code:
@@ -74,24 +77,58 @@ class A_function:
 # NOTE: the variables '_block_decorator' and '_function_decorator'
 #       must match the names of the decorator functions.
 
+class once: pass
+once = once()
+class chain: pass
+chain = chain()
+
 _block_decorator = 'block'
-def block(fn):
-    block_name = fn.__name__
-    code = _compiled_code.get(block_name)
-    if not code:
-        print("Error: could not retrieve compiled block code")
-        print("_compiled_code = ", _compiled_code)
-    # update (or add) this block in the global list of blocks
-    codeblock = _blocks.get(block_name)
-    if codeblock:
-        codeblock.update_code(code)
-    else:
-        _blocks[block_name] = codeblock = A_block(code)
+_block_decorator_types = ['once', 'chain']
+def block(block_type):
+    if block_type is not once and block_type is not chain:
+        print("Error: block decorator type is invalid: {}".format(block_type))
+        return #TODO
 
-    # _arduino.send(codeblock)
+    def decorator(fn):
+        block_name = fn.__name__
+        code = _compiled_code.get(block_name)
+        if not code:
+            print("Error: could not retrieve compiled block code")
+            print("_compiled_code = ", _compiled_code)
+        # update (or add) this block in the global list of blocks
+        codeblock = _blocks.get(block_name)
+        if codeblock:
+            codeblock.update_code(code)
+        else:
+            _blocks[block_name] = codeblock = A_block(code, block_type)
 
-    # By returning the codeblock, we bind it to the value of `block_name'
-    return codeblock
+        _arduino.add_block(codeblock)
+
+        # _arduino.send(codeblock)
+
+        # By returning the codeblock, we bind it to the value of `block_name'
+        return codeblock
+    return decorator
+
+
+# _block_decorator = 'block'
+# def block(fn):
+#     block_name = fn.__name__
+#     code = _compiled_code.get(block_name)
+#     if not code:
+#         print("Error: could not retrieve compiled block code")
+#         print("_compiled_code = ", _compiled_code)
+#     # update (or add) this block in the global list of blocks
+#     codeblock = _blocks.get(block_name)
+#     if codeblock:
+#         codeblock.update_code(code)
+#     else:
+#         _blocks[block_name] = codeblock = A_block(code)
+
+#     # _arduino.send(codeblock)
+
+#     # By returning the codeblock, we bind it to the value of `block_name'
+#     return codeblock
 
 _function_decorator = 'function'
 def function(fn):
@@ -129,7 +166,7 @@ class Arduino:
         print ("here")
         # initialize serial
         self.serial_hook = []
-
+        self.blocks = []
         self.desktop = desktop
         self.serial.desktop = desktop
 
@@ -184,6 +221,9 @@ class Arduino:
 
         pass
 
+    def add_block(self, block):
+        self.blocks.append(block)
+
     # TODO overload lookup
     def add_serial_hook(self, hook):
         """
@@ -225,10 +265,19 @@ def update_compiled_code(code):
         if ast['type'] == 'function':
             decorators = ast['decorator_list']
             if len(decorators) == 1:
-                name = decorators[0]['id']
+                decorator = decorators[0]
+                print("found decorator: ", decorator)
+                if 'func' not in decorator:
+                    continue
+                name = decorator['func']['id']
                 if name == _block_decorator:
-                    # print("compiling block '{}'".format(ast['name']))
-                    _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
+                    print("FOUND CODE BLOCK")
+                    args = decorator['args']
+                    if len(args) != 1:
+                        continue
+                    if args[0]['id'] in _block_decorator_types:
+                        print("OK")
+                        _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
                 elif name == _function_decorator:
                     pass  # TODO
 
