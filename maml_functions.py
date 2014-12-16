@@ -8,11 +8,22 @@ def compile(name):
         function_compiler_functions[name] = fn
     return decorator
 
+def gen_call_code(name, ast, btc, env, top):
+    """
+    generate a call to function NAME
+    """
+    index = primitives.get(name, None)
+    if index:
+        btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
+    else:
+        raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
+                                      .format(ast['func']['id']))
+
 
 @compile('print')
-def _(ast, btc, env, top):
+def _(ast, nargs, btc, env, top):
     if ast['s_type'] == 'int':
-        print_i(ast['n'])  # generate call to print_i
+        gen_call_code('print_i', 1, ast, btc, env, top)
     elif ast['s_type'] == 'float':
         print_i(ast['n'])
     elif ast['s_type'] == 'str':
@@ -27,5 +38,5 @@ def _(ast, btc, env, top):
 
 @compile('cast')
 
-def _(ast, btc, env, top):
+def _(ast, nargs, btc, env, top):
     pass #TODO

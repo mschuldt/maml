@@ -393,16 +393,15 @@ def _(ast, btc, env, top):
         # We have to use SOP_INT here so that the bytecode expansion
         # can expand the numbers
         if transform_fn:
-            raise MamlSyntaxError("primitive function '{}' has tranform function"
-                  .format(name))
+            raise MamlSyntaxError("conflicting types: function '{}' has tranform function and primitive definition".format(name))
         btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
         if top:
             btc.append(OP_POP)
     elif transform_fn:
-        transform_fn(ast, btc, env, top)
+        transform_fn(ast, nargs, btc, env, top)
     else:  # Calling a user defined function
         raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
-              .format(ast['func']['id']))
+                                      .format(ast['func']['id']))
 
 
 @type_check('call')
