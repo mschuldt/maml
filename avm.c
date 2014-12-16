@@ -1,10 +1,6 @@
 // AVM - Arduino Virtual Machine
 
 #define arduino 0
-#define SERIAL_RX_PIN 0
-#define SERIAL_INTR_NUM 0
-#define SERIAL_INTR_PIN 2 //pin that needs to be wired to SERIAL_RX_PIN
-//interrupt 0 is pin 2 on Uno and Mega2560, pin 3 on Learnardo
 
 #define ENABLE_PAUSES 1
 
