@@ -25,13 +25,13 @@ def _(ast, nargs, btc, env, top):
     if ast['s_type'] == 'int':
         gen_call_code('print_i', 1, ast, btc, env, top)
     elif ast['s_type'] == 'float':
-        print_i(ast['n'])
+        gen_call_code('print_i', 1, ast, btc, env, top)
     elif ast['s_type'] == 'str':
-        print_s(ast['s']) # generate call to print_s
+        gen_call_code('print_s', 1, ast, btc, env, top)
     elif ast['s_type'] == 'list':
-        print_l(ast['elts'])
+        gen_call_code('print_l', 1, ast, btc, env, top)
     elif ast['s_type'] == 'tuple':
-        print_a(ast['elts'])
+        gen_call_code('print_a', 1, ast, btc, env, top)
     else:
         pass  # other
 
