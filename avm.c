@@ -258,7 +258,9 @@ char* in_string_s;
 char* in_integer;
 int in_integer_i;
 
-
+//the main program stack
+void** stack;
+int top = -1;//index of the top item on the stack
 
 void setup(void){
 #include "_prim.c"
@@ -271,6 +273,7 @@ void setup(void){
   labels =  (void**)malloc(sizeof(void*)*max_labels);
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
+  stack = (void**)malloc(sizeof(void*)*10);//?
 
 #if ARDUINO // setup signal interrupt
   maml_serial.begin(9600);
@@ -378,9 +381,6 @@ void loop (){
   int *I = &int_regs[0];
   char **C = &char_regs[0];
   static long a,b,c,d,e,f,g;
-
-  void* stack[10];//??
-  int top = -1;//index of the top item on the stack
 
   void* r_ret; //?
   int n;
