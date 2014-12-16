@@ -4,19 +4,19 @@ arduino = Arduino(desktop=True)
 #the next one is sent so each of them delays while the next block
 #is sent to the vm
 
-@block
+@block(once)
 def b1():
     print_i(11)
     delay(1)
-@block    
+@block(once)    
 def b2():
     print_i(22)
     delay(1)
-@block    
+@block(once)    
 def b3():
     print_i(33)
     delay(1)
-@block    
+@block(once)    
 def b4():
     print_i(44)
     die(0)

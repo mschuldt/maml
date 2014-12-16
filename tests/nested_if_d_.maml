@@ -4,7 +4,7 @@ arduino = Arduino(desktop=True)
 #the next one is sent so each of them delays while the next block
 #is sent to the vm
 
-@block
+@block(once)
 def test():
     if 1:
         if 2:

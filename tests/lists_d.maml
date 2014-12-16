@@ -1,6 +1,6 @@
 arduino = Arduino(desktop=True)
 
-@block
+@block(once)
 def fib():
     x = cons(10, None);
     x = cons(9, x)

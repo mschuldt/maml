@@ -1,6 +1,6 @@
 arduino = Arduino(desktop=True)
 
-@block
+@block(once)
 def func():
     print_i(1)
     print_i(2)

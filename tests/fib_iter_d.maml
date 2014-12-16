@@ -1,5 +1,5 @@
 arduino = Arduino(desktop=True)
-@block
+@block(once)
 def fib():
     x <- int; x = 1
     while x < 20:

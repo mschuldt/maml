@@ -1,6 +1,6 @@
 arduino = Arduino(desktop=True)
 
-@block
+@block(once)
 def test():
     # True assignments
     print_i(1+1 == 2) # 1

@@ -1,5 +1,5 @@
 arduino = Arduino(desktop=True)
-@block
+@block(once)
 def hello_world():
     print_s("Hello, world!")
     die(1)

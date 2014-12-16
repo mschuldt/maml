@@ -1,6 +1,6 @@
 arduino = Arduino(desktop=True)
 
-@block
+@block(once)
 def test():
     a = b = c = d = e = 12
     f = g = d
