@@ -904,7 +904,9 @@ void byte_in(unsigned char c){
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
-      D2("unknown bytecode = %d\n", c);
+      serial_out("unknown bytecode = ");
+      serial_out(c);
+      serial_out("\n");
 
     }//end bytecode switch
     return;

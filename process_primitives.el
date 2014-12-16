@@ -80,7 +80,7 @@ arduino_primitives = {}\n")
 (erase-buffer)
 (insert (format "/***** This file is auto-generated, do not modify. *****/
 
-#if arduino
+#if ARDUINO
 n_primitives = %s;
 #else
 n_primitives = %s;
@@ -88,7 +88,7 @@ n_primitives = %s;
 primitives = (void**)malloc(sizeof(void*)*n_primitives);
 " (+ l_names l_arduino_names) (+ l_names l_desktop_names)))
 (write_c names)
-(insert "#if  arduino\n")
+(insert "#if  ARDUINO\n")
 (write_c arduino_names l_names)
 (insert "#else\n")
 (write_c desktop_names l_names)

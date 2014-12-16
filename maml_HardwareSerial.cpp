@@ -233,6 +233,7 @@ void maml_HardwareSerial::_rx_complete_irq(void)
 
     ////////////////////////////////////////////////////////////////////////////
     // maml:
+
     if (!busy){
       busy = true;
       byte_in(c);

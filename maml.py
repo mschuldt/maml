@@ -296,17 +296,14 @@ def update_compiled_code(code):
             decorators = ast['decorator_list']
             if len(decorators) == 1:
                 decorator = decorators[0]
-                print("found decorator: ", decorator)
                 if 'func' not in decorator:
                     continue
                 name = decorator['func']['id']
                 if name == _block_decorator:
-                    print("FOUND CODE BLOCK")
                     args = decorator['args']
                     if len(args) != 1:
                         continue
                     if args[0]['id'] in _block_decorator_types:
-                        print("OK")
                         _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
                 elif name == _function_decorator:
                     pass  # TODO

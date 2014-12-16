@@ -8,7 +8,7 @@
 
 _DEFUN_
 int print_i(int n){
-#if arduino
+#if ARDUINO
   maml_serial.print(n, DEC);
   //delay(1000);
 #else
@@ -18,7 +18,7 @@ int print_i(int n){
 
 _DEFUN_
 void print_s(struct string* str){
-#if arduino
+#if ARDUINO
   maml_serial.print(str->s);
   //delay(1000);
 #else
@@ -30,7 +30,7 @@ _DEFUN_
 void print_l(struct node *list) {
   struct node *n = list;
   while(n) {
-#if arduino
+#if ARDUINO
     maml_serial.write((int)n->data);
     maml_serial.write(" ");
 #else
@@ -45,7 +45,7 @@ _DEFUN_
 void print_a(struct array* a) {
   void** d = a->data;
   for(int i = 0; i < a->len; i++) {
-#if arduino
+#if ARDUINO
     maml_serial.write((int)d[i]);
     maml_serial.write(" ");
 #else
@@ -59,7 +59,7 @@ void print_a(struct array* a) {
 //TODO: way of defining function from standard lib as primitives
 _DEFUN_
 int die(int code){
-#if !arduino
+#if !ARDUINO
   remove(lockfile);
   printf("bye.\n");
 #endif
