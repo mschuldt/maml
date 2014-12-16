@@ -1,3 +1,13 @@
+#include <time.h>
+
+double cps_div_1000 = CLOCKS_PER_SEC / 1000.0;
+
+_DEFUN_
+long millis(void){
+  return (clock() / cps_div_1000);
+}
+
+
 _DEFUN_
 void print1(struct string *fmt, void *arg){
   char *fmt_str = fmt->s;

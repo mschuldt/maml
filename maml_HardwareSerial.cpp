@@ -242,6 +242,7 @@ void maml_HardwareSerial::_rx_complete_irq(void)
       busy = false;
       return;
     }
+
     ////////////////////////////////////////////////////////////////////////////
     i = (unsigned int)(_rx_buffer_head + 1) % SERIAL_RX_BUFFER_SIZE;
 
@@ -568,4 +569,4 @@ void loop() {
 */
 
 
-// end maml_HardwareSerial.cppg
+// end maml_HardwareSerial.cpp

@@ -133,6 +133,9 @@ void init_codeblock(struct codeblock* block, int code_len){
   block->prev = block->next = NULL;
 }
 
+#if arduino
+#include "maml_HardwareSerial.cpp"
+#endif
 void append_codeblock(struct codeblock* block){
   //TODO: should add
   if (!blockchain_end){
@@ -191,9 +194,7 @@ struct frame *current_frame = NULL;
 void** primitives; //this is filled by auto-generated code in _prim.c
 int n_primitives;
 
-#if arduino
-#include "maml_HardwareSerial.cpp"
-#endif
+
 
 #include "primitives.c"
 #if arduino
@@ -371,7 +372,8 @@ void loop (){
   NEXT(code);
  call_prim_0:
   D("call_0\n");
-  stack[++top] = ((void* (*)(void))(*code++))();
+  stack[++top] = ((void* (*)(void))(*code))();
+  //stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_1:
   stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
@@ -412,10 +414,12 @@ void loop (){
   NEXT(code);
  load_global:
   D("load_global\n")
+    //::? (int)
   stack[++top] = globals[(long)*code++];
   NEXT(code);
  store_global:
   D("store_global\n")
+    //::? (int)
   globals[(long)*code++] = stack[top--];
   NEXT(code);
  _if:
@@ -443,8 +447,8 @@ void loop (){
   stack[top-1] = (void*)((long)stack[top-1] / (long)stack[top--]);
   NEXT(code);
  gt:
-  // use < because items on stack are reversed
-  stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top-1]) > ((long)stack[top--]));
+  //stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
   NEXT(code);
  lt:
   //This works on the desktop, but not the arduino(why?):
@@ -453,18 +457,18 @@ void loop (){
   NEXT(code);
 
  eq:
-  stack[top-1] = (void*) ((long)(stack[top]) == ((long)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top-1]) == ((long)stack[top--]));
   NEXT(code);
  notEq:
-  stack[top-1] = (void*) ((long)(stack[top]) != ((long)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top-1]) != ((long)stack[top--]));
   NEXT(code);
  ltEq:
   // use > because items on stack are reversed
-  stack[top-1] = (void*) ((long)(stack[top]) >= ((long)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top-1]) <= ((long)stack[top--]));
   NEXT(code);
  gtEq:
   // use < because items on stack are reversed
-  stack[top-1] = (void*) ((long)(stack[top]) <= ((long)stack[--top]));
+  stack[top-1] = (void*) ((long)(stack[top-1]) >= ((long)stack[top--]));
   NEXT(code);
 #if include_lists
  list:
@@ -524,6 +528,10 @@ int main(){
 
 
 void byte_in(unsigned char c){
+  /* if (c != SOP_PING){ */
+  /*   serial_out("got>"); */
+  /*   serial_out(c); */
+  /* } */
   //processes the next byte of input
   switch (reading_state){
     ///start by reading the length of the code to be received
@@ -558,7 +566,6 @@ void byte_in(unsigned char c){
     return;
 
   case done://c is a bytecode
-    D2("case done");
     switch (c){
     case SOP_PING:
       //serial_out("SOP_PING\n");
@@ -809,7 +816,7 @@ void byte_in(unsigned char c){
       }
       if (newblock){
         //printf("appending new codeblock\n");
-        D2("appending new codeblock\n");
+        //serial_out("appending new codeblock\n");
         code_array[code_i] = l_end_of_block;
 
         append_codeblock(newblock);
@@ -823,6 +830,11 @@ void byte_in(unsigned char c){
       }else{
         D2("end of input\n");
       }
+      //serial_out("received:");
+      /* for (int i = 0; i < code_i;i++){ */
+      /*   serial_out((int)(code_array[i])); */
+      /* } */
+      /* delay(10000); */
       return;
     default: //bytecode
       //TODO:

@@ -28,7 +28,8 @@ class Maml_serial:
         self.vm_pid = None
         self.serial_in = [] #lines of strings received from the serial port
         self.serial = None
-        self.timeout = 0.3
+        self.timeout = 0.01
+        #self.serial_delay = 0.005 #time to delay between sending bytes
         self.serial_delay = 0.005 #time to delay between sending bytes
 
     def send_codeblock(self, block):
@@ -39,7 +40,6 @@ class Maml_serial:
         bc = block.bytecode
         length = len(bc)
         exp = expand_bytecode(bc)
-        print("***num bytecodes = " + str(length+1))
         #exp = [SOP_PING+1]+list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
         #TODO: this bytecode should be generated elsewhere
         exp = [chr(SOP_INT)] + list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
@@ -146,9 +146,9 @@ class Maml_serial:
             self.serial.write((c if type(c) == str else chr(c)).encode('ascii'))
             print(".", end="")
             stdout.flush()
-            #self.read_lines();
-            #print("received===========",self.serial_in)
-            #self.serial_in = []
+            # self.read_lines();
+            # print("received===========",self.serial_in)
+            # self.serial_in = []
         print("done sending")
 
     def read_lines(self, check_connection=False, _timeout=None):

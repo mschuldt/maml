@@ -3,6 +3,7 @@
 (setq files '("_opcodes.h"
               "primitives.c"
               "_prim.c"
+              "arduino_only_primitives.c"
               "maml_HardwareSerial.cpp"))
 
 (find-file "avm.c")
