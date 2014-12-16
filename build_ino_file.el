@@ -7,7 +7,7 @@
               "maml_HardwareSerial.cpp"))
 
 (find-file "avm.c")
-(re-search-forward "#define +arduino +\\(0\\)")
+(re-search-forward "#define +ARDUINO +\\(0\\)")
 (replace-match "1" nil nil nil 1)
 (goto-char 1)
 (insert "/***** This file is auto-generated, do not modify. *****/\n\n")
