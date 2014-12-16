@@ -10,7 +10,7 @@ _DEFUN_
 int print_i(int n){
 #if arduino
   maml_serial.print(n, DEC);
-  delay(1000);
+  //delay(1000);
 #else
   printf("%d\n", n);
 #endif
@@ -20,7 +20,7 @@ _DEFUN_
 void print_s(struct string* str){
 #if arduino
   maml_serial.print(str->s);
-  delay(1000);
+  //delay(1000);
 #else
   printf("%s\n", str->s);
 #endif
