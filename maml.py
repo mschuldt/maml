@@ -239,6 +239,21 @@ class Arduino:
             print("Error: variable '{}' does not exist in the global env"
                   .format(var))
 
+    def dump(self):
+        """
+        dump values from the VMs environment
+        """
+        was_paused = self.paused
+        if not was_paused:
+            self.pause()
+
+        print("Variables:")
+        for v in self.env.names:
+            print(v, self.get(v))
+
+        if not was_paused:
+            self.resume()
+
     def pause(self):
         """
         Pause the VM.
