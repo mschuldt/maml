@@ -1,5 +1,5 @@
 avm: avm.c _opcodes.h _prim.c _prim.py
-	g++ -g -fpermissive avm.c -o avm
+	g++ -g -w -fpermissive avm.c -o avm
 #	g -std=c99 -g  avm.c -o avm
 
 all: avm ino
