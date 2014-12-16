@@ -383,7 +383,8 @@ void loop (){
 #define _ void*
 #define S(i) stack[top+i]
   D("call_2\n");
-  stack[--top] = ((_ (*)(_, _))(*code++))(S(0), S(1));
+  top -= 1;
+  stack[top] = ((_ (*)(_, _))(*code++))(S(0), S(1));
   NEXT(code);
  call_prim_3:
   D("call_3\n");
