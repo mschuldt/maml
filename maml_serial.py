@@ -158,7 +158,7 @@ class Maml_serial:
             # self.serial_in = []
         print("done sending")
 
-    def read_lines(self, check_connection=False, _timeout=None):
+    def update(self, check_connection=False, _timeout=None):
         "read available lines from Arduino, returns number lines read"
         if not self.serial:
             return 0
