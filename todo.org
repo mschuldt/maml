@@ -15,19 +15,19 @@
       the compiler should use the available types to output correct function
 - [ ] assignment to list/vertex indices etc
       currently only supports assignment to variables
-
 * Compilation
 - [ ] Check that reserved variable names, keyword, and function are not used incorrectly
 - [ ] Any expression that can be at the top level that normally
       pushes to the stack will have to pop that element from the stack
+     (currently only function calls do this)
 - [X] Declaration of built-in variable types
-- [ ] Need way of declaring types of built in functions
-- [ ] decorator used for defining the translation of specific functions
-- [ ] static typing should not be optional - only auto type declarations
+- [X] Need way of declaring types of built in functions
+- [X] decorator used for defining the translation of specific functions
+- [X] static typing should not be optional - only auto type declarations
 - [ ] allow_type_reassign should be set to False by default
       currently to to True because tests fail otherwise
 - [ ] check types of comparisons like '>' in @type_check('compare')
-
+- [X] need to have proper exception classes TypeError and SyntaxError
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
 - [ ] Separate function that wraps malloc and check if mem is available
@@ -54,9 +54,13 @@ traverse the ast object without converting to string and evaluating
       because the vm stops reading when it reaches \0
       and the rest of the characters are interpreted as opcodes
 - [ ] bug: in @code_gen('assign'), the assigned value should only be evaluated once
-
+p- [ ] in examples/variable_blink.maml if _delay(1000) is added to the end
+      of the 'setup' block, it break.
+      => it looks like delays at the end of any @block(once) block will
+         cause the VM to crash.
 * types
   - [ ] some way of typecasting
+  - [ ] type checking for 'call' this currently does not work: func()+var
 * Miscellaneous
 - [ ] Functions for reporting errors (instead of using print + exit everytime)
 - [X] need test framework for testing invalid programs
@@ -66,3 +70,9 @@ traverse the ast object without converting to string and evaluating
       static type configs
       debugging vars
       features to include in the compiled vm
+- [ ] the vm should accept the bytecode file as a command line arg
+- [ ] should null terminators be allowed at the end of strings? x = 'string\0'
+* making the vm faster
+- [ ] don't be retarded about sending/converting integers
+* stuff for the demo
+
