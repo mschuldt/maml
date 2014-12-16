@@ -111,6 +111,11 @@ def Str(s, lineno=None, col_offset=None):
 
 
 def Name(id, ctx, lineno=None, col_offset=None):
+    if id == 'True':
+        return Num(1, lineno, col_offset)
+    if id == 'False':
+        return Num(0, lineno, col_offset)
+
     return {'type': 'name',
             'id': id,
             'ctx': ctx,
