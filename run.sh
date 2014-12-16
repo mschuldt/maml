@@ -24,6 +24,6 @@ rm -f $out
 #the vm needs to start before python sends it the interupt,
 #this works because python startup is so slow
 #
-python3 maml.py $1 & #> /dev/null &
+python3 maml.py -d $1 & #> /dev/null &
 ./avm
 
