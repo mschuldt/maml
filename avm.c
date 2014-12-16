@@ -152,6 +152,25 @@ void append_codeblock(struct codeblock* block){
   n_codeblocks++;
 }
 
+void remove_codeblock(struct codeblock* block){
+  if (block->prev){
+    block->prev->next = block->next;
+  }else{//removing head
+    blockchain = block->next;
+  }
+  if (block->next){
+    block->next->prev = block->prev;
+  }else{//removing tail
+    blockchain_end = block->prev;
+  }
+  if (n_codeblocks == 1){
+    blockchain_end = blockchain = NULL;
+  }
+  free(block->code);
+  free(block);
+  n_codeblocks--;
+}
+
 #if include_lists
 struct node{
   void* data;
@@ -286,6 +305,7 @@ void* l_mult;
 void* l_div;
 void* l_ret;
 void* l_end_of_block;
+void* l_block_suicide;
 void* l_call_prim_0;
 void* l_call_prim_1;
 void* l_call_prim_2;
@@ -320,6 +340,7 @@ void loop (){
     l_div = &&div;
     l_ret = &&ret;
     l_end_of_block = &&end_of_block;
+    l_block_suicide = &&block_suicide;
     l_call_prim_0 = &&call_prim_0;
     l_call_prim_1 = &&call_prim_1;
     l_call_prim_2 = &&call_prim_2;
@@ -503,6 +524,14 @@ void loop (){
   current_block = current_block->next;
   code = current_block->code;
   NEXT(code);
+ block_suicide:
+  struct codeblock* next_block = current_block->next;
+  remove_codeblock(current_block);
+  if (next_block && n_codeblocks){
+    code = next_block->code;
+    NEXT(code);
+  }
+  return; //no more code blocks - keep looping until one arrives
  pop:
   D("POP\n");
   --top;
@@ -793,6 +822,12 @@ void byte_in(unsigned char c){
       code_array[code_i++] = (void*) l_const;
       code_array[code_i++] = INPUT_STACK_POP();
       return;
+    case OP_BLOCK_NEXT:
+      code_array[code_i++] = l_end_of_block;
+      return;
+    case OP_BLOCK_SUICIDE:
+      code_array[code_i++] = l_block_suicide;
+      return;
     case SOP_END:
       D2("SOP_END\n");
       //TODO: reset jump/label variables at start of block/function transfer
@@ -816,10 +851,6 @@ void byte_in(unsigned char c){
         */
       }
       if (newblock){
-        //printf("appending new codeblock\n");
-        //serial_out("appending new codeblock\n");
-        code_array[code_i] = l_end_of_block;
-
         append_codeblock(newblock);
         D2("appended codeblock\n");
 

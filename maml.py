@@ -93,7 +93,7 @@ def block(block_type):
         block_name = fn.__name__
         raw = _compiled_code.get(block_name)
         block_end = OP_BLOCK_NEXT if block_type is chain else OP_BLOCK_SUICIDE
-        code = [SOP_START_CODEBLOCK] + raw + [SOP_END]
+        code = [SOP_START_CODEBLOCK] + raw + [block_end, SOP_END]
 
         if not code:
             print("Error: could not retrieve compiled block code")
