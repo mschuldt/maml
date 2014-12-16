@@ -14,7 +14,6 @@ compile_decorator = 'arduino'
 
 from maml_ast import make_ast
 from maml_opcodes import *
-from maml_env import env
 from maml_functions import function_compiler_functions
 from functools import reduce
 from operator import add
@@ -681,10 +680,10 @@ def compile_str(code: str) -> list:
 
 
 # TODO: instead of handling errors like gcc, just terminate after the first one
-def compile_ast(ast, desktop_p):
+def compile_ast(ast, desktop_p, env=None):
     global primitives
     primitives = (desktop_primitives if desktop_p else arduino_primitives)
-    env = make_new_env()
+    env = env or make_new_env()
     bytecode = []
     for a in ast:
         if type_checking:

@@ -6,6 +6,10 @@ from operator import add
 from functools import reduce
 from sys import argv
 from maml_serial import Maml_serial
+from maml_env import env
+
+allow_type_reassign = True  # enable re-declaring variable type
+
 
 # maps block names to bytecode arrays and
 # function names to FunctionByteCode objects
@@ -109,18 +113,25 @@ def function(fn):
 
 
 class Arduino:
-    def __init__(self, desktop=False):
+    def __new__(cls, *args, **kwargs):
         global _arduino
-        if _arduino:
-            print("WARNING: multiple Arduino boards are not supported")
-            return self
-        _arduino = self
+        #we only support one Arduino and have one global Arduino object
+        #to represent it
+        if not _arduino:
+            print("making new arduino object")
+            _arduino = object.__new__(cls, *args, **kwargs)
+            _arduino.serial = Maml_serial()
+            _arduino.env = env(None, allow_type_reassign)
+        return _arduino
 
+    def __init__(self, desktop=False):
+        print ("here")
         # initialize serial
         self.serial_hook = []
-        self.serial = Maml_serial()
+
         self.desktop = desktop
         self.serial.desktop = desktop
+
 
     def set_vm_pid(self, pid):
         """set the pid of the vm processes (only used when self.desktop == True)
@@ -152,6 +163,8 @@ class Arduino:
         """
         Compile and send the code 'VAR=VALUE' to the arduino
         """
+        exp = expand_bytecode([OP_SET, ])
+
 
         pass
 
@@ -191,6 +204,7 @@ class Arduino:
             # TODO: check for errors
             self.serial.send_byte(c)
 
+_arduino = Arduino()
 
 def update_compiled_code(code):
     """
@@ -205,7 +219,7 @@ def update_compiled_code(code):
                 name = decorators[0]['id']
                 if name == _block_decorator:
                     # print("compiling block '{}'".format(ast['name']))
-                    _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p)
+                    _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
                 elif name == _function_decorator:
                     pass  # TODO
 
