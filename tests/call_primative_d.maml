@@ -1,6 +1,6 @@
 arduino = Arduino(desktop=True)
 
-@block
+@block(once)
 def test():
     print_i(5)
     print_i(5 + 6)
