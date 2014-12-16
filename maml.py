@@ -91,10 +91,14 @@ def block(block_type):
 
     def decorator(fn):
         block_name = fn.__name__
-        code = _compiled_code.get(block_name)
+        raw = _compiled_code.get(block_name)
+        block_end = OP_BLOCK_NEXT if block_type is chain else OP_BLOCK_SUICIDE
+        code = [SOP_START_CODEBLOCK] + raw + [SOP_END]
+
         if not code:
             print("Error: could not retrieve compiled block code")
             print("_compiled_code = ", _compiled_code)
+
         # update (or add) this block in the global list of blocks
         codeblock = _blocks.get(block_name)
         if codeblock:

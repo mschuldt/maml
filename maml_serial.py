@@ -35,7 +35,8 @@ class Maml_serial:
     def send_code(self, code):
         """
         sends unexpanded code to the arduino.
-        this is intended for sending single opcode instructions.
+        this is intended for sending single opcode instructions
+        as is done by Arduino.set and Arduino.get
         """
         self._send(expand_bytecode(code))
 
@@ -45,13 +46,10 @@ class Maml_serial:
         """
         # TODO: how to handle disconnection and other errors?
         bc = block.bytecode
-        length = len(bc)
-        exp = expand_bytecode(bc)
-        #exp = [SOP_PING+1]+list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
-        #TODO: this bytecode should be generated elsewhere
-        exp = [chr(SOP_INT)] + list(str(length+1)) + [NUM_TERMINATOR, chr(SOP_START_CODEBLOCK)] + exp
+        #send the length of the codeblock first
+        exp = expand_bytecode([SOP_INT, len(bc)+1] + bc)
         # end block and end file
-        self._send(exp + [chr(SOP_END), chr(SOP_END)])
+        self._send(exp + [chr(SOP_END)])
 
     def send_function(self, fn):
         # TODO
@@ -273,7 +271,6 @@ def expand_bytecode(bc):
 
     while i < length:
         c = bc[i]
-
         if c == SOP_INT:
             i += 1
             long_code.extend(expand_int(bc[i]))
