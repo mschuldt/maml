@@ -903,9 +903,13 @@ void byte_in(unsigned char c){
       return;
     case OP_DUMP_STACK:
       for (int i = 0; i <= top; i++){
+#if ARDUINO
         maml_serial.print(i);
         maml_serial.print(" ");
         maml_serial.println((int)stack[i]);
+#else
+        printf("%d %d\n", i, (int)stack[i]);
+#endif
       }
       return;
     default: //bytecode
