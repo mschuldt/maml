@@ -7,6 +7,10 @@ long millis(void){
   return (clock() / cps_div_1000);
 }
 
+_DEFUN_
+void delay(int ms){
+  usleep(ms*1000);
+}
 
 _DEFUN_
 void print1(struct string *fmt, void *arg){
@@ -20,11 +24,6 @@ void print1(struct string *fmt, void *arg){
     c++;
   }
   printf(fmt_str, arg);
-}
-
-_DEFUN_
-void delay(int ms){
-  sleep(ms); //TODO: delay for milliseconds instead of seconds
 }
 
 ///primitives used for testing
@@ -73,6 +72,7 @@ _DEFUN_
 int test_print_args6(int a, int b, int c, int d, int e, int f){
   printf("args=> %d, %d, %d, %d, %d, %d\n",a,b,c,d,e,f);
 }
+
 _DEFUN_
 int test_print(int n){
   printf("-> %d\n", n);
