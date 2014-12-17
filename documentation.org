@@ -102,6 +102,9 @@ Dump all variable values in the VM as well as the values on the stack
 arduino.dump()
 #+END_SRC
 
+* desktop version limitations
+- Arduino.get an Arduino.dump do not work in the desktop version
+  (this is just because the output of the VM is not piped back to maml.py)
 * features
 some features in the ~order they where implemented
 
