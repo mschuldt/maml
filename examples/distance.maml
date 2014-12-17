@@ -25,7 +25,18 @@ def delay_and_update():
 arduino.send(setup)
 arduino.send(delay_and_update)
 
-# now you can interactively change the variable values in the VM:
+# NOW YOU CAN INTERACTIVELY SET THE VARIABLE VALUES IN THE VM:
 #>>> arduino.set("led_on", 0)
 #>>> arduino.set("led_on", 1)
+#
+# OR GET THE VALUES:
 #>>> arduino.get("distance")
+#
+# OR PAUSE THE VM:
+#>>> arduino.pause()
+#
+# AND RESUME IT AGAIN
+#>>> arduino.resume()
+#
+# DUMP THE VM ENVIRONMENT:
+#>>> arduino.dump()

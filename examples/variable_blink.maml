@@ -1,4 +1,3 @@
-# -*- python -*-
 
 #run with:
 #   python3 -i maml.py -a variable_blink.maml
@@ -23,9 +22,6 @@ def vblink():
         delay_time += increment
 
 
-s = arduino.serial
-s.update()
-s.serial_in
 arduino.send(setup)
 arduino.send(vblink)
 
