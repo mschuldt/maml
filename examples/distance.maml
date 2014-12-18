@@ -1,8 +1,12 @@
+# This uses an LED on pin 13 and a ping distance sensor on pin 53
+# Arduino library functions used here are declared in
+# arduino_only_primitives.c, which also contains the function
+# 'get_distance' that supports this example.
+
 # run with:
 #   python3 -i maml.py -a distance.maml
 
 arduino = Arduino(desktop=False)
-
 
 @block(once)
 def setup():

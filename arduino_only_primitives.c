@@ -16,6 +16,7 @@ void _delay(int n){
 
 _DEFUN_
 int get_distance(){
+  //returns distance in centimeters from a ping sensor setup on pin 53
   pinMode(53, OUTPUT);
   digitalWrite(53, LOW);
   delayMicroseconds(2);
@@ -27,3 +28,4 @@ int get_distance(){
 
   return pulseIn(53, HIGH) / 29 / 2;
 }
+

@@ -1,4 +1,20 @@
-* usage
+* Overview
+MAML compiles select blocks of a Python program to bytecode and sends it to
+an Arduino for execution. The virtual machine running on the Arduino may be
+paused/resumed and its environment can be fully inspected and modified from
+Python as the program is running. This enables writing programs for
+Arduino that benefit from interactive development, friendly syntax, and
+close interoperability with the desktop.
+
+The Python decorators @block(once) and @block(chain) are used to designate
+functions whose body will be compiled and sent to the Arduino for execution.
+The rest of the Python program runs as normal and may exit after sending
+the bytecode or keep running and provide an application that interacts
+with the Arduino.
+The bodies of these decorated functions contain a subset of the Python
+language with modified semantics.
+
+* Usage
 to compile, send, and run a file on the desktop:
 #+Begin_SRC text
 ./run.sh filename.maml
@@ -20,55 +36,17 @@ if you want to interact with it:
 #+Begin_SRC text
 python3 -i maml.py -a filename.maml
 #+END_SRC
-* building the VM
-- make
-  build the virtual machine for use on the desktop
-
-- make ino
-  generates the file 'avm.ino' that can be copied into the Arduino IDE
-* dependencies
- - g++ (The VM does not compile with LLVM)
- - python3
- - pyserial  (pip3 install pyserial)
- - Arduino IDE 1.5.8 (http://arduino.cc/en/Main/Software)
- - Emacs
-* testing
-to run all tests in maml/tests/ and maml/false_tests:
-#+Begin_SRC text
-  make test
-#+END_SRC
-** using gdb to debug the VM
-start avm process with gdb
-then inject code in separate terminal by running python file:
-#+Begin_SRC text
- ./maml.py filename.maml
-#+END_SRC
-using ./run.sh will not work because it creates its own avm subprocess
-** testing bytecode compilation
-to print the compiled code from a file use:
-#+Begin_SRC text
- ./maml_compile filename.py
-#+END_SRC
-this will print something like:
-#+Begin_SRC text
-  block: 'test'
-      [22, 2, 8, 0]
-#+END_SRC
-to print with human readable opcodes instead,
-at the top of maml_opcodes.py set "debug = True"
-Now maml_compile will print something like
-#+Begin_SRC text
-  block: 'test'
-      ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
-#+END_SRC
-
-* API
+* Examples
+For working examples see the [[file:examples/][examples]] directory.
+* Arduino API
 instantiate the arduino object (required)
 set desktop=True if the VM is running on the Desktop, defaults to False
 #+Begin_SRC python
 arduino = Arduino(desktop=True)
 #+END_SRC
-Define a block that is executed once on the VM
+Define a block that is executed once on the VM.
+The body of all @block functions are executed in global scope on the Arduino,
+Therefor variables defined in one block are available to all others.
 #+Begin_SRC python
 @block(once)
 def blockname():
@@ -102,13 +80,63 @@ Dump all variable values in the VM as well as the values on the stack
 arduino.dump()
 #+END_SRC
 
+* Building the VM
+#+Begin_SRC text
+make
+#+END_SRC
+ build the virtual machine for use on the desktop
+#+Begin_SRC text
+make ino
+#+END_SRC
+ generates the file 'avm.ino' that can be copied into the Arduino IDE
+* Dependencies
+ - g++ (The VM does not compile with LLVM)
+ - python3
+ - pyserial  (pip3 install pyserial)
+ - Arduino IDE 1.5.8 (http://arduino.cc/en/Main/Software)
+ - Emacs
+
+Maml is currently only known to run on the Arduino Mega 2560.
+The Uno does not work for unknown reasons, The Due does does not work
+because of changes to the Serial Library.
+
+* Testing
+to run all tests in maml/tests/ and maml/false_tests:
+#+Begin_SRC text
+  make test
+#+END_SRC
+** using gdb to debug the VM
+start avm process with gdb
+then inject code in separate terminal by running python file:
+#+Begin_SRC text
+ ./maml.py filename.maml
+#+END_SRC
+using ./run.sh will not work because it creates its own avm subprocess
+** testing bytecode compilation
+to print the compiled code from a file use:
+#+Begin_SRC text
+ ./maml_compile filename.py
+#+END_SRC
+this will print something like:
+#+Begin_SRC text
+  block: 'test'
+      [22, 2, 8, 0]
+#+END_SRC
+to print with human readable opcodes instead,
+at the top of maml_opcodes.py set "debug = True"
+Now maml_compile will print something like
+#+Begin_SRC text
+  block: 'test'
+      ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
+#+END_SRC
+
 * desktop version limitations
 - Arduino.get an Arduino.dump do not work in the desktop version
   (this is just because the output of the VM is not piped back to maml.py)
 * features
 some features in the ~order they where implemented
 
-- arithmetic   
+- arithmetic
 - communication to vm on desktop using files and signals
 - defining/calling c primitive functions
 - global variables
@@ -122,12 +150,12 @@ some features in the ~order they where implemented
 - getting/setting values from the VM
 - dumping all variable and stack values from the VM
 - pausing and resuming the VM
-  
+
 * defining new c primitives
 primitives are separated into files depending on their compile target.
 - primitives.c                for both Desktop and Arduino
-- arduino_only_primitives.c   not compiled for desktop   
-- desktop_only_primitives.c   not compiled for desktop   
+- arduino_only_primitives.c   not compiled for desktop
+- desktop_only_primitives.c   not compiled for desktop
 
 primitive functions are defined as normal but with the
 _DEFUN_ tag above them.
@@ -136,7 +164,7 @@ declare primitives with the _DECL_ tag. See the files for examples.
 ** serial protocol
 ** bytecode and opcode format
 Operands are mixed in with opcodes. All opcode operands come before the
-opcodes in the bytecode when it is transmitted to the arduino but 
+opcodes in the bytecode when it is transmitted to the arduino but
 comp after the operands in the threaded code that is generated within the VM.
 
 TODO: opcode formats
@@ -158,12 +186,12 @@ in avm.c add the case in loop():
 
 #+Begin_SRC c
   pop:
-   --top; 
-   NEXT(code); 
+   --top;
+   NEXT(code);
 #+END_SRC
 
 in avm.c at the top of loop() defined a label variable:
- 
+
 #+Begin_SRC c
  void* l_pop;
 #+END_SRC
@@ -176,14 +204,14 @@ and below that, in loop(), add the label address assignment:
 
 at the bottom of avm.c in serial_in(), add a case to the switch statement
 that reads in the bytecode and adds the address to the code array,
-if this opcode has operands, they are read in now, see case SOP_INT or 
+if this opcode has operands, they are read in now, see case SOP_INT or
 SOP_PRIM_CALL for and example of that.
 
 #+Begin_SRC c
     case OP_POP:
       NL;
       code_array[i++] = l_pop;
-      break;      
+      break;
 #+END_SRC
 
 ** adding new feature
@@ -194,7 +222,7 @@ general steps (lots of them may not be used)
 - ast checking function
 - code generation function
 - new opcode
-- serialization  
+- serialization
 - de-serialization, convert to threaded form
 - new vm case
 *** AST translation
@@ -211,7 +239,7 @@ NameError: name 'If' is not defined
 #+END_SRC
 (If there is no error, the ast will be dumped. skip this section)
 This means we need to define the AST node translation function for 'If'
-in maml_ast.py. Before we do that we need to know what parameters the 
+in maml_ast.py. Before we do that we need to know what parameters the
 translation function will take. Get a dump of the raw Python ast using:
 
 #+Begin_SRC text
@@ -289,6 +317,6 @@ TODO
 * .lock files
 When running the VM on the desktop, it creates a while PID.lock
 where PID is the process id of the VM. This prevents the compiler
-from interrupting the VM at a bad time to inject code. 
+from interrupting the VM at a bad time to inject code.
 These should be cleaned up by the VM but often are not - you may delete them safely
 after the VM terminates
