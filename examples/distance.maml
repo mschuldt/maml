@@ -1,4 +1,7 @@
+# blinks an LED with delay proportional to the distance sensor value.
+#
 # This uses an LED on pin 13 and a ping distance sensor on pin 53
+#
 # Arduino library functions used here are declared in
 # arduino_only_primitives.c, which also contains the function
 # 'get_distance' that supports this example.

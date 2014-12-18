@@ -39,8 +39,8 @@ python3 -i maml.py -a filename.maml
 * Examples
 For working examples see the [[file:examples/][examples]] directory.
 * Arduino API
-instantiate the arduino object (required)
-set desktop=True if the VM is running on the Desktop, defaults to False
+Instantiate the arduino object (required).
+Set desktop=True if the VM is running on the Desktop, defaults to False
 #+Begin_SRC python
 arduino = Arduino(desktop=True)
 #+END_SRC
@@ -62,7 +62,7 @@ Send a block to the VM
 #+Begin_SRC python
 arduino.send(blockname)
 #+END_SRC
-set a variable on the VM
+Set a variable in the VM environment
 #+Begin_SRC python
 arduino.set("variableName", value)
 #+END_SRC
@@ -81,14 +81,15 @@ arduino.dump()
 #+END_SRC
 
 * Building the VM
+build the virtual machine for use on the desktop
 #+Begin_SRC text
 make
 #+END_SRC
- build the virtual machine for use on the desktop
+generates the file 'avm.ino', the Arduino Virtual Machine,
+that can be copied into the Arduino IDE
 #+Begin_SRC text
 make ino
 #+END_SRC
- generates the file 'avm.ino' that can be copied into the Arduino IDE
 * Dependencies
  - g++ (The VM does not compile with LLVM)
  - python3
@@ -97,22 +98,22 @@ make ino
  - Emacs
 
 Maml is currently only known to run on the Arduino Mega 2560.
-The Uno does not work for unknown reasons, The Due does does not work
-because of changes to the Serial Library.
+The Uno does not work for unknown reasons (never able to connect to the VM on it),
+The Due does does not work because of changes to the Serial Library.
 
 * Testing
 to run all tests in maml/tests/ and maml/false_tests:
 #+Begin_SRC text
   make test
 #+END_SRC
-** using gdb to debug the VM
-start avm process with gdb
+** Using gdb to debug the VM
+start the avm process with gdb
 then inject code in separate terminal by running python file:
 #+Begin_SRC text
  ./maml.py filename.maml
 #+END_SRC
 using ./run.sh will not work because it creates its own avm subprocess
-** testing bytecode compilation
+** Testing bytecode compilation
 to print the compiled code from a file use:
 #+Begin_SRC text
  ./maml_compile filename.py
@@ -153,14 +154,16 @@ some features in the ~order they where implemented
 
 * defining new c primitives
 primitives are separated into files depending on their compile target.
-- primitives.c                for both Desktop and Arduino
-- arduino_only_primitives.c   not compiled for desktop
-- desktop_only_primitives.c   not compiled for desktop
+- [[file:primitives.c][primitives.c]]                for both Desktop and Arduino
+- [[file:arduino_only_primitives.c][arduino_only_primitives.c]]   not compiled for desktop
+- [[file:desktop_only_primitives.c][desktop_only_primitives.c]]   not compiled for desktop
 
 primitive functions are defined as normal but with the
 _DEFUN_ tag above them.
 declare primitives with the _DECL_ tag. See the files for examples.
 * internals
+Internal structures and how to add compiler or VM features.
+TODO: This is very incomplete.
 ** serial protocol
 ** bytecode and opcode format
 Operands are mixed in with opcodes. All opcode operands come before the
