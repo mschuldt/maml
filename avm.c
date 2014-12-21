@@ -1,6 +1,6 @@
 // AVM - Arduino Virtual Machine
 
-#define ENABLE_PAUSES 1 //uses an additional 1175 bytes
+#define ENABLE_PAUSES 1 //uses an additional 874 bytes
 #define INCLUDE_LISTS 1
 #define ARDUINO 0
 
@@ -22,11 +22,6 @@
 #include <unistd.h>
 #endif
 
-#if ENABLE_PAUSES
-#define NEXT(code) while (paused){delay(500);}; goto *(*code++)
-#else
-#define NEXT(code) goto *(*code++)
-#endif
 
 #if DEBUG
 #define D(...) printf(__VA_ARGS__);
@@ -314,6 +309,15 @@ char initialized = false;
 
 static void** entry_table;
 static void** prim_call_entry_table;
+
+#if ENABLE_PAUSES
+void _d(void){
+  delay(500);
+}
+#define NEXT(code) while (paused){_d();}; goto *(*code++)
+#else
+#define NEXT(code) goto *(*code++)
+#endif
 
 void loop (){
   if (!initialized){
