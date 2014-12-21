@@ -651,20 +651,6 @@ void byte_in(unsigned char c){
         code_array[code_i++] = (void*)index;
         return;
       }
-    case OP_ADD:
-    case OP_MULT:
-    case OP_SUB:
-    case OP_DIV:
-    case OP_GT:
-    case OP_LT:
-    case OP_EQ:
-    case OP_NOT_EQ:
-    case OP_LT_EQ:
-    case OP_GT_EQ:
-    case OP_RETURN:
-    case OP_POP:
-      code_array[code_i++] = entry_table[c];
-      return;
 #if INCLUDE_LISTS
     case OP_LIST:
       {
@@ -690,10 +676,6 @@ void byte_in(unsigned char c){
         code_array[code_i++] = (void*)n;
         return;
       }
-    case OP_IF:
-      SAY("OP_IF\n");
-      code_array[code_i++] = entry_table[OP_IF];
-      return;
     case OP_JUMP:
       SAY("OP_JUMP\n");
       code_array[code_i++] = entry_table[OP_JUMP];
@@ -731,12 +713,6 @@ void byte_in(unsigned char c){
       SAY("SOP_INT_ARRAY\n");
       code_array[code_i++] = entry_table[OP_CONST];
       code_array[code_i++] = INPUT_STACK_POP();
-      return;
-    case OP_NEXT_BLOCK:
-      code_array[code_i++] = entry_table[OP_NEXT_BLOCK];
-      return;
-    case OP_BLOCK_SUICIDE:
-      code_array[code_i++] = entry_table[OP_BLOCK_SUICIDE];
       return;
     case SOP_END:
       D2("SOP_END\n");
@@ -818,6 +794,25 @@ void byte_in(unsigned char c){
 #endif
       }
       return;
+
+    case OP_IF:
+    case OP_ADD:
+    case OP_MULT:
+    case OP_SUB:
+    case OP_DIV:
+    case OP_GT:
+    case OP_LT:
+    case OP_EQ:
+    case OP_NOT_EQ:
+    case OP_LT_EQ:
+    case OP_GT_EQ:
+    case OP_RETURN:
+    case OP_NEXT_BLOCK:
+    case OP_BLOCK_SUICIDE:
+    case OP_POP:
+      code_array[code_i++] = entry_table[c];
+      return;
+
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
@@ -889,7 +884,8 @@ void read_file(void){
 //9,782
 //11,366
 //13,362
-//14,232 <-- this was the change to using from variables to entry_table
+//14,072 <-- this was the change to using from variables to entry_table
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
 //858
+//880
