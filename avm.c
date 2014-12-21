@@ -872,7 +872,7 @@ void byte_in(unsigned char c){
       /* } */
       /* delay(10000); */
       return;
-    case OP_SET:
+    case SOP_SET:
       {
         int index = (int)INPUT_STACK_POP();
         if (index < 0 || index > max_globals){
@@ -881,7 +881,7 @@ void byte_in(unsigned char c){
         globals[index] = INPUT_STACK_POP();
         return;
       }
-    case OP_GET:
+    case SOP_GET:
       {
         int index = (int)INPUT_STACK_POP();
         if (index < 0 || index > max_globals){
@@ -894,14 +894,14 @@ void byte_in(unsigned char c){
 #endif
         return;
       }
-    case OP_PAUSE:
+    case SOP_PAUSE:
       paused = true;
       return;
-    case OP_RESUME:
+    case SOP_RESUME:
       serial_out("resuming...\n");
       paused = NULL;
       return;
-    case OP_DUMP_STACK:
+    case SOP_DUMP_STACK:
       for (int i = 0; i <= top; i++){
 #if ARDUINO
         maml_serial.print(i);

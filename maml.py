@@ -216,7 +216,7 @@ class Arduino:
         else:
             print("Error: Arduino.set currently only accepts str and int values")
             return
-        self.serial.send_code([sop_code, value, SOP_INT, index, OP_SET])
+        self.serial.send_code([sop_code, value, SOP_INT, index, SOP_SET])
 
     def get(self, var):
         """
@@ -228,7 +228,7 @@ class Arduino:
             if not was_paused:
                 self.pause()
             self.serial.update()
-            self.serial.send_code([SOP_INT, index, OP_GET])
+            self.serial.send_code([SOP_INT, index, SOP_GET])
             ret = self.serial.update()
             if not was_paused:
                 self.resume()
@@ -259,7 +259,7 @@ class Arduino:
             print("None")
 
         self.serial.update()
-        self.serial.send_code([OP_DUMP_STACK])
+        self.serial.send_code([SOP_DUMP_STACK])
         print("\n___Stack:___");
         for x in self.serial.update():
             x = str(x.strip())[1:]
@@ -274,7 +274,7 @@ class Arduino:
         """
         Pause the VM.
         """
-        self.serial.send_code([OP_PAUSE])
+        self.serial.send_code([SOP_PAUSE])
         self.paused = True
 
     def resume(self):
@@ -282,7 +282,7 @@ class Arduino:
         resume the VM if paused.
         """
         if self.paused:
-            self.serial.send_code([OP_RESUME])
+            self.serial.send_code([SOP_RESUME])
             self.paused = False
         else:
             print("Error: Cannot resume a non-paused VM")
