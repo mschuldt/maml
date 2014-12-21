@@ -382,8 +382,38 @@ void loop (){
 #undef _
 #undef S
   //// undef _ and S ////////////////////////////////////////////
- call:
-  NEXT(code);
+ op_call: //calls non-primitive
+  //extend 'call stack' - really a doubly linked list
+  //TODO: use an array of frames instead - less memory + faster
+  {
+    struct procedure* fn = (struct procedure*)stack[top--];
+    if (current_frame->next){
+      //reuse old frame
+      current_frame = current_frame->next;
+      if (current_frame->n_locals < fn->n_locals){
+        if (!realloc(current_frame->locals, fn->n_locals)){
+          //TODO: error
+        }
+      }
+    }else{
+      struct frame *_new = (struct frame*)malloc(sizeof(struct frame));
+      _new->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
+      _new->next = NULL;
+      _new->prev = current_frame;
+      current_frame->next = _new;
+      current_frame = _new;
+    }
+    n_locals = current_frame->n_locals = fn->n_locals;
+    locals = current_frame->locals;
+    code = current_frame->code = fn->code;
+    //assign argument values
+    int* args = fn->args->data;
+    int n_args = fn->args->len;
+    for (int i = 0; i < n_args; i++, args++){
+      locals[*args] = stack[top--]; //TODO: correct order?
+    }
+    NEXT(code);
+  }
  op_return:
   NEXT(code);
  op_global_load:
@@ -927,6 +957,7 @@ void read_file(void){
 //13,362
 //14,072 <-- this was the change to using from variables to entry_table
 //15,174
+//14,872
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
 //858
