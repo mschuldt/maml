@@ -44,6 +44,8 @@ class env:
         first (the corresponding call to get_store_index must have been
         made)
         """
+        ##?? why do we have two functions for this?
+        ##   can we just have a 'get_index' function?
 
         # Check if this variable was declared 'global'
         if name in self.global_names:

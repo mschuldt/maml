@@ -83,7 +83,7 @@ class Maml_serial:
             kill(self.vm_pid, VM_SIGNAL)
             return True
         else:
-            if self.verbose:
+            if self.verbose and False:
                 print("sending to arduino...")
             if self.connect():
                 if self.verbose:

@@ -110,13 +110,20 @@ def _(ast, btc, env, top):
 def _(ast, env):
     ast['s_type'] = 'int'
 
+@ast_check('int')
+def _(ast):
+    pass #TODO: check size
+
 ###############################################################################
 # float
-
 
 @code_gen('float')
 def _(ast, btc, env, top):
     raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
+
+@ast_check('float')
+def _(ast):
+    pass#TODO: check size
 
 ###############################################################################
 # list
@@ -165,6 +172,10 @@ def _(ast, env):
     check_types(theArray, env)
     ast['s_type'] = theArray['s_type']
 
+
+@ast_check('subscript')
+def _(ast):
+    pass
 
 ###############################################################################
 # tuple
