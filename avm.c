@@ -1,6 +1,6 @@
 // AVM - Arduino Virtual Machine
 
-#define ENABLE_PAUSES 1
+#define ENABLE_PAUSES 1 //uses an additional 1175 bytes
 #define INCLUDE_LISTS 1
 #define ARDUINO 0
 
@@ -312,9 +312,6 @@ void setup(void){
 }
 char initialized = false;
 
-static int int_regs[8];
-static char* char_regs[8];
-
 static void** entry_table;
 static void** prim_call_entry_table;
 
@@ -328,13 +325,8 @@ void loop (){
 
   //this part happens only once
   struct codeblock* current_block = blockchain;
-  int i_top=0, c_top=0;
   void** code = current_block->code;
-  int *I = &int_regs[0];
-  char **C = &char_regs[0];
-  static long a,b,c,d,e,f,g;
 
-  void* r_ret; //?
   int n;
   struct node *list = NULL;
   struct node *tmp;
