@@ -523,7 +523,6 @@ void byte_in(unsigned char c){
   /*   serial_out(c); */
   /* } */
   //processes the next byte of input
-  //printf("(byte_in) entry_table = %p\n", entry_table);
 
   switch (reading_state){
     ///start by reading the length of the code to be received
@@ -581,7 +580,6 @@ void byte_in(unsigned char c){
     case SOP_INT_ARRAY:
       reading_state = int_array;
       in_array_len = (int)INPUT_STACK_POP();
-      D2("reading array len ===>>> %d\n", in_array_len);
       in_int_array_struct = (struct i_array*)malloc(sizeof(struct i_array));
       in_int_array = (int*)malloc(sizeof(int)*in_array_len);
       in_int_array_struct->data = in_int_array;
@@ -609,8 +607,9 @@ void byte_in(unsigned char c){
       //TODO: the next code should specify creation/replacement of a block
       //      or just its index number with the creation/replacement implied
       if (newfunction){
-        //TODO: (error)
+        SAY("Error: cannot start a codeblock while reading a function\n");
       }
+
       //TODO: keep track of the number of bytecodes written into
       //      code array and compare to 'expected_length' in sop_end
       expected_length = (int)INPUT_STACK_POP();
@@ -620,18 +619,30 @@ void byte_in(unsigned char c){
       code_array = newblock->code;
       code_i = 0;
       return;
-    case SOP_START_FUNCTION:
-      D2("SOP_START_FUNCTION\n");
-      if (newblock){
-        //TODO: error
-      }
-      //READ_INT_ARRAY()
-      newfunction = (struct procedure*)malloc(sizeof(struct procedure));
-      //newfunction->args = READ_INT_ARRAY();
-      //newfunction->
-      code_array = newfunction->code;
-      return;
 
+    case SOP_START_FUNCTION:
+      {
+        printf("SOP_START_FUNCTION\n");
+        if (newblock){
+          //TODO: error
+        }
+
+        expected_length = (int)INPUT_STACK_POP();
+
+        newfunction = (struct procedure*)malloc(sizeof(struct procedure));
+        code_array = newfunction->code = (void**)malloc(sizeof(void*)*expected_length);
+        newfunction->args = (struct i_array*)INPUT_STACK_POP();
+
+        int len = newfunction->args->len;
+        int* data = newfunction->args->data;
+        for (int i = 0; i < len; i++, data++){
+          printf("%d: %d\n", i, *data);
+        }
+        //newfunction->args = READ_INT_ARRAY();
+        //newfunction->
+        code_array = newfunction->code;
+        return;
+      }
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
       {
         D2("SOP_PRIM_CALL\n");
@@ -768,7 +779,13 @@ void byte_in(unsigned char c){
         code_array = NULL;
 
       }else if (newfunction){
-        D2("TODO: newfunction case in SOP_END");
+        int index = (int)INPUT_STACK_POP();
+        if (index < 0 || index > max_globals){
+          SAY("Error: (storing function) invalid index\n"); DIE(1);
+        }
+        //printf("inserting function into global index %d\n", index);
+        globals[index] = (void*)newfunction;
+        newfunction = NULL;
       }else{
         D2("end of input\n");
       }
@@ -909,7 +926,9 @@ void read_file(void){
 //11,366
 //13,362
 //14,072 <-- this was the change to using from variables to entry_table
+//15,174
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
 //858
 //880
+//1,038
