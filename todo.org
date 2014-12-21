@@ -40,6 +40,9 @@
 - [X] what is the actual value of EOF? must make sure that it does not match a bytecode
 - [ ] need some kind of character escaping for sending ping signals etc
 - [ ] all loops in vm cases need to check if the VM is being paused
+- [ ] instead of pushing argument values onto the stack, just them directly
+      in the local environment of the function about to be called
+
 * AST
 Better way of transforming the ast - dont convert to dictionaries in that
 traverse the ast object without converting to string and evaluating

@@ -132,6 +132,7 @@ long paused = NULL;
 #if ARDUINO
 #include "maml_HardwareSerial.cpp"
 #endif
+
 void append_codeblock(struct codeblock* block){
   //TODO: should add
   if (!blockchain_end){
@@ -258,6 +259,9 @@ int in_integer_i;
 int* in_int_array;
 int in_array_len;
 struct i_array* in_int_array_struct;
+
+//end
+////////////////////////////////////////////////////////////////////////////////
 
 //the main program stack
 void** stack;
@@ -535,8 +539,7 @@ void loop (){
   NEXT(code);
 }
 
-#if ARDUINO
-#else
+#if ! ARDUINO
 int main(){
   setup();
   //serial_in(); ///test
@@ -547,13 +550,9 @@ int main(){
 }
 #endif
 
-#define CHAR_TO_INT(c) ((c) - 48)
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 //TODO: how to handle a read signal while a read is already in progress?
-
 
 void byte_in(unsigned char c){
   /* if (c != SOP_PING){ */

@@ -26,6 +26,9 @@ void print_s(struct string* str){
 #endif
 }
 
+#if INCLUDE_LISTS //TODO: need to let the preprocessor know not to create
+                  //      entries for these functions, it currently
+                  //      does not recognize conditional includes
 _DEFUN_
 void print_l(struct node *list) {
   struct node *n = list;
@@ -40,6 +43,7 @@ void print_l(struct node *list) {
   }
   serial_out("\n");
 }
+#endif
 
 _DEFUN_
 void print_a(struct array* a) {
