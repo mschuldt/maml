@@ -636,8 +636,8 @@ def gen_bytecode(ast, btc=None, env=None, top=True):
               .format(ast['type']))
 
 
-def make_new_env():
-    return env(None, allow_type_reassign)
+def make_new_env(parent=None):
+    return env(parent, allow_type_reassign)
 
 # TODO: Should exit immediately on error, check functions should not return
 # anyting
