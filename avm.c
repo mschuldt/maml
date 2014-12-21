@@ -226,7 +226,7 @@ int n_primitives;
 ////////////////////////////////////////////////////////////////////////////////
 //variables used by 'byte_in' to build input
 
-enum Reading_state {done, integer, string, array, code};
+enum Reading_state {done, integer, string, int_array, array, code};
 Reading_state reading_state;
 int expected_length;
 void** code_array;
@@ -257,6 +257,10 @@ char* in_string_s;
 //for reading numbers
 char* in_integer;
 int in_integer_i;
+//for reading int arrays
+int* in_int_array;
+int in_array_len;
+struct i_array* in_int_array_struct;
 
 //the main program stack
 void** stack;
@@ -538,8 +542,15 @@ void byte_in(unsigned char c){
     }
     return;
 
-  case array:
-    serial_out("TODO: case array\n");
+  case int_array:
+    D2("reading_state:int_array\n");
+    if (in_array_len){
+      in_array_len--;
+      *in_int_array++ = c;
+    }else{
+      INPUT_STACK_PUSH(in_int_array_struct);
+      reading_state = done;
+    }
     return;
 
   case done://c is a bytecode
@@ -557,6 +568,15 @@ void byte_in(unsigned char c){
       in_string_s = (char*)malloc(sizeof(char)*in_string_len+1);
       in_string_struct->s = in_string_s;
       in_string_struct->len = in_string_len;
+      return;
+    case SOP_INT_ARRAY:
+      reading_state = int_array;
+      in_array_len = (int)INPUT_STACK_POP();
+      D2("reading array len ===>>> %d\n", in_array_len);
+      in_int_array_struct = (struct i_array*)malloc(sizeof(struct i_array));
+      in_int_array = (int*)malloc(sizeof(int)*in_array_len);
+      in_int_array_struct->data = in_int_array;
+      in_int_array_struct->len = in_array_len;
       return;
     case OP_CONST:
       code_array[code_i++] = entry_table[OP_CONST];
@@ -708,11 +728,6 @@ void byte_in(unsigned char c){
     case SOP_ARRAY:
       SAY("SOP_ARRAY\n");
       //TODO:
-      return;
-    case SOP_INT_ARRAY:
-      SAY("SOP_INT_ARRAY\n");
-      code_array[code_i++] = entry_table[OP_CONST];
-      code_array[code_i++] = INPUT_STACK_POP();
       return;
     case SOP_END:
       D2("SOP_END\n");
