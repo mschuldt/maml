@@ -53,8 +53,10 @@ class Maml_serial:
         self._send(exp + [chr(SOP_END)])
 
     def send_function(self, fn):
-        # TODO
-        self._send(expanded)
+        #TODO: merge with method 'send_codeblock'
+        bc = fn.bytecode
+        exp = expand_bytecode([SOP_INT, len(bc)+1] + bc)
+        self._send(exp + [chr(SOP_END)])
 
     def _send(self, bytecode):
         """
