@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from maml_compile import compile_ast
+from maml_compile import compile_ast, compile_function
 from maml_ast import make_ast
 from operator import add
 from functools import reduce
@@ -69,10 +69,16 @@ class A_block:
     def __hash__(self):
         return hash([self.block_index, self.in_arduino] + self.bytecode)
 
-
 class A_function:
-    def __init__(self, bytecode_obj):
-        pass
+    def __init__(self, code, name):
+        self.bytecode = code
+        self.name = name
+
+    def update_code(self, code):
+        if self.bytecode != code:
+            self.bytecode = code
+            if self.in_arduino:
+                _arduino.update(self)
 
 # NOTE: the variables '_block_decorator' and '_function_decorator'
 #       must match the names of the decorator functions.
@@ -141,11 +147,11 @@ def function(fn):
     if not code:
         print("Error: could not retrieve compiled function code")
     # update (or add) this block in the global list of blocks
-    codeblock = _blocks.get(fn_name)
+    codeblock = _functions.get(fn_name)
     if codeblock:
         codeblock.update_code(code)
     else:
-        _functions[fn_name] = codeblock = Function(code)
+        _functions[fn_name] = codeblock = A_function(code, fn_name)
 
     # _arduino.send(codeblock)
 
@@ -333,17 +339,19 @@ def update_compiled_code(code):
             decorators = ast['decorator_list']
             if len(decorators) == 1:
                 decorator = decorators[0]
-                if 'func' not in decorator:
-                    continue
-                name = decorator['func']['id']
-                if name == _block_decorator:
-                    args = decorator['args']
-                    if len(args) != 1:
-                        continue
-                    if args[0]['id'] in _block_decorator_types:
-                        _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
-                elif name == _function_decorator:
-                    pass  # TODO
+                if 'func' in decorator:
+                    name = decorator['func']['id']
+                    if name == _block_decorator:
+                        args = decorator['args']
+                        if len(args) != 1:
+                            continue
+                        if args[0]['id'] in _block_decorator_types:
+                            _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
+                            #TODO: should have function 'compile_block'
+                            #      similar to 'compile_function'
+                elif 'id' in decorator:
+                    if decorator['id'] == _function_decorator:
+                        _compiled_code[ast['name']] = compile_function(ast, desktop_p, _arduino.env)
 
 
 if __name__ == '__main__':

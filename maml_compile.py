@@ -22,6 +22,7 @@ from _prim import desktop_primitives, arduino_primitives
 from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
+from maml_env import env
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
@@ -569,12 +570,38 @@ comparison_ops = {'>': OP_GT,
 ###############################################################################
 # function
 
-
 @code_gen('function')
 def _(ast, btc, env, top):
+    compile_function_node(ast, btc, env, top)
+
+def compile_function_node(ast, btc, env, top):
+    # body: ast['body']
+    if not top:
+        print("Error: functions can only be declared at the top level")
+        exit(1)
+    fn_name = ast['name']
+    index = env.get_store_index(fn_name)
+    new_env = make_new_env(env)
+    args = ast['args']['args']
+    arg_indexes = []
+    for arg in args:
+        arg_indexes.append(new_env.get_store_index(arg['arg'])[1])
+    n_args = len(args)
+    body = []
+    for a in ast['body']:
+        gen_bytecode(a, body, new_env, True)
+    #TODO: len(body) is not the actual length of the function body
+    btc.extend([SOP_INT_ARRAY, arg_indexes, SOP_INT, len(body), SOP_START_FUNCTION,] + body + [SOP_INT, index, SOP_END])
+    OP_GLOBAL_STORE
+
+
+@type_check('function')
+def _(ast, env):
+    ast['s_type'] = "TODO:function"
+    return #TODO
     argTypes = {}
     argNum = 0
-    for elem in ast['args']:
+    for elem in ast['args']['args']:
         argTypes[argNum] = elem['argType']
         argNum += 1
     env.createFuncTypes(ast['name'], argTypes, ast['returns']['id'])
@@ -695,6 +722,13 @@ def compile_ast(ast, desktop_p, env=None):
     # COMPILE
     return bytecode
 
+def compile_function(ast, desktop_p, env=None):
+    global primitives
+    primitives = (desktop_primitives if desktop_p else arduino_primitives)
+    env = env or make_new_env()
+    bytecode = []
+    compile_function_node(ast, bytecode, env, True)
+    return bytecode
 
 if __name__ == '__main__':
     #TODO: this needs to be updated to read the -[a|d] arg and
