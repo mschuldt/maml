@@ -1,6 +1,7 @@
-#!/usr/bin/emacs --script
+#!/bin/sh
+":"; exec emacs --quick --script "$0" "$@" #
 
-;;TODO: should probably rewrite this in Python
+;;#!/usr/bin/emacs --script
 
 ;;input: primitives.c
 ;;output: _prim.c, _prim.py

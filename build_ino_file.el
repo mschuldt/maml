@@ -1,4 +1,5 @@
-#!/usr/bin/emacs --script
+#!/bin/sh
+":"; exec emacs --quick --script "$0" "$@" #
 
 (setq files '("_opcodes.h"
               "primitives.c"
