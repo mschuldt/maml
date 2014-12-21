@@ -286,11 +286,8 @@ def expand_bytecode(bc):
             long_code.extend(expand_int(len(s)) + [chr(SOP_STR)] + list(s) + [chr(0)])
         elif c == SOP_ARRAY or c == SOP_INT_ARRAY:
             i += 1
-            s = bc[i]
-            # Types: 0 -> int
-            #        1 -> void*
-            long_code.extend(expand_int(len(s)) + expand_int(c == SOP_ARRAY) +
-                             s)#TODO
+            seq = bc[i]
+            long_code.extend(expand_int(len(seq)) + [chr(c)] + list(map(chr, seq)))
         else:
             long_code.append(chr(c))
         i += 1
