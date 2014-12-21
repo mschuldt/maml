@@ -208,12 +208,14 @@ char* lockfile;
 void** globals; //array of global variables
 int max_globals = 20; //TODO: maml.env.py needs to know about this
                       //      OR: have serial_in() check and resize!
+void** locals; // array of local variables. In global scope, this points
+               // to the 'globals' array.
+int n_locals;
 struct frame *current_frame = NULL;
 
 //if these names are changed, also change them in process_primitives.el
 void** primitives; //this is filled by auto-generated code in _prim.c
 int n_primitives;
-
 
 
 #include "primitives.c"
@@ -272,7 +274,8 @@ void setup(void){
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
-  globals = (void**)malloc(sizeof(void*)*max_globals);
+  locals = globals = (void**)malloc(sizeof(void*)*max_globals);
+  n_locals = max_globals;
   jumps = (void***)malloc(sizeof(void*)*max_jumps);
   labels =  (void**)malloc(sizeof(void*)*max_labels);
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
@@ -388,14 +391,21 @@ void loop (){
  op_return:
   NEXT(code);
  op_global_load:
-  D("load_global\n")
-    //::? (int)
+  D("load_global\n");
   stack[++top] = globals[(long)*code++];
   NEXT(code);
  op_global_store:
-  D("store_global\n")
-    //::? (int)
+  D("store_global\n");
   globals[(long)*code++] = stack[top--];
+  NEXT(code);
+ op_local_load:
+  D("load_local\n");
+  stack[++top] = locals[(long)*code++];
+  NEXT(code);
+ op_local_store:
+  D("store_local\n");
+  //::? (int)
+  locals[(long)*code++] = stack[top--];
   NEXT(code);
  op_if:
   D("if\n");
