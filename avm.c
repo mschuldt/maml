@@ -314,11 +314,14 @@ char initialized = false;
 static void** entry_table;
 static void** prim_call_entry_table;
 
+#define PAUSE_MAYBE while (paused){_d();}
+
 #if ENABLE_PAUSES
 void _d(void){
   delay(500);
 }
-#define NEXT(code) while (paused){_d();}; goto *(*code++)
+
+#define NEXT(code) PAUSE_MAYBE; goto *(*code++)
 #else
 #define NEXT(code) goto *(*code++)
 #endif
@@ -504,6 +507,7 @@ void loop (){
     tmp->data = stack[top--];
     list = tmp;
     n--;
+    PAUSE_MAYBE;
   }
   stack[++top] = list;
   NEXT(code);
@@ -517,6 +521,7 @@ void loop (){
   while (n) {
     n--;
     tmpData[n] = stack[top--];
+    PAUSE_MAYBE;
   }
   tuple->data = tmpData;
   stack[++top] = tuple;
