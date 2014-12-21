@@ -23,7 +23,7 @@ test: avm
 	./run_false_tests.sh
 
 clean::
-	rm -f avm _prim.c _prim.py _opcodes.h avm.ino
+	rm -f avm _prim.c _prim.py _opcodes.h _entrytable.h avm.ino
 
 ☃:
 	echo "snowman!"

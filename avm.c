@@ -298,78 +298,18 @@ void setup(void){
   printf("Ready.\n\n");
 #endif
 }
-
-//void* labels[20];
 char initialized = false;
-void* l_const;
-void* l_addii;
-void* l_addi;
-void* l_add;
-void* l_sub;
-void* l_mult;
-void* l_div;
-void* l_ret;
-void* l_end_of_block;
-void* l_block_suicide;
-void* l_call_prim_0;
-void* l_call_prim_1;
-void* l_call_prim_2;
-void* l_call_prim_3;
-void* l_call_prim_4;
-void* l_call_prim_5;
-void* l_call_prim_6;
-void* l_pop;
-void* l_store_global;
-void* l_load_global;
-void* l_jump;
-void* l_if;
-void* l_lt;
-void* l_gt;
-void* l_eq;
-void* l_notEq;
-void* l_ltEq;
-void* l_gtEq;
-#if INCLUDE_LISTS
-void* l_list;
-#endif
-void* l_tuple;
 
 static int int_regs[8];
 static char* char_regs[8];
 
+static void** entry_table;
+static void** prim_call_entry_table;
+
 void loop (){
   if (!initialized){
+#include "_entrytable.h"
     initialized = true;
-    l_const = &&load_const;
-    l_add = &&add;
-    l_mult = &&mult;
-    l_div = &&div;
-    l_ret = &&ret;
-    l_end_of_block = &&end_of_block;
-    l_block_suicide = &&block_suicide;
-    l_call_prim_0 = &&call_prim_0;
-    l_call_prim_1 = &&call_prim_1;
-    l_call_prim_2 = &&call_prim_2;
-    l_call_prim_3 = &&call_prim_3;
-    l_call_prim_4 = &&call_prim_4;
-    l_call_prim_5 = &&call_prim_5;
-    l_call_prim_6 = &&call_prim_6;
-    l_pop = &&pop;
-    l_load_global = &&load_global;
-    l_store_global = &&store_global;
-    l_jump = &&jump;
-    l_if = &&_if;
-    l_gt = &&gt;
-    l_lt = &&lt;
-    l_eq = &&eq;
-    l_notEq = &&notEq;
-    l_ltEq = &&ltEq;
-    l_gtEq = &&gtEq;
-    l_sub = &&sub;
-#if INCLUDE_LISTS
-    l_list = &&list;
-#endif
-    l_tuple = &&tuple;
     return;
   }
   if (!blockchain) return;//no bytecode yet
@@ -389,7 +329,7 @@ void loop (){
 
   NEXT(code);
 
- load_const:
+ op_const:
   D("loading const: %d\n", *code);
   stack[++top] = *code;
   code++;
@@ -400,6 +340,7 @@ void loop (){
   //stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_1:
+  D("call_0\n");
   stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_2:
@@ -435,68 +376,68 @@ void loop (){
   //// undef _ and S ////////////////////////////////////////////
  call:
   NEXT(code);
- ret:
+ op_return:
   NEXT(code);
- load_global:
+ op_global_load:
   D("load_global\n")
     //::? (int)
   stack[++top] = globals[(long)*code++];
   NEXT(code);
- store_global:
+ op_global_store:
   D("store_global\n")
     //::? (int)
   globals[(long)*code++] = stack[top--];
   NEXT(code);
- _if:
+ op_if:
   D("if\n");
   if (stack[top--]){
     code+=2; //skip over the jump
   }
   NEXT(code);
- jump:
+ op_jump:
   code = (void**)*code;
   NEXT(code);
- add:
+ op_add:
   stack[top-1] = (void*)((long)stack[top-1] + (long)stack[top--]);
   NEXT(code);
- sub:
+ op_sub:
   D("SUB\n");
   stack[top-1] = (void*)((long)stack[top-1] - (long)stack[top--]);
   NEXT(code);
- mult:
+ op_mult:
   D("mult\n");
   stack[top-1] = (void*)((long)stack[top-1] * (long)stack[top--]);
   NEXT(code);
- div:
+ op_div:
   D("div\n");
   stack[top-1] = (void*)((long)stack[top-1] / (long)stack[top--]);
   NEXT(code);
- gt:
+ op_gt:
   stack[top-1] = (void*) ((long)(stack[top-1]) > ((long)stack[top--]));
   //stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
   NEXT(code);
- lt:
+ op_lt:
   //This works on the desktop, but not the arduino(why?):
   // stack[top-1] = (void*) ((long)(stack[top]) > ((long)stack[--top]));
   stack[top-1] = (void*) ((long)(stack[top-1]) < ((long)stack[top--]));
   NEXT(code);
 
- eq:
+ op_eq:
   stack[top-1] = (void*) ((long)(stack[top-1]) == ((long)stack[top--]));
   NEXT(code);
- notEq:
+ op_not_eq:
   stack[top-1] = (void*) ((long)(stack[top-1]) != ((long)stack[top--]));
   NEXT(code);
- ltEq:
+ op_lt_eq:
   // use > because items on stack are reversed
   stack[top-1] = (void*) ((long)(stack[top-1]) <= ((long)stack[top--]));
   NEXT(code);
- gtEq:
+ op_gt_eq:
   // use < because items on stack are reversed
   stack[top-1] = (void*) ((long)(stack[top-1]) >= ((long)stack[top--]));
   NEXT(code);
 #if INCLUDE_LISTS
- list:
+ op_list:
   D("list\n");
   n = (int)*code++;
   list = NULL;
@@ -510,8 +451,8 @@ void loop (){
   stack[++top] = list;
   NEXT(code);
 #endif
- tuple:
-  D("tuple\n");
+ op_array:
+  D("array\n");
   n = (int)*code++;
   struct array* tuple = (struct array*)malloc(sizeof(struct array));
   void** tmpData = (void**)malloc(sizeof(void*)*n);
@@ -523,11 +464,11 @@ void loop (){
   tuple->data = tmpData;
   stack[++top] = tuple;
   NEXT(code);
- end_of_block:
+ op_next_block:
   current_block = current_block->next;
   code = current_block->code;
   NEXT(code);
- block_suicide:
+ op_block_suicide:
   struct codeblock* next_block = current_block->next;
   remove_codeblock(current_block);
   if (next_block && n_codeblocks){
@@ -535,7 +476,7 @@ void loop (){
     NEXT(code);
   }
   return; //no more code blocks - keep looping until one arrives
- pop:
+ op_pop:
   D("POP\n");
   --top;
   NEXT(code);
@@ -567,6 +508,8 @@ void byte_in(unsigned char c){
   /*   serial_out(c); */
   /* } */
   //processes the next byte of input
+  //printf("(byte_in) entry_table = %p\n", entry_table);
+
   switch (reading_state){
     ///start by reading the length of the code to be received
   case string:
@@ -616,7 +559,7 @@ void byte_in(unsigned char c){
       in_string_struct->len = in_string_len;
       return;
     case OP_CONST:
-      code_array[code_i++] = l_const;
+      code_array[code_i++] = entry_table[OP_CONST];
       code_array[code_i++] = INPUT_STACK_POP();
       return;
     case SOP_INT:
@@ -668,28 +611,14 @@ void byte_in(unsigned char c){
         void* tmp;
         int index = (int)INPUT_STACK_POP(); //pop arg count
         // get the address for the label that calls with that # args
-        switch (index){
-          //TODO: put all l_call_prim_N into an array and index that
-          //      then we can free that array if all code is sent
-        case 0:
-          tmp = l_call_prim_0; break;
-        case 1:
-          tmp = l_call_prim_1; break;
-        case 2:
-          tmp = l_call_prim_2; break;
-        case 3:
-          tmp = l_call_prim_3; break;
-        case 4:
-          tmp = l_call_prim_4; break;
-        case 5:
-          tmp = l_call_prim_5; break;
-        case 6:
-          tmp = l_call_prim_6; break;
-        default:
+
+        if (index < 0 || index > 6){
           serial_out("ERROR: (current) max args to primitive is 6\n");
+          printf("index = %d\n", index);
           D2("got %d arg index\n", index);
+          return;
         }
-        code_array[code_i++] = tmp;
+        code_array[code_i++] = prim_call_entry_table[index];
 
         //now read in function pointer
         index = (int)INPUT_STACK_POP();
@@ -708,12 +637,12 @@ void byte_in(unsigned char c){
       }
     case OP_GLOBAL_LOAD:
       SAY("OP_GLOBAL_LOAD\n");
-      code_array[code_i++] = l_load_global;
+      code_array[code_i++] = entry_table[OP_GLOBAL_LOAD];
       goto read_globals_index;
     case OP_GLOBAL_STORE:
       {
         SAY("OP_GLOBAL_STORE\n");
-        code_array[code_i++] = l_store_global;
+        code_array[code_i++] = entry_table[OP_GLOBAL_STORE];
       read_globals_index:
         int index = (int)INPUT_STACK_POP();
         if (index < 0 || index > max_globals){
@@ -723,47 +652,24 @@ void byte_in(unsigned char c){
         return;
       }
     case OP_ADD:
-      SAY("OP_ADD\n");
-      code_array[code_i++] = l_add;
-      return;
     case OP_MULT:
-      code_array[code_i++] = l_mult;
-      return;
     case OP_SUB:
-      code_array[code_i++] = l_sub;
-      return;
     case OP_DIV:
-      code_array[code_i++] = l_div;
-      return;
     case OP_GT:
-      code_array[code_i++] = l_gt;
-      return;
     case OP_LT:
-      code_array[code_i++] = l_lt;
-      return;
     case OP_EQ:
-      code_array[code_i++] = l_eq;
-      return;
     case OP_NOT_EQ:
-      code_array[code_i++] = l_notEq;
-      return;
     case OP_LT_EQ:
-      code_array[code_i++] = l_ltEq;
-      return;
     case OP_GT_EQ:
-      code_array[code_i++] = l_gtEq;
-      return;
     case OP_RETURN:
-      code_array[code_i++] = l_ret;
-      return;
     case OP_POP:
-      code_array[code_i++] = l_pop;
+      code_array[code_i++] = entry_table[c];
       return;
 #if INCLUDE_LISTS
     case OP_LIST:
       {
         SAY("OP_LIST\n");
-        code_array[code_i++] = l_list;
+        code_array[code_i++] = entry_table[OP_LIST];
         int n = (int)INPUT_STACK_POP();
         if (n <= 0){
           SAY("Error: (op_list) invalid length"); DIE(1);
@@ -776,7 +682,7 @@ void byte_in(unsigned char c){
     case OP_ARRAY:
       {
         SAY("OP_ARRAY\n");
-        code_array[code_i++] = l_tuple;
+        code_array[code_i++] = entry_table[OP_ARRAY];
         int n = (int)INPUT_STACK_POP();
         if ( n <= 0 ) {
           SAY("Error: (op_array) invalid length"); DIE(1);
@@ -786,11 +692,11 @@ void byte_in(unsigned char c){
       }
     case OP_IF:
       SAY("OP_IF\n");
-      code_array[code_i++] = l_if;
+      code_array[code_i++] = entry_table[OP_IF];
       return;
     case OP_JUMP:
       SAY("OP_JUMP\n");
-      code_array[code_i++] = l_jump;
+      code_array[code_i++] = entry_table[OP_JUMP];
       if (n_jumps > max_jumps-1){ //-1 because we add 2 items each time
         //TODO: extend the jumps array
         SAY("Error: max jumps exceeded\n"); DIE(1);
@@ -814,7 +720,7 @@ void byte_in(unsigned char c){
       }
     case SOP_NULL:
       SAY("SOP_NULL\n");
-      code_array[code_i++] = (void*) l_const;
+      code_array[code_i++] = entry_table[OP_CONST];
       code_array[code_i++] = NULL;
       return;
     case SOP_ARRAY:
@@ -823,14 +729,14 @@ void byte_in(unsigned char c){
       return;
     case SOP_INT_ARRAY:
       SAY("SOP_INT_ARRAY\n");
-      code_array[code_i++] = (void*) l_const;
+      code_array[code_i++] = entry_table[OP_CONST];
       code_array[code_i++] = INPUT_STACK_POP();
       return;
-    case OP_BLOCK_NEXT:
-      code_array[code_i++] = l_end_of_block;
+    case OP_NEXT_BLOCK:
+      code_array[code_i++] = entry_table[OP_NEXT_BLOCK];
       return;
     case OP_BLOCK_SUICIDE:
-      code_array[code_i++] = l_block_suicide;
+      code_array[code_i++] = entry_table[OP_BLOCK_SUICIDE];
       return;
     case SOP_END:
       D2("SOP_END\n");
@@ -982,6 +888,8 @@ void read_file(void){
 //9,626
 //9,782
 //11,366
+//13,362
+//14,232 <-- this was the change to using from variables to entry_table
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
 //858
