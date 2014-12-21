@@ -278,6 +278,11 @@ void setup(void){
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
   stack = (void**)malloc(sizeof(void*)*10);//?
+  //initialize global frame
+  current_frame = (struct frame*)malloc(sizeof(struct frame));
+  current_frame->locals = globals;
+  current_frame->n_locals = max_globals;
+  current_frame->next = current_frame->prev = NULL;
 
 #if ARDUINO // setup signal interrupt
   maml_serial.begin(9600);
