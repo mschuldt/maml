@@ -543,11 +543,9 @@ void byte_in(unsigned char c){
     return;
 
   case int_array:
-    D2("reading_state:int_array\n");
-    if (in_array_len){
-      in_array_len--;
-      *in_int_array++ = c;
-    }else{
+    in_array_len--;
+    *in_int_array++ = c;
+    if (!in_array_len){
       INPUT_STACK_PUSH(in_int_array_struct);
       reading_state = done;
     }

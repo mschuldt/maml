@@ -54,7 +54,7 @@ def Module(body):
 def arg(arg, annotation, lineno=None, col_offset=None):
     return {
         'arg': arg,
-        'argType': annotation['id']
+        'argType': annotation
     }
 
 
