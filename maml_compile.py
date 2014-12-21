@@ -633,7 +633,17 @@ def _(ast):
 
 @code_gen('return')
 def _(ast, btc, env, top):
-    raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
+    #raise MamlNotImplementedError("Node type '{}' is not implemented".format(ast['type']))
+    gen_bytecode(ast['value'], btc, env, False)
+    btc.append(OP_RETURN)
+
+@type_check('return')
+def _(ast, env):
+    ast['s_type'] = "TODO:return"
+
+@ast_check('return')
+def _(ast):
+    pass #TODO
 
 ###############################################################################
 # pass

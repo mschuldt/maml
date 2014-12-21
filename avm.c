@@ -414,7 +414,15 @@ void loop (){
     }
     NEXT(code);
   }
- op_return:
+ op_return: //return from a function
+  if (current_frame->prev){
+    current_frame = current_frame->prev;
+  }else{
+    SAY("Error: attempt to return from global frame\n"); DIE(1);
+  }
+  locals = current_frame->locals;
+  n_locals = current_frame->n_locals;
+  code = current_frame->code;
   NEXT(code);
  op_global_load:
   D("load_global\n");
@@ -963,3 +971,4 @@ void read_file(void){
 //858
 //880
 //1,038
+//1,028
