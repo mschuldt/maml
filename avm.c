@@ -859,6 +859,7 @@ void byte_in(unsigned char c){
 #endif
         return;
       }
+#if ENABLE_PAUSES
     case SOP_PAUSE:
       paused = true;
       return;
@@ -866,6 +867,12 @@ void byte_in(unsigned char c){
       serial_out("resuming...\n");
       paused = NULL;
       return;
+#else
+    case SOP_PAUSE:
+    case SOP_RESUME:
+      SAY("Error: pauses are not enabled");
+      return;
+#endif
     case SOP_DUMP_STACK:
       for (int i = 0; i <= top; i++){
 #if ARDUINO
