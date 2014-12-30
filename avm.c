@@ -393,6 +393,7 @@ void loop (){
   //extend 'call stack' - really a doubly linked list
   //TODO: use an array of frames instead - less memory + faster
   {
+    D("op_call\n");
     current_frame->code = code;
     struct procedure* fn = (struct procedure*)stack[top--];
     if (current_frame->next){
@@ -423,6 +424,7 @@ void loop (){
     NEXT(code);
   }
  op_return: //return from a function
+  D("op_return\n");
   if (current_frame->prev){
     current_frame = current_frame->prev;
   }else{
@@ -482,7 +484,6 @@ void loop (){
   // stack[top-1] = (void*) ((long)(stack[top]) > ((long)stack[--top]));
   stack[top-1] = (void*) ((long)(stack[top-1]) < ((long)stack[top--]));
   NEXT(code);
-
  op_eq:
   stack[top-1] = (void*) ((long)(stack[top-1]) == ((long)stack[top--]));
   NEXT(code);
@@ -566,7 +567,6 @@ void byte_in(unsigned char c){
   /*   serial_out(c); */
   /* } */
   //processes the next byte of input
-
   switch (reading_state){
     ///start by reading the length of the code to be received
   case string:
@@ -596,11 +596,13 @@ void byte_in(unsigned char c){
     return;
 
   case int_array:
+    D2("reading_state:int_array\n");
     in_array_len--;
     *in_int_array++ = c;
     if (!in_array_len){
       INPUT_STACK_PUSH(in_int_array_struct);
       reading_state = done;
+      D2("done reading int array");
     }
     return;
 
@@ -674,7 +676,7 @@ void byte_in(unsigned char c){
 
     case SOP_START_FUNCTION:
       {
-        printf("SOP_START_FUNCTION\n");
+        D("SOP_START_FUNCTION\n");
         if (newblock){
           //TODO: error
         }
@@ -951,6 +953,9 @@ void byte_in(unsigned char c){
 void read_file(void){
   //set lock file so that other processes will not interrupt this one
   //while it reads in the new bytecode (ugly things happen in that case)
+  if (DEBUG){
+    printf("reading file...\n");
+  }
   FILE *fp = fopen(lockfile, "w");
   fprintf(fp, "1");
   fclose(fp);
@@ -973,6 +978,9 @@ void read_file(void){
   fclose(fp);
 
   signal(SIGIO, (__sighandler_t)read_file);
+    if (DEBUG){
+      printf("done reading file\n");
+  }
 }
 #endif
 

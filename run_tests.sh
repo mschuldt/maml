@@ -6,7 +6,7 @@ pid=$(pgrep avm)
 if [ $? -eq 0 ] ;
 then
     pgrep avm
-    echo "terminate exiting 'avm' processes first"
+    echo "Terminate exiting 'avm' processes first"
     exit
 fi
 
@@ -29,7 +29,8 @@ fi
 
 for f in $files ;
 do
-    echo -n "testing ${f}..."
+    echo
+    echo "Testing '${f}':"
 
     file=tests/$f
     expect=${file}.out
@@ -48,12 +49,12 @@ do
     diff $expect $test_out > /dev/null
     ret=$?
     if [ $ret != 0 ] ; then
-        echo "fail"
+        echo "==> fail"
         bad=$((bad + 1))
         failed="$f $failed"
         cp _bc.txt ${expect}.bc
     else
-        echo "ok"
+        echo "==> ok"
         good=$((good + 1))
         rm -f $test_out
         rm -f ${expect}.bc
@@ -73,7 +74,8 @@ fi
 
 for f in $files ;
 do
-    echo -n "testing ${f}..."
+    echo
+    echo "Testing '${f}':"
 
     file=false_tests/$f
     expect=${file}.err
@@ -90,12 +92,12 @@ do
     diff $expect $error_out > /dev/null
     ret=$?
     if [ $ret != 0 ] ; then
-        echo "fail"
+        echo "==> fail"
         bad=$((bad + 1))
         failed="$f $failed"
         cp _bc.txt ${expect}.bc
     else
-        echo "ok"
+        echo "==> ok"
         good=$((good + 1))
         rm -f $error_out
         rm -f ${expect}.bc

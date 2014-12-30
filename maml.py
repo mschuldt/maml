@@ -166,14 +166,12 @@ class Arduino:
         #we only support one Arduino and have one global Arduino object
         #to represent it
         if not _arduino:
-            print("making new arduino object")
             _arduino = object.__new__(cls, *args, **kwargs)
             _arduino.serial = Maml_serial()
             _arduino.env = env(None, allow_type_reassign)
         return _arduino
 
     def __init__(self, desktop=False):
-        print ("here")
         # initialize serial
         self.serial_hook = []
         self.blocks = []
