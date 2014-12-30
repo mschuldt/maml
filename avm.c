@@ -393,6 +393,7 @@ void loop (){
   //extend 'call stack' - really a doubly linked list
   //TODO: use an array of frames instead - less memory + faster
   {
+    current_frame->code = code;
     struct procedure* fn = (struct procedure*)stack[top--];
     if (current_frame->next){
       //reuse old frame
