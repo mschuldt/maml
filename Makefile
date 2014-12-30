@@ -20,7 +20,6 @@ ino: avm.ino
 
 test: avm
 	./run_tests.sh 
-	./run_false_tests.sh
 
 clean::
 	rm -f avm _prim.c _prim.py _opcodes.h _entrytable.h avm.ino *.lock
