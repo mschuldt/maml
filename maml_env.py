@@ -13,7 +13,7 @@ class env:
         self.while_end_labels = []
         # TODO: track the size of the variable arrays in the Arduino
 
-    def get_store_index(self, name):
+    def get_store_index(self, name, ast=None):
         """
         Returns the index at which to store NAME
         return format: (global_p, index)
@@ -21,7 +21,7 @@ class env:
 
         # check if this variable was declared 'global'
         if name in self.global_names:
-            return self.parent.get_store_index(name)
+            return self.parent.get_store_index(name, ast)
 
         globalp = (self.parent is None)
 
@@ -36,13 +36,14 @@ class env:
             self.n_names += 1
             return (globalp, index)
 
-    def get_load_index(self, name):
+    def get_load_index(self, name, ast=None):
         """
         Returns the index ast which to load NAME.
         Return format: (global_p, index)
         For NAME to have a load index, it must have been stored (declared)
         first (the corresponding call to get_store_index must have been
         made)
+        The type of  AST node is included in error messages if given
         """
         ##?? why do we have two functions for this?
         ##   can we just have a 'get_index' function?
@@ -61,7 +62,8 @@ class env:
         if self.parent:
             return self.parent.get_load_index(name)
         # Else: no index found
-        print("Error: name '{}' is not defined".format(name))
+        print("Error: name '{}' is not defined{}"
+              .format(name," (in AST node '{}')".format(ast['type'])))
         exit(1)  # TODO: just terminate compilation, not the whole program
 
     def declare_global(self, name):

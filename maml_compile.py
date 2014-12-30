@@ -228,7 +228,7 @@ def _(ast, btc, env, top):
     if name == 'None' or name == 'False':
         btc.append(SOP_NULL)
     else:
-        globalp, index = env.get_load_index(name)
+        globalp, index = env.get_load_index(name, ast)
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
         btc.extend([SOP_INT, index, op])
 
@@ -260,7 +260,7 @@ def _(ast, btc, env, top):
     for target in ast['targets']:
         # TODO: Value should only be evaluated once
         gen_bytecode(ast['value'], btc, env, False)
-        globalp, index = env.get_store_index(target['id'])
+        globalp, index = env.get_store_index(target['id'], ast)
         op = OP_GLOBAL_STORE if globalp else OP_LOCAL_STORE
         btc.extend([SOP_INT, index, op])
 
@@ -590,7 +590,7 @@ def compile_function_node(ast, btc, env, top):
     if not top:
         raise MamlSyntaxError("function definition not at top level")
     fn_name = ast['name']
-    index = env.get_store_index(fn_name)
+    index = env.get_store_index(fn_name, ast)
     new_env = make_new_env(env)
     args = ast['args']['args']
     arg_indexes = []
