@@ -60,6 +60,16 @@ def arg(arg, annotation, lineno=None, col_offset=None):
 
 def FunctionDef(name, args, body, decorator_list, returns, lineno=None,
                 col_offset=None):
+    if not body or body[-1]['type'] != 'return':
+        n = 666 if lineno is not None else None
+        body.append({'type': 'return',
+                     'value': {'ctx': 'load',
+                               'type': 'name',
+                               'id': 'None',
+                               'col_offset': n,
+                               'lineno': n},
+                     'lineno': n,
+                     'col_offset': n})
     return {'type': 'function',
             'name': name,
             'args': args,
