@@ -18,11 +18,14 @@ debug = False
 opcodes = []
 vm_cases = []
 i = 0
+forbidden = {7,8,9,10,13,32} #whitespace characters (they make debugging harder)
 
 def OP(name, vm_case=True):
     # if VM_CASE is False, NAME will not have an entry in _entrytable.c
     global i
     i = i + 1
+    while i in forbidden:
+        i = i + 1
     opcodes.append((name, i))
     if vm_case:
         vm_cases.append((name, i))
