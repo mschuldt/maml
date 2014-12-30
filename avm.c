@@ -620,12 +620,21 @@ void byte_in(unsigned char c){
       in_string_struct->len = in_string_len;
       return;
     case SOP_INT_ARRAY:
-      reading_state = int_array;
       in_array_len = (int)INPUT_STACK_POP();
+      if (in_array_len < 0){
+        SAY("Error: int array length is negative\n"); DIE(1);
+      }
       in_int_array_struct = (struct i_array*)malloc(sizeof(struct i_array));
-      in_int_array = (int*)malloc(sizeof(int)*in_array_len);
+      if (in_array_len){
+        in_int_array = (int*)malloc(sizeof(int)*in_array_len);
+      }
       in_int_array_struct->data = in_int_array;
       in_int_array_struct->len = in_array_len;
+      if (!in_array_len){
+        INPUT_STACK_PUSH(in_int_array_struct);
+      }else{
+        reading_state = int_array;
+      }
       return;
     case OP_CONST:
       code_array[code_i++] = entry_table[OP_CONST];
