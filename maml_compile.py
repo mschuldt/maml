@@ -588,8 +588,7 @@ def _(ast, btc, env, top):
 def compile_function_node(ast, btc, env, top):
     # body: ast['body']
     if not top:
-        print("Error: functions can only be declared at the top level")
-        exit(1)
+        raise MamlSyntaxError("function definition not at top level")
     fn_name = ast['name']
     index = env.get_store_index(fn_name)
     new_env = make_new_env(env)
