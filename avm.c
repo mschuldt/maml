@@ -745,6 +745,23 @@ void byte_in(unsigned char c){
         code_array[code_i++] = (void*)index;
         return;
       }
+    case OP_LOCAL_LOAD:
+      SAY("OP_LOCAL_LOAD\n");
+      code_array[code_i++] = entry_table[OP_LOCAL_LOAD];
+      goto read_locals_index;
+    case OP_LOCAL_STORE:
+      {
+        SAY("OP_LOCAL_STORE\n");
+        code_array[code_i++] = entry_table[OP_LOCAL_STORE];
+      read_locals_index:
+        int index = (int)INPUT_STACK_POP();
+        if (index < 0 ){//|| index > max_globals){
+          //TODO: keep track of max local variables
+          SAY("Error: (op_local_global) invalid local variable index\n"); DIE(1);
+        }
+        code_array[code_i++] = (void*)index;
+        return;
+      }
 #if INCLUDE_LISTS
     case OP_LIST:
       {
@@ -912,6 +929,7 @@ void byte_in(unsigned char c){
     case OP_NEXT_BLOCK:
     case OP_BLOCK_SUICIDE:
     case OP_POP:
+    case OP_CALL:
       code_array[code_i++] = entry_table[c];
       return;
 
