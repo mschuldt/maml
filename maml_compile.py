@@ -753,6 +753,8 @@ def compile_function(ast, desktop_p, env=None):
 if __name__ == '__main__':
     #TODO: this needs to be updated to read the -[a|d] arg and
     #      call compile_ast with desktop_p
+    desktop_p=True; #tmp
+
     if len(argv) != 2:
         print('Usage:')
         print('  ./maml-compile.py <filename>.py')
@@ -766,9 +768,11 @@ if __name__ == '__main__':
 
     _block_decorator = 'block'
     _function_decorator = 'function'
-    _blocks = {}
-    _functions = {}
+    _block_decorator_types = ['once', 'chain']
 
+    _blocks = {}
+    _funcs = {}
+    _env = make_new_env()
     def compile_blocks(code):
         """
         Update the compiled blocks and functions in _compiled_code
@@ -779,18 +783,27 @@ if __name__ == '__main__':
             if ast['type'] == 'function':
                 decorators = ast['decorator_list']
                 if len(decorators) == 1:
-                    name = decorators[0]['id']
-                    if name == _block_decorator:
-                        # print("compiling block '{}'".format(ast['name']))
-                        _blocks[ast['name']] = compile_ast(ast['body'])
-                    elif name == _function_decorator:
-                        pass  # TODO
+                    decorator = decorators[0]
+                    if 'func' in decorator:
+                        name = decorator['func']['id']
+                        if name == _block_decorator:
+                            args = decorator['args']
+                            if len(args) != 1:
+                                continue
+                            if args[0]['id'] in _block_decorator_types:
+                                _blocks[ast['name']] = compile_ast(ast['body'], desktop_p, _env)
+                    elif 'id' in decorator:
+                        if decorator['id'] == _function_decorator:
+                            _funcs[ast['name']] = compile_function(ast, desktop_p, _env)
 
     # print(compile_str(f.read()))
     compile_blocks(f.read())
     for k in _blocks:
         print("block: '{}'".format(k))
         print("   ", _blocks[k])
+    for f in _funcs:
+        print("function: '{}'".format(k))
+        print("   ", _funcs[f])
     # TODO: compile/print functions
 
     exit(0)
