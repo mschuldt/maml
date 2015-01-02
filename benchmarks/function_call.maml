@@ -1,0 +1,128 @@
+
+arduino = Arduino(desktop=True)
+
+
+@function
+def f0():
+    return 0
+
+@function
+def f1(a):
+    return 1
+
+@function
+def f2(a, b):
+    return 2
+
+@function
+def f3(a, b, c):
+    return 3
+
+@function
+def f4(a, b, c, d):
+    return 4
+
+@function
+def f5(a, b, c, d, e):
+    return 5
+
+@function
+def f6(a, b, c, d, e, f):
+    return  6
+
+@block(once)
+def test():
+    n = 50000000
+
+    start = millis()
+    i = 0
+    while i < n:
+        f0()
+        i += 1
+    elapsed=millis() - start
+    print_s("0:")
+    print_i(elapsed)
+    
+    start = millis()
+    i = 0
+    while i < n:
+        f1(1)
+        i += 1
+    elapsed=millis() - start
+    print_s("1:")
+    print_i(elapsed)
+
+    start = millis()
+    i = 0
+    while i < n:
+        f2(1,2)
+        i += 1
+    elapsed=millis() - start
+    print_s("2:")
+    print_i(elapsed)
+
+
+    start = millis()
+    i = 0
+    while i < n:
+        f3(1,2,3)
+        i += 1
+    elapsed=millis() - start
+    print_s("3:")
+    print_i(elapsed)
+
+
+    start = millis()
+    i = 0
+    while i < n:
+        f4(1,2,3,4)
+        i += 1
+    elapsed=millis() - start
+    print_s("4:")
+    print_i(elapsed)
+
+
+    start = millis()
+    i = 0
+    while i < n:
+        f5(1,2,3,4,5)
+        i += 1
+    elapsed=millis() - start
+    print_s("5:")
+    print_i(elapsed)
+
+
+    start = millis()
+    i = 0
+    while i < n:
+        f6(1,2,3,4,5,6)
+        i += 1
+    elapsed=millis() - start
+    print_s("6:")
+    print_i(elapsed)
+
+
+arduino.send(f0)
+arduino.send(f1)
+arduino.send(f2)
+arduino.send(f3)
+arduino.send(f4)
+arduino.send(f5)
+arduino.send(f6)
+arduino.send(test)
+
+######## original:
+# 0:
+# 4570
+# 1:
+# 5070
+# 2:
+# 5670
+# 3:
+# 6290
+# 4:
+# 8170
+# 5:
+# 8690
+# 6:
+# 9310
