@@ -424,48 +424,48 @@ void loop (){
     //IDE does not allow conditionally included  brackets
     //error:  “expected unqualified-id before 'else'”
 #if !LL_CALL_STACK
-frame_i++;
+    frame_i++;
 #endif
     if
 #if LL_CALL_STACK
       (current_frame->next)
 #else
-    (frame_i < max_frames)
+      (frame_i < max_frames)
 #endif
-      {//reuse old frame
+        {//reuse old frame
 #if LL_CALL_STACK
-    current_frame = current_frame->next;
+          current_frame = current_frame->next;
 #else
-    current_frame = call_frames[frame_i];
+          current_frame = call_frames[frame_i];
 #endif
 
-      if (current_frame->n_locals < fn->n_locals){
-        if (!(current_frame->locals = (void**)realloc(current_frame->locals,
-                                              sizeof(void*)*fn->n_locals))){
-          //TODO: error
-        }
-        current_frame->n_locals = fn->n_locals;
-      }
-    }else{
+          if (current_frame->n_locals < fn->n_locals){
+            if (!(current_frame->locals = (void**)realloc(current_frame->locals,
+                                                          sizeof(void*)*fn->n_locals))){
+              //TODO: error
+            }
+            current_frame->n_locals = fn->n_locals;
+          }
+        }else{
       //extend the 'max_frames' array by 1
 #if LL_CALL_STACK
-        struct frame *_new = (struct frame*)malloc(sizeof(struct frame));
-        _new->next = NULL;
-        _new->prev = current_frame;
-        current_frame->next = _new;
-        current_frame = _new;
+      struct frame *_new = (struct frame*)malloc(sizeof(struct frame));
+      _new->next = NULL;
+      _new->prev = current_frame;
+      current_frame->next = _new;
+      current_frame = _new;
 #else
-        max_frames++;
-        if (!(call_frames = (struct frame**) realloc(call_frames,
-          sizeof(struct frame*)*max_frames))){
+      max_frames++;
+      if (!(call_frames = (struct frame**) realloc(call_frames,
+                                                   sizeof(struct frame*)*max_frames))){
         //TODO: error
       }
-        current_frame = (struct frame*)malloc(sizeof(struct frame));
-        call_frames[frame_i] = current_frame;
+      current_frame = (struct frame*)malloc(sizeof(struct frame));
+      call_frames[frame_i] = current_frame;
 
 #endif
-        current_frame->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
-        current_frame->n_locals = fn->n_locals;
+      current_frame->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
+      current_frame->n_locals = fn->n_locals;
     }
     n_locals = fn->n_locals;
     locals = current_frame->locals;
@@ -482,12 +482,12 @@ frame_i++;
 
 #if LL_CALL_STACK
   if (current_frame->prev){
-        current_frame = current_frame->prev;
-      }
+    current_frame = current_frame->prev;
+  }
 #else
   if (frame_i != 0){
-        current_frame = call_frames[--frame_i];
-      }
+    current_frame = call_frames[--frame_i];
+  }
 #endif
   else{
     SAY("Error: attempt to return from global frame\n"); DIE(1);
@@ -992,9 +992,9 @@ void byte_in(unsigned char c){
     default: //bytecode
       //TODO:
       serial_out("ERROR: unrecognized bytecode\n");
-      serial_out("unknown bytecode = ");
-      serial_out(c);
-      serial_out("\n");
+      //serial_out("unknown bytecode = ");
+      //serial_out(c);
+      //serial_out("\n");
 
     }//end bytecode switch
     return;
@@ -1052,8 +1052,8 @@ void read_file(void){
   fclose(fp);
 
   signal(SIGIO, (__sighandler_t)read_file);
-    if (DEBUG){
-      printf("done reading file\n");
+  if (DEBUG){
+    printf("done reading file\n");
   }
 }
 #endif

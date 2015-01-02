@@ -44,7 +44,7 @@
       in the local environment of the function about to be called
 - [ ] 'registers' used for passing argument values to primitive functions
       instead of using push/pop from stack
-
+- [ ] excessive call frames should be freed
 * AST
 Better way of transforming the ast - dont convert to dictionaries in that
 traverse the ast object without converting to string and evaluating
