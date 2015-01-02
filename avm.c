@@ -686,6 +686,7 @@ void byte_in(unsigned char c){
         code_array = newfunction->code = (void**)malloc(sizeof(void*)*expected_length);
         newfunction->n_args = (char)INPUT_STACK_POP();
         code_array = newfunction->code;
+        code_i = 0;
         return;
       }
     case SOP_PRIM_CALL:  //SOP_PRIM <function index> <arg count>
