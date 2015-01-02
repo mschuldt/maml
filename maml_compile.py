@@ -807,7 +807,7 @@ if __name__ == '__main__':
         print("block: '{}'".format(k))
         print("   ", _blocks[k])
     for f in _funcs:
-        print("function: '{}'".format(k))
+        print("function: '{}'".format(f))
         print("   ", _funcs[f])
     # TODO: compile/print functions
 
