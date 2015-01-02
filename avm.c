@@ -961,17 +961,22 @@ void byte_in(unsigned char c){
       return;
 #endif
     case SOP_DUMP_STACK:
-      for (int i = 0; i <= top; i++){
+      {
+        //TODO: test this
+        int i = 0;
+        void** tmp = stack_base;
+        for (; tmp <= stack; tmp++, i++){
 #if ARDUINO
-        maml_serial.print(i);
-        maml_serial.print(" ");
-        maml_serial.println((int)stack[i]);
+          maml_serial.print(i);
+          maml_serial.print(" ");
+          maml_serial.println((int)*tmp);
 #else
-        printf("%d %d\n", i, (int)stack[i]);
+          printf("%d %d\n", i, (int)*tmp);
 #endif
-      }
-      return;
+        }
 
+        return;
+      }
     case OP_IF:
     case OP_ADD:
     case OP_MULT:
