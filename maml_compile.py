@@ -412,8 +412,10 @@ def _(ast, btc, env, top):
     elif transform_fn:
         transform_fn(ast, nargs, btc, env, top)
     else:  # Calling a user defined function
-        raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
-                                      .format(ast['func']['id']))
+        gen_bytecode(ast['func'], btc, env, False)#False because we want the result
+        btc.append(OP_CALL)
+        #raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
+         #                             .format(ast['func']['id']))
 
 
 @type_check('call')
@@ -424,6 +426,7 @@ def _(ast, env):
 
 @ast_check('call')
 def _(ast):
+    #TODO: check that ast['func'] is a function with len(ast['args']) args
     if ast['keywords']:
         raise MamlSyntaxError("keyword args are not supported")
     if ast['starargs']:
