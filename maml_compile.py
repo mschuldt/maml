@@ -593,7 +593,8 @@ def compile_function_node(ast, btc, env, top):
     if not top:
         raise MamlSyntaxError("function definition not at top level")
     fn_name = ast['name']
-    index = env.get_store_index(fn_name, ast)
+    #print("compiling function '{}'".format(fn_name))
+    _, index = env.get_store_index(fn_name, ast)
     new_env = make_new_env(env)
     args = ast['args']['args']
     arg_indexes = []
