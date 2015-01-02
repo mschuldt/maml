@@ -415,7 +415,9 @@ def _(ast, btc, env, top):
         gen_bytecode(ast['func'], btc, env, False)#False because we want the result
         btc.append(OP_CALL)
         #raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
-         #                             .format(ast['func']['id']))
+        #                             .format(ast['func']['id']))
+        if top:
+            btc.append(OP_POP)
 
 
 @type_check('call')
