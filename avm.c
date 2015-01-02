@@ -684,7 +684,8 @@ void byte_in(unsigned char c){
 
         newfunction = (struct procedure*)malloc(sizeof(struct procedure));
         code_array = newfunction->code = (void**)malloc(sizeof(void*)*expected_length);
-        newfunction->n_args = (char)INPUT_STACK_POP();
+        //this double type casting to keeps the compiler happy
+        newfunction->n_args = (char)(long)INPUT_STACK_POP();
         code_array = newfunction->code;
         code_i = 0;
         return;
@@ -1005,9 +1006,11 @@ void read_file(void){
 //14,072 <-- this was the change to using from variables to entry_table
 //15,174
 //14,872
+//14,496
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
 //858
 //880
 //1,038
 //1,028
+//1,088
