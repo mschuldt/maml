@@ -1,0 +1,57 @@
+arduino = Arduino(desktop=True)
+
+@function
+def a(x):
+    print_s("a")
+    print_i(x)
+    return x + 1
+
+@function
+def b(x):
+    print_s("b")
+    print_i(x)
+    return x + 2
+    
+@function
+def c(x):
+    print_s("c")
+    print_i(x)
+    return x + 3
+
+@function
+def ftest(a,b,c):
+    print_i(a)
+    print_i(b)
+    print_i(c)
+    return "ok"
+
+@function
+def f(x):
+    return x + 1
+
+@function
+def ff():
+    n = 1
+    print_i(n)
+
+@block(once)
+def test():
+    print_s(ftest(a(1), b(2), c(3)))
+    x = 0
+    while x < 50:
+        x = f(x)
+    print_s("x = ")
+    print_i(x)
+    n = 0
+    print_i(n)
+    ff()
+    print_i(n)
+    die(0)
+
+arduino.send(a)
+arduino.send(b)
+arduino.send(c)
+arduino.send(ftest)
+arduino.send(f)
+arduino.send(ff)
+arduino.send(test)

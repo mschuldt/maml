@@ -1,0 +1,18 @@
+arduino = Arduino(desktop=True)
+
+@function
+def factorial(n):
+    if n == 1:
+        return 1
+    return n * factorial(n-1)
+
+@block(once)
+def test():
+    k = 1
+    while k < 10:
+        print_i(factorial(k))
+        k = k + 1
+    die(0)
+    
+arduino.send(factorial)
+arduino.send(test)

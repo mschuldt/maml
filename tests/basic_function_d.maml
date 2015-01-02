@@ -1,0 +1,16 @@
+arduino = Arduino(desktop=True)
+
+@function
+def ftest():
+    print_i(123)
+    print_s("test ok!")
+
+@block(once)
+def test():
+    print_s("calling ftest:")
+    ftest()
+    print_s("Done.")
+    die(0)
+    
+arduino.send(ftest)
+arduino.send(test)
