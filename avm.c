@@ -91,7 +91,7 @@ struct i_array{
 struct procedure{
   void** code;
   int n_locals;
-  struct i_array *args;
+  char n_args;
 };
 
 void init_procedure(struct procedure* fn, int code_len, int n_locals){
@@ -416,10 +416,9 @@ void loop (){
     locals = current_frame->locals;
     code = current_frame->code = fn->code;
     //assign argument values
-    int* args = fn->args->data;
-    int n_args = fn->args->len;
-    for (int i = 0; i < n_args; i++, args++){
-      locals[*args] = stack[top--]; //TODO: correct order?
+    int n_args = fn->n_args;
+    for (char i = n_args-1; i > -1; i--){
+      locals[i] = stack[top--];
     }
     NEXT(code);
   }
@@ -685,15 +684,7 @@ void byte_in(unsigned char c){
 
         newfunction = (struct procedure*)malloc(sizeof(struct procedure));
         code_array = newfunction->code = (void**)malloc(sizeof(void*)*expected_length);
-        newfunction->args = (struct i_array*)INPUT_STACK_POP();
-
-        int len = newfunction->args->len;
-        int* data = newfunction->args->data;
-        for (int i = 0; i < len; i++, data++){
-          printf("%d: %d\n", i, *data);
-        }
-        //newfunction->args = READ_INT_ARRAY();
-        //newfunction->
+        newfunction->n_args = (char)INPUT_STACK_POP();
         code_array = newfunction->code;
         return;
       }

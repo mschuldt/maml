@@ -601,11 +601,12 @@ def compile_function_node(ast, btc, env, top):
     for arg in args:
         arg_indexes.append(new_env.get_store_index(arg['arg'])[1])
     n_args = len(args)
+    assert not (set(range(n_args)) - set(arg_indexes)), "args must be in the first n indexes"
     body = []
     for a in ast['body']:
         gen_bytecode(a, body, new_env, True)
     #TODO: len(body) is not the actual length of the function body
-    btc.extend([SOP_INT_ARRAY, arg_indexes, SOP_INT, len(body), SOP_START_FUNCTION,] + body + [SOP_INT, index, SOP_END])
+    btc.extend([SOP_INT, n_args, SOP_INT, len(body), SOP_START_FUNCTION,] + body + [SOP_INT, index, SOP_END])
     OP_GLOBAL_STORE
 
 
