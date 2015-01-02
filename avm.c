@@ -274,8 +274,8 @@ struct i_array* in_int_array_struct;
 ////////////////////////////////////////////////////////////////////////////////
 
 //the main program stack
-void** stack;
-int top = -1;//index of the top item on the stack
+void** stack; //points to top of the stack
+void** stack_base;
 
 void setup(void){
 #include "_prim.c"
@@ -287,7 +287,8 @@ void setup(void){
   labels =  (void**)malloc(sizeof(void*)*max_labels);
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
-  stack = (void**)malloc(sizeof(void*)*10);//?
+  stack_base = (void**)malloc(sizeof(void*)*10);//?
+  stack  = stack_base - 1;
 #if LL_CALL_STACK
   current_frame = (struct frame*)malloc(sizeof(struct frame));
   current_frame->next = current_frame->prev = NULL;
@@ -369,45 +370,45 @@ void loop (){
 
  op_const:
   D("loading const: %d\n", *code);
-  stack[++top] = *code;
+  *++stack = *code;
   code++;
   NEXT(code);
  call_prim_0:
   D("call_0\n");
-  stack[++top] = ((void* (*)(void))(*code++))();
+  *++stack = ((void* (*)(void))(*code++))();
   //stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
   NEXT(code);
  call_prim_1:
   D("call_0\n");
-  stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
+  *stack = ((void* (*)(void*))(*code++))(*stack);
   NEXT(code);
  call_prim_2:
   //// define _ and S////////////////////////////////////////////
 #define _ void*
-#define S(i) stack[top+i]
+#define S(i) *(stack+i)
   D("call_2\n");
-  top -= 1;
-  stack[top] = ((_ (*)(_, _))(*code++))(S(0), S(1));
+  stack -= 1;
+  *stack = ((_ (*)(_, _))(*code++))(S(0), S(1));
   NEXT(code);
  call_prim_3:
   D("call_3\n");
-  top -= 2;
-  stack[top] = ((_ (*)(_, _, _))(*code++))(S(0),S(1), S(2));
+  stack -= 2;
+  *stack = ((_ (*)(_, _, _))(*code++))(S(0),S(1), S(2));
   NEXT(code);
  call_prim_4:
   D("call_4\n");
-  top -= 3;
-  stack[top] = ((_ (*)(_, _, _, _))(*code++))(S(0),S(1),S(2),S(3));
+  stack -= 3;
+  *stack = ((_ (*)(_, _, _, _))(*code++))(S(0),S(1),S(2),S(3));
   NEXT(code);
  call_prim_5:
   D("call_5\n");
-  top -= 4;
-  stack[top] = ((_ (*)(_, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4));
+  stack -= 4;
+  *stack = ((_ (*)(_, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4));
   NEXT(code);
  call_prim_6:
   D("call_6\n");
-  top -= 5;
-  stack[top] = ((_ (*)(_, _, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4),S(5));
+  stack -= 5;
+  *stack = ((_ (*)(_, _, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4),S(5));
   NEXT(code);
 #undef _
 #undef S
@@ -418,7 +419,7 @@ void loop (){
   {
     D("op_call\n");
     current_frame->code = code;
-    struct procedure* fn = (struct procedure*)stack[top--];
+    struct procedure* fn = (struct procedure*)*stack--;
 
     //This is split up in such a horrible way becuase it seems the Arduino
     //IDE does not allow conditionally included  brackets
@@ -473,7 +474,7 @@ void loop (){
     //assign argument values
     int n_args = fn->n_args;
     for (char i = n_args-1; i > -1; i--){
-      locals[i] = stack[top--];
+      locals[i] = *stack--;
     }
     NEXT(code);
   }
@@ -498,24 +499,24 @@ void loop (){
   NEXT(code);
  op_global_load:
   D("load_global\n");
-  stack[++top] = globals[(long)*code++];
+  *++stack = globals[(long)*code++];
   NEXT(code);
  op_global_store:
   D("store_global\n");
-  globals[(long)*code++] = stack[top--];
+  globals[(long)*code++] = *stack--;
   NEXT(code);
  op_local_load:
   D("load_local\n");
-  stack[++top] = locals[(long)*code++];
+  *++stack = locals[(long)*code++];
   NEXT(code);
  op_local_store:
   D("store_local\n");
   //::? (int)
-  locals[(long)*code++] = stack[top--];
+  locals[(long)*code++] = *stack--;
   NEXT(code);
  op_if:
   D("if\n");
-  if (stack[top--]){
+  if (*stack--){
     code+=2; //skip over the jump
   }
   NEXT(code);
@@ -523,42 +524,43 @@ void loop (){
   code = (void**)*code;
   NEXT(code);
  op_add:
-  stack[top-1] = (void*)((long)stack[top-1] + (long)stack[top--]);
+  *(stack-1) = (void*)((long)*(stack-1) + (long)*stack--);
   NEXT(code);
  op_sub:
   D("SUB\n");
-  stack[top-1] = (void*)((long)stack[top-1] - (long)stack[top--]);
+  *(stack-1) = (void*)((long)*(stack-1) - (long)*stack--);
   NEXT(code);
  op_mult:
   D("mult\n");
-  stack[top-1] = (void*)((long)stack[top-1] * (long)stack[top--]);
+  *(stack-1) = (void*)((long)*(stack-1) * (long)*stack--);
   NEXT(code);
  op_div:
   D("div\n");
-  stack[top-1] = (void*)((long)stack[top-1] / (long)stack[top--]);
+  *(stack-1) = (void*)((long)*(stack-1) / (long)*stack--);
   NEXT(code);
  op_gt:
-  stack[top-1] = (void*) ((long)(stack[top-1]) > ((long)stack[top--]));
+  *(stack-1) = (void*) ((long)*(stack-1) > ((long)*stack--));
   //stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
   NEXT(code);
  op_lt:
   //This works on the desktop, but not the arduino(why?):
   // stack[top-1] = (void*) ((long)(stack[top]) > ((long)stack[--top]));
-  stack[top-1] = (void*) ((long)(stack[top-1]) < ((long)stack[top--]));
+  *(stack-1) = (void*) ((long)*(stack-1) < (long)*stack--);
   NEXT(code);
  op_eq:
-  stack[top-1] = (void*) ((long)(stack[top-1]) == ((long)stack[top--]));
+  *(stack-1) = (void*) ((long)*(stack-1) == (long)*(stack--));
   NEXT(code);
  op_not_eq:
-  stack[top-1] = (void*) ((long)(stack[top-1]) != ((long)stack[top--]));
+  //mbs
+  *(stack-1) = (void*) ((long)*(stack-1) != (long)*stack--);
   NEXT(code);
  op_lt_eq:
   // use > because items on stack are reversed
-  stack[top-1] = (void*) ((long)(stack[top-1]) <= ((long)stack[top--]));
+  *(stack-1) = (void*) ((long)*(stack-1) <= (long)*stack--);
   NEXT(code);
  op_gt_eq:
   // use < because items on stack are reversed
-  stack[top-1] = (void*) ((long)(stack[top-1]) >= ((long)stack[top--]));
+  *(stack-1) = (void*) ((long)*(stack-1) >= (long)*stack--);
   NEXT(code);
 #if INCLUDE_LISTS
  op_list:
@@ -568,12 +570,12 @@ void loop (){
   while (n){
     tmp = (struct node*)malloc(sizeof(struct node));
     tmp->next = list;
-    tmp->data = stack[top--];
+    tmp->data = *stack--;
     list = tmp;
     n--;
     PAUSE_MAYBE;
   }
-  stack[++top] = list;
+  *++stack = list;
   NEXT(code);
 #endif
  op_array:
@@ -584,11 +586,11 @@ void loop (){
   tuple->len = n;
   while (n) {
     n--;
-    tmpData[n] = stack[top--];
+    tmpData[n] = *stack--;
     PAUSE_MAYBE;
   }
   tuple->data = tmpData;
-  stack[++top] = tuple;
+  *++stack = tuple;
   NEXT(code);
  op_next_block:
   current_block = current_block->next;
@@ -604,7 +606,7 @@ void loop (){
   return; //no more code blocks - keep looping until one arrives
  op_pop:
   D("POP\n");
-  --top;
+  --stack;
   NEXT(code);
 }
 
