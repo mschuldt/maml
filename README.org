@@ -58,7 +58,13 @@ Define a block that is inserted into the VM mainloop and repeatedly executed
 def blockname():
    ...
 #+END_SRC
-Send a block to the VM
+Define a function
+#+Begin_SRC python
+@function
+def funcname(a,b,c):
+   ...
+#+END_SRC
+Send a block or function to the VM
 #+Begin_SRC python
 arduino.send(blockname)
 #+END_SRC
@@ -110,7 +116,7 @@ to run all tests in maml/tests/ and maml/false_tests:
 start the avm process with gdb
 then inject code in separate terminal by running python file:
 #+Begin_SRC text
- ./maml.py filename.maml
+ ./maml.py -d filename.maml
 #+END_SRC
 using ./run.sh will not work because it creates its own avm subprocess
 ** Testing bytecode compilation
@@ -131,10 +137,10 @@ Now maml_compile will print something like
       ['SOP_INT', 2, 'OP_GLOBAL_STORE', 0]
 #+END_SRC
 
-* desktop version limitations
+* Desktop version limitations
 - Arduino.get an Arduino.dump do not work in the desktop version
   (this is just because the output of the VM is not piped back to maml.py)
-* features
+* Features
 some features in the ~order they where implemented
 
 - arithmetic
@@ -151,17 +157,18 @@ some features in the ~order they where implemented
 - getting/setting values from the VM
 - dumping all variable and stack values from the VM
 - pausing and resuming the VM
+- defining/calling functions
 
-* defining new c primitives
+* Defining new c primitives
 primitives are separated into files depending on their compile target.
 - [[file:primitives.c][primitives.c]]                for both Desktop and Arduino
 - [[file:arduino_only_primitives.c][arduino_only_primitives.c]]   not compiled for desktop
 - [[file:desktop_only_primitives.c][desktop_only_primitives.c]]   not compiled for desktop
 
-primitive functions are defined as normal but with the
+primitive functions are defined in normal C/C++ but with the
 _DEFUN_ tag above them.
 declare primitives with the _DECL_ tag. See the files for examples.
-* internals
+* Internals
 Internal structures and how to add compiler or VM features.
 TODO: This is very incomplete.
 ** serial protocol
