@@ -104,8 +104,6 @@ struct frame{
   void** code;
   void** locals;
   int n_locals;
-  struct frame* prev;
-  struct frame* next;
 };
 
 struct codeblock{
@@ -208,6 +206,9 @@ void** locals; // array of local variables. In global scope, this points
                // to the 'globals' array.
 int n_locals;
 struct frame *current_frame = NULL;
+struct frame **call_frames = NULL;
+int frame_i = -1; //index of current frame in array 'call_frames'
+int max_frames = 5;
 
 //if these names are changed, also change them in process_primitives.el
 void** primitives; //this is filled by auto-generated code in _prim.c
@@ -273,19 +274,26 @@ void setup(void){
   blockchain = NULL;
   blockchain_end = NULL;
   n_codeblocks = 0;
-  locals = globals = (void**)malloc(sizeof(void*)*max_globals);
-  n_locals = max_globals;
   jumps = (void***)malloc(sizeof(void*)*max_jumps);
   labels =  (void**)malloc(sizeof(void*)*max_labels);
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
   stack = (void**)malloc(sizeof(void*)*10);//?
+  call_frames = (struct frame**)malloc(sizeof(struct frame*)*max_frames);
+  struct frame *f;
+  for (int i = 0; i < max_frames; i++){
+    call_frames[i] = f = (struct frame*)malloc(sizeof(struct frame));
+    if (i == 0) continue;
+    f->locals = (void**)malloc(sizeof(void*)*3);
+    f->n_locals = 3;
+  }
   //initialize global frame
-  current_frame = (struct frame*)malloc(sizeof(struct frame));
-  current_frame->locals = globals;
+  current_frame = call_frames[0];
+  globals = (void**)malloc(sizeof(void*)*max_globals);
+  current_frame->locals = locals = globals;
   current_frame->n_locals = max_globals;
-  current_frame->next = current_frame->prev = NULL;
-
+  n_locals = max_globals;
+  frame_i = 0;
 #if ARDUINO // setup signal interrupt
   maml_serial.begin(9600);
 #else
@@ -396,23 +404,30 @@ void loop (){
     D("op_call\n");
     current_frame->code = code;
     struct procedure* fn = (struct procedure*)stack[top--];
-    if (current_frame->next){
+    frame_i++;
+    if (frame_i < max_frames){
       //reuse old frame
-      current_frame = current_frame->next;
+      current_frame = call_frames[frame_i];
       if (current_frame->n_locals < fn->n_locals){
-        if (!realloc(current_frame->locals, fn->n_locals)){
+        if (!(current_frame->locals = (void**)realloc(current_frame->locals,
+                                              sizeof(void*)*fn->n_locals))){
           //TODO: error
         }
+        current_frame->n_locals = fn->n_locals;
       }
     }else{
-      struct frame *_new = (struct frame*)malloc(sizeof(struct frame));
-      _new->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
-      _new->next = NULL;
-      _new->prev = current_frame;
-      current_frame->next = _new;
-      current_frame = _new;
+      //extend the 'max_frames' array by 1
+      max_frames++;
+      if (!(call_frames = (struct frame**) realloc(call_frames,
+                                                   sizeof(struct frame*)*max_frames))){
+        //TODO: error
+      }
+      current_frame = (struct frame*)malloc(sizeof(struct frame));
+      current_frame->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
+      current_frame->n_locals = fn->n_locals;
+      call_frames[frame_i] = current_frame;
     }
-    n_locals = current_frame->n_locals = fn->n_locals;
+    n_locals = fn->n_locals;
     locals = current_frame->locals;
     code = current_frame->code = fn->code;
     //assign argument values
@@ -424,8 +439,9 @@ void loop (){
   }
  op_return: //return from a function
   D("op_return\n");
-  if (current_frame->prev){
-    current_frame = current_frame->prev;
+
+  if (frame_i != 0){
+    current_frame = call_frames[--frame_i];
   }else{
     SAY("Error: attempt to return from global frame\n"); DIE(1);
   }
@@ -702,7 +718,6 @@ void byte_in(unsigned char c){
 
         if (index < 0 || index > 6){
           serial_out("ERROR: (current) max args to primitive is 6\n");
-          printf("index = %d\n", index);
           D2("got %d arg index\n", index);
           return;
         }
