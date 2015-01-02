@@ -684,6 +684,7 @@ void byte_in(unsigned char c){
 
         newfunction = (struct procedure*)malloc(sizeof(struct procedure));
         code_array = newfunction->code = (void**)malloc(sizeof(void*)*expected_length);
+        newfunction->n_locals = (int)INPUT_STACK_POP();
         //this double type casting to keeps the compiler happy
         newfunction->n_args = (char)(long)INPUT_STACK_POP();
         code_array = newfunction->code;
