@@ -608,7 +608,7 @@ def compile_function_node(ast, btc, env, top):
     for a in ast['body']:
         gen_bytecode(a, body, new_env, True)
     #TODO: len(body) is not the actual length of the function body
-    n_locals = n_args + len(env.names)
+    n_locals = len(new_env.names)
     btc.extend([SOP_INT, n_args, SOP_INT, n_locals, SOP_INT, len(body), SOP_START_FUNCTION] + body + [SOP_INT, index, SOP_END])
     OP_GLOBAL_STORE
 
