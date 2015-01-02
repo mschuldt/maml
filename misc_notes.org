@@ -489,3 +489,18 @@ in maml_env.py have two stack for the current while loop start/end labels
 'break' or 'continue' look up these labels to know where to jump to 
 
 #+END_SRC
+* calling primitives using 'registers'
+
+use variables instead of the stack for storing argument values
+
+swap out the stack with a special temporary stack S2
+
+registers defined as:
+a0 = &S2[0]
+a1 = &s2[1]
+...
+
+then call the functions with [...](*a0, *a1, ...)
+
+would need extra primitive call to swap stacks before and after evaluating args
+when will this be worth the that extra work?
