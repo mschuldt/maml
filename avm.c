@@ -3,7 +3,9 @@
 #define ENABLE_PAUSES 1 //uses an additional 874 bytes
 #define INCLUDE_LISTS 1
 #define ARDUINO 0
-
+#define LL_CALL_STACK 0 //represent the call stack as a linked list or array
+                        //LL version saves 234 bytes but runs slower
+                        //and uses (slightly) more ram
 #define DEBUG 0
 #define DEBUG2 0
 
@@ -104,6 +106,10 @@ struct frame{
   void** code;
   void** locals;
   int n_locals;
+#if LL_CALL_STACK
+  struct frame* prev;
+  struct frame* next;
+#endif
 };
 
 struct codeblock{
@@ -206,9 +212,12 @@ void** locals; // array of local variables. In global scope, this points
                // to the 'globals' array.
 int n_locals;
 struct frame *current_frame = NULL;
+
+#if ! LL_CALL_STACK
 struct frame **call_frames = NULL;
 int frame_i = -1; //index of current frame in array 'call_frames'
 int max_frames = 5;
+#endif
 
 //if these names are changed, also change them in process_primitives.el
 void** primitives; //this is filled by auto-generated code in _prim.c
@@ -279,6 +288,10 @@ void setup(void){
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
   stack = (void**)malloc(sizeof(void*)*10);//?
+#if LL_CALL_STACK
+  current_frame = (struct frame*)malloc(sizeof(struct frame));
+  current_frame->next = current_frame->prev = NULL;
+#else
   call_frames = (struct frame**)malloc(sizeof(struct frame*)*max_frames);
   struct frame *f;
   for (int i = 0; i < max_frames; i++){
@@ -287,13 +300,15 @@ void setup(void){
     f->locals = (void**)malloc(sizeof(void*)*3);
     f->n_locals = 3;
   }
-  //initialize global frame
+  frame_i = 0;
   current_frame = call_frames[0];
+#endif //LL_CALL_STACK
+
+  //initialize global frame
   globals = (void**)malloc(sizeof(void*)*max_globals);
   current_frame->locals = locals = globals;
   current_frame->n_locals = max_globals;
   n_locals = max_globals;
-  frame_i = 0;
 #if ARDUINO // setup signal interrupt
   maml_serial.begin(9600);
 #else
@@ -404,10 +419,26 @@ void loop (){
     D("op_call\n");
     current_frame->code = code;
     struct procedure* fn = (struct procedure*)stack[top--];
-    frame_i++;
-    if (frame_i < max_frames){
-      //reuse old frame
-      current_frame = call_frames[frame_i];
+
+    //This is split up in such a horrible way becuase it seems the Arduino
+    //IDE does not allow conditionally included  brackets
+    //error:  “expected unqualified-id before 'else'”
+#if !LL_CALL_STACK
+frame_i++;
+#endif
+    if
+#if LL_CALL_STACK
+      (current_frame->next)
+#else
+    (frame_i < max_frames)
+#endif
+      {//reuse old frame
+#if LL_CALL_STACK
+    current_frame = current_frame->next;
+#else
+    current_frame = call_frames[frame_i];
+#endif
+
       if (current_frame->n_locals < fn->n_locals){
         if (!(current_frame->locals = (void**)realloc(current_frame->locals,
                                               sizeof(void*)*fn->n_locals))){
@@ -417,15 +448,24 @@ void loop (){
       }
     }else{
       //extend the 'max_frames' array by 1
-      max_frames++;
-      if (!(call_frames = (struct frame**) realloc(call_frames,
-                                                   sizeof(struct frame*)*max_frames))){
+#if LL_CALL_STACK
+        struct frame *_new = (struct frame*)malloc(sizeof(struct frame));
+        _new->next = NULL;
+        _new->prev = current_frame;
+        current_frame->next = _new;
+        current_frame = _new;
+#else
+        max_frames++;
+        if (!(call_frames = (struct frame**) realloc(call_frames,
+          sizeof(struct frame*)*max_frames))){
         //TODO: error
       }
-      current_frame = (struct frame*)malloc(sizeof(struct frame));
-      current_frame->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
-      current_frame->n_locals = fn->n_locals;
-      call_frames[frame_i] = current_frame;
+        current_frame = (struct frame*)malloc(sizeof(struct frame));
+        call_frames[frame_i] = current_frame;
+
+#endif
+        current_frame->locals = (void**)malloc(sizeof(void*)*fn->n_locals);
+        current_frame->n_locals = fn->n_locals;
     }
     n_locals = fn->n_locals;
     locals = current_frame->locals;
@@ -440,9 +480,16 @@ void loop (){
  op_return: //return from a function
   D("op_return\n");
 
+#if LL_CALL_STACK
+  if (current_frame->prev){
+        current_frame = current_frame->prev;
+      }
+#else
   if (frame_i != 0){
-    current_frame = call_frames[--frame_i];
-  }else{
+        current_frame = call_frames[--frame_i];
+      }
+#endif
+  else{
     SAY("Error: attempt to return from global frame\n"); DIE(1);
   }
   locals = current_frame->locals;
@@ -1023,6 +1070,8 @@ void read_file(void){
 //15,174
 //14,872
 //14,496
+//14,788
+//
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
 //858
@@ -1030,3 +1079,4 @@ void read_file(void){
 //1,038
 //1,028
 //1,088
+//1,094
