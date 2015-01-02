@@ -504,3 +504,22 @@ then call the functions with [...](*a0, *a1, ...)
 
 would need extra primitive call to swap stacks before and after evaluating args
 when will this be worth the that extra work?
+
+* mixing data and opcodes vs separate arrays?
+
+have arrays of constants (global and local)
+opcodes array contains the corresponding indexes
+OR: have a data array pointer that tracks the current data being used
+    insert jump indexes into the data array and move the pointer
+    whenever a jump occurs in the code array
+
+seporate arrays:
+ good:
+   smaller separate arrays, maybe helps in memory constrained environments (frag)
+   if using bytecodes, allows for using an array of bytes instead of void*
+     huge mem savings
+     better cache utilization
+ bad:
+    need to modify compilation
+    more complicated VM 
+    slower - need to access seporate arrays for data and indexes

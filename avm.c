@@ -350,7 +350,7 @@ void _d(void){
 #define NEXT() goto *(*code++)
 #endif
 
-#define VM_CASE(op) op
+#define VM_CASE(op) op //in preparation for optional threading
 
 void loop (){
   if (!initialized){
