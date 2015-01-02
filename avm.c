@@ -345,9 +345,9 @@ void _d(void){
   delay(500);
 }
 
-#define NEXT(code) PAUSE_MAYBE; goto *(*code++)
+#define NEXT() PAUSE_MAYBE; goto *(*code++)
 #else
-#define NEXT(code) goto *(*code++)
+#define NEXT() goto *(*code++)
 #endif
 
 #define VM_CASE(op) op
@@ -368,24 +368,24 @@ void loop (){
   struct node *list = NULL;
   struct node *tmp;
 
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_const):
   D("loading const: %d\n", *code);
   *++stack = *code;
   code++;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_0):
   D("call_0\n");
   *++stack = ((void* (*)(void))(*code++))();
   //stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_1):
   D("call_0\n");
   *stack = ((void* (*)(void*))(*code++))(*stack);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_2):
   //// define _ and S////////////////////////////////////////////
@@ -395,31 +395,31 @@ void loop (){
   D("call_2\n");
   stack -= 1;
   *stack = ((_ (*)(_, _))(*code++))(S(0), S(1));
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_3):
   D("call_3\n");
   stack -= 2;
   *stack = ((_ (*)(_, _, _))(*code++))(S(0),S(1), S(2));
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_4):
   D("call_4\n");
   stack -= 3;
   *stack = ((_ (*)(_, _, _, _))(*code++))(S(0),S(1),S(2),S(3));
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_5):
   D("call_5\n");
   stack -= 4;
   *stack = ((_ (*)(_, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4));
-  NEXT(code);
+  NEXT();
 
  VM_CASE(call_prim_6):
   D("call_6\n");
   stack -= 5;
   *stack = ((_ (*)(_, _, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4),S(5));
-  NEXT(code);
+  NEXT();
 #undef _
 #undef S
   //// undef _ and S ////////////////////////////////////////////
@@ -487,7 +487,7 @@ void loop (){
     for (char i = n_args-1; i > -1; i--){
       locals[i] = *stack--;
     }
-    NEXT(code);
+    NEXT();
   }
 
  VM_CASE(op_return): //return from a functio;
@@ -508,88 +508,88 @@ void loop (){
   locals = current_frame->locals;
   n_locals = current_frame->n_locals;
   code = current_frame->code;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_global_load):
   D("load_global\n");
   *++stack = globals[(long)*code++];
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_global_store):
   D("store_global\n");
   globals[(long)*code++] = *stack--;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_local_load):
   D("load_local\n");
   *++stack = locals[(long)*code++];
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_local_store):
   D("store_local\n");
   //::? (int)
   locals[(long)*code++] = *stack--;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_if):
   D("if\n");
   if (*stack--){
     code+=2; //skip over the jump
   }
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_jump):
   code = (void**)*code;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_add):
   *(stack-1) = (void*)((long)*(stack-1) + (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_sub):
   D("SUB\n");
   *(stack-1) = (void*)((long)*(stack-1) - (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_mult):
   D("mult\n");
   *(stack-1) = (void*)((long)*(stack-1) * (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_div):
   D("div\n");
   *(stack-1) = (void*)((long)*(stack-1) / (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_gt):
   *(stack-1) = (void*) ((long)*(stack-1) > ((long)*stack--));
   //stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_lt):
   //This works on the desktop, but not the arduino(why?):
   // stack[top-1] = (void*) ((long)(stack[top]) > ((long)stack[--top]));
   *(stack-1) = (void*) ((long)*(stack-1) < (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_eq):
   *(stack-1) = (void*) ((long)*(stack-1) == (long)*(stack--));
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_not_eq):
   //mbs
   *(stack-1) = (void*) ((long)*(stack-1) != (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_lt_eq):
   // use > because items on stack are reversed
   *(stack-1) = (void*) ((long)*(stack-1) <= (long)*stack--);
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_gt_eq):
   // use < because items on stack are reversed
   *(stack-1) = (void*) ((long)*(stack-1) >= (long)*stack--);
-  NEXT(code);
+  NEXT();
 
 #if INCLUDE_LISTS
  VM_CASE(op_list):
@@ -605,7 +605,7 @@ void loop (){
     PAUSE_MAYBE;
   }
   *++stack = list;
-  NEXT(code);
+  NEXT();
 #endif
 
  VM_CASE(op_array):
@@ -621,26 +621,26 @@ void loop (){
   }
   tuple->data = tmpData;
   *++stack = tuple;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_next_block):
   current_block = current_block->next;
   code = current_block->code;
-  NEXT(code);
+  NEXT();
 
  VM_CASE(op_block_suicide):
   struct codeblock* next_block = current_block->next;
   remove_codeblock(current_block);
   if (next_block && n_codeblocks){
     code = next_block->code;
-    NEXT(code);
+    NEXT();
   }
   return; //no more code blocks - keep looping until one arrives
 
  VM_CASE(op_pop):
   D("POP\n");
   --stack;
-  NEXT(code);
+  NEXT();
 }
 
 #if ! ARDUINO
