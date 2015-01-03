@@ -345,10 +345,12 @@ void _d(void){
   delay(500);
 }
 
-#define NEXT(code) PAUSE_MAYBE; goto *(*code++)
+#define NEXT() PAUSE_MAYBE; goto *(*code++)
 #else
-#define NEXT(code) goto *(*code++)
+#define NEXT() goto *(*code++)
 #endif
+
+#define VM_CASE(op) op //in preparation for optional threading
 
 void loop (){
   if (!initialized){
@@ -366,54 +368,63 @@ void loop (){
   struct node *list = NULL;
   struct node *tmp;
 
-  NEXT(code);
+  NEXT();
 
- op_const:
+ VM_CASE(op_const):
   D("loading const: %d\n", *code);
   *++stack = *code;
   code++;
-  NEXT(code);
- call_prim_0:
+  NEXT();
+
+ VM_CASE(call_prim_0):
   D("call_0\n");
   *++stack = ((void* (*)(void))(*code++))();
   //stack[top] = ((void* (*)(void*))(*code++))(stack[top]);
-  NEXT(code);
- call_prim_1:
+  NEXT();
+
+ VM_CASE(call_prim_1):
   D("call_0\n");
   *stack = ((void* (*)(void*))(*code++))(*stack);
-  NEXT(code);
- call_prim_2:
+  NEXT();
+
+ VM_CASE(call_prim_2):
   //// define _ and S////////////////////////////////////////////
 #define _ void*
 #define S(i) *(stack+i)
+
   D("call_2\n");
   stack -= 1;
   *stack = ((_ (*)(_, _))(*code++))(S(0), S(1));
-  NEXT(code);
- call_prim_3:
+  NEXT();
+
+ VM_CASE(call_prim_3):
   D("call_3\n");
   stack -= 2;
   *stack = ((_ (*)(_, _, _))(*code++))(S(0),S(1), S(2));
-  NEXT(code);
- call_prim_4:
+  NEXT();
+
+ VM_CASE(call_prim_4):
   D("call_4\n");
   stack -= 3;
   *stack = ((_ (*)(_, _, _, _))(*code++))(S(0),S(1),S(2),S(3));
-  NEXT(code);
- call_prim_5:
+  NEXT();
+
+ VM_CASE(call_prim_5):
   D("call_5\n");
   stack -= 4;
   *stack = ((_ (*)(_, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4));
-  NEXT(code);
- call_prim_6:
+  NEXT();
+
+ VM_CASE(call_prim_6):
   D("call_6\n");
   stack -= 5;
   *stack = ((_ (*)(_, _, _, _, _, _))(*code++))(S(0),S(1),S(2),S(3),S(4),S(5));
-  NEXT(code);
+  NEXT();
 #undef _
 #undef S
   //// undef _ and S ////////////////////////////////////////////
- op_call: //calls non-primitive
+
+ VM_CASE(op_call): //calls non-primitive
   //extend 'call stack' - really a doubly linked list
   //TODO: use an array of frames instead - less memory + faster
   {
@@ -448,7 +459,6 @@ void loop (){
             current_frame->n_locals = fn->n_locals;
           }
         }else{
-      //extend the 'max_frames' array by 1
 #if LL_CALL_STACK
       struct frame *_new = (struct frame*)malloc(sizeof(struct frame));
       _new->next = NULL;
@@ -456,6 +466,7 @@ void loop (){
       current_frame->next = _new;
       current_frame = _new;
 #else
+      //extend the 'call_frames' array by 1
       max_frames++;
       if (!(call_frames = (struct frame**) realloc(call_frames,
                                                    sizeof(struct frame*)*max_frames))){
@@ -476,9 +487,10 @@ void loop (){
     for (char i = n_args-1; i > -1; i--){
       locals[i] = *stack--;
     }
-    NEXT(code);
+    NEXT();
   }
- op_return: //return from a function
+
+ VM_CASE(op_return): //return from a functio;
   D("op_return\n");
 
 #if LL_CALL_STACK
@@ -496,74 +508,91 @@ void loop (){
   locals = current_frame->locals;
   n_locals = current_frame->n_locals;
   code = current_frame->code;
-  NEXT(code);
- op_global_load:
+  NEXT();
+
+ VM_CASE(op_global_load):
   D("load_global\n");
   *++stack = globals[(long)*code++];
-  NEXT(code);
- op_global_store:
+  NEXT();
+
+ VM_CASE(op_global_store):
   D("store_global\n");
   globals[(long)*code++] = *stack--;
-  NEXT(code);
- op_local_load:
+  NEXT();
+
+ VM_CASE(op_local_load):
   D("load_local\n");
   *++stack = locals[(long)*code++];
-  NEXT(code);
- op_local_store:
+  NEXT();
+
+ VM_CASE(op_local_store):
   D("store_local\n");
   //::? (int)
   locals[(long)*code++] = *stack--;
-  NEXT(code);
- op_if:
+  NEXT();
+
+ VM_CASE(op_if):
   D("if\n");
   if (*stack--){
     code+=2; //skip over the jump
   }
-  NEXT(code);
- op_jump:
+  NEXT();
+
+ VM_CASE(op_jump):
   code = (void**)*code;
-  NEXT(code);
- op_add:
+  NEXT();
+
+ VM_CASE(op_add):
   *(stack-1) = (void*)((long)*(stack-1) + (long)*stack--);
-  NEXT(code);
- op_sub:
+  NEXT();
+
+ VM_CASE(op_sub):
   D("SUB\n");
   *(stack-1) = (void*)((long)*(stack-1) - (long)*stack--);
-  NEXT(code);
- op_mult:
+  NEXT();
+
+ VM_CASE(op_mult):
   D("mult\n");
   *(stack-1) = (void*)((long)*(stack-1) * (long)*stack--);
-  NEXT(code);
- op_div:
+  NEXT();
+
+ VM_CASE(op_div):
   D("div\n");
   *(stack-1) = (void*)((long)*(stack-1) / (long)*stack--);
-  NEXT(code);
- op_gt:
+  NEXT();
+
+ VM_CASE(op_gt):
   *(stack-1) = (void*) ((long)*(stack-1) > ((long)*stack--));
   //stack[top-1] = (void*) ((long)(stack[top]) < ((long)stack[--top]));
-  NEXT(code);
- op_lt:
+  NEXT();
+
+ VM_CASE(op_lt):
   //This works on the desktop, but not the arduino(why?):
   // stack[top-1] = (void*) ((long)(stack[top]) > ((long)stack[--top]));
   *(stack-1) = (void*) ((long)*(stack-1) < (long)*stack--);
-  NEXT(code);
- op_eq:
+  NEXT();
+
+ VM_CASE(op_eq):
   *(stack-1) = (void*) ((long)*(stack-1) == (long)*(stack--));
-  NEXT(code);
- op_not_eq:
+  NEXT();
+
+ VM_CASE(op_not_eq):
   //mbs
   *(stack-1) = (void*) ((long)*(stack-1) != (long)*stack--);
-  NEXT(code);
- op_lt_eq:
+  NEXT();
+
+ VM_CASE(op_lt_eq):
   // use > because items on stack are reversed
   *(stack-1) = (void*) ((long)*(stack-1) <= (long)*stack--);
-  NEXT(code);
- op_gt_eq:
+  NEXT();
+
+ VM_CASE(op_gt_eq):
   // use < because items on stack are reversed
   *(stack-1) = (void*) ((long)*(stack-1) >= (long)*stack--);
-  NEXT(code);
+  NEXT();
+
 #if INCLUDE_LISTS
- op_list:
+ VM_CASE(op_list):
   D("list\n");
   n = (int)*code++;
   list = NULL;
@@ -576,9 +605,10 @@ void loop (){
     PAUSE_MAYBE;
   }
   *++stack = list;
-  NEXT(code);
+  NEXT();
 #endif
- op_array:
+
+ VM_CASE(op_array):
   D("array\n");
   n = (int)*code++;
   struct array* tuple = (struct array*)malloc(sizeof(struct array));
@@ -591,23 +621,26 @@ void loop (){
   }
   tuple->data = tmpData;
   *++stack = tuple;
-  NEXT(code);
- op_next_block:
+  NEXT();
+
+ VM_CASE(op_next_block):
   current_block = current_block->next;
   code = current_block->code;
-  NEXT(code);
- op_block_suicide:
+  NEXT();
+
+ VM_CASE(op_block_suicide):
   struct codeblock* next_block = current_block->next;
   remove_codeblock(current_block);
   if (next_block && n_codeblocks){
     code = next_block->code;
-    NEXT(code);
+    NEXT();
   }
   return; //no more code blocks - keep looping until one arrives
- op_pop:
+
+ VM_CASE(op_pop):
   D("POP\n");
   --stack;
-  NEXT(code);
+  NEXT();
 }
 
 #if ! ARDUINO
@@ -1078,6 +1111,7 @@ void read_file(void){
 //14,872
 //14,496
 //14,788
+//14,120 <-- after eliminating 'top' index
 //
 //Global variables use 812 bytes (9%) of dynamic memory
 //794
