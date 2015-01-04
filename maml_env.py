@@ -139,6 +139,11 @@ class env:
             self.argTypes = argTypes
             self.returnType = returnType
 
+class ftype:
+    def __init__(self, a, r):
+        self.args = a
+        self.ret = r
+
 built_in_types = {'true': 'int',
                   'false': 'int',
                   'none': 'int'}

@@ -22,7 +22,7 @@ from _prim import desktop_primitives, arduino_primitives
 from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
-from maml_env import env
+from maml_env import env, ftype
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
