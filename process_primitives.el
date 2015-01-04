@@ -4,7 +4,11 @@
 ;;#!/usr/bin/emacs --script
 
 ;;input: primitives.c
-;;output: _prim.c, _prim.py
+;;       avm.c
+;;       desktop_only_primitives.c
+;;       arduino_only_primitives.c
+;;output: _prim.c
+;;        _prim.py
 
 (setq primitives_files '("primitives.c" "avm.c")
       desktop_files '("desktop_only_primitives.c")
@@ -12,7 +16,7 @@
       c_out "_prim.c"
       py_out "_prim.py"
       token "_DEFUN_"
-      function_re (format"^%s[ \n\t]+\\([a-zA-Z0-9\*_]+[ \t\n]+\\)+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*(" token)
+      function_re (format "^[ \t]*%s[ \t]*(\\(.*\\))[ \t\n]*[a-zA-Z0-9\*_ ]+[ \t\n]+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*(" token)
       declaration_re "^[ \t]*_DECL_(\\([A-Za-z][A-Za-z0-9]*\\).*)[ \t]*$"
       )
 
