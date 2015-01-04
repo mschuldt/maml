@@ -285,6 +285,7 @@ def _(ast):
 def _(ast, env):
     # TODO: This currently only works for assignment to variables
     check_types(ast['value'], env)
+
     val_type = ast['value']['s_type']
 
     for target in ast['targets']:
@@ -422,9 +423,18 @@ def _(ast, btc, env, top):
 
 @type_check('call')
 def _(ast, env):
-    # TODO:
-    ast['s_type'] = "TODO"
-
+    name = ast['func']['id']
+    print("calling function:", name)
+    func_type = env.get_type(name)
+    n_args = len(func_type.args)
+    if type(func_type) is not ftype:
+        raise MamlTypeError("attempting to call non-function")
+    for arg_type, a, nth in zip(func_type.args, ast['args'], range(n_args)):
+        check_types(a, env)
+        if arg_type != a['s_type']:
+            raise MamlTypeError("call to '{}'. arg {}. Expected '{}'. got '{}'"
+                                .format(name, nth, arg_type, a['s_type']))
+    ast['s_type'] = func_type.ret
 
 @ast_check('call')
 def _(ast):
@@ -436,21 +446,6 @@ def _(ast):
     if ast['kwargs']:
         raise MamlSyntaxError("kwargs args are not supported")
 
-
-@type_check('call')
-def _(ast, env):
-    ast['s_type'] = "TODO:call"
-    return
-    functionArgs = env.funcTypes[ast['func']['id']]
-    argNum = 0
-    for elem in ast['args']:
-        check_types(elem, env)
-        if elem['s_type'] != functionArgs.argTypes[argNum]:
-            raise MamlTypeError("argument type {} does not match received "
-                                + "argument type {}"
-                                .format(functionArgs.argTypes[argNum], elem['s_type']))
-        argNum += 1
-    ast['s_type'] = functionArgs.returnType
 
 ###############################################################################
 # if
@@ -613,10 +608,40 @@ def compile_function_node(ast, btc, env, top):
     OP_GLOBAL_STORE
 
 
+function_return_type = None
+
 @type_check('function')
 def _(ast, env):
-    ast['s_type'] = "TODO:function"
-    return #TODO
+    #TODO: support recursive function calls
+    global function_return_type
+    #get arg annotations
+    arg_types = []
+    new_env = make_new_env(env)
+    for arg in ast['args']['args']:
+        name = arg['arg']
+        typ = arg['argType']['id']##TODO: fix for other types
+        new_env.declare_type(name, typ)
+        arg_types.append(typ)
+    #check body and return type
+    function_return_type = None
+    for a in ast['body']:
+        check_types(a, new_env)
+
+    assert function_return_type, "cannot find function return type"
+    #TODO: "ast['returns']['id']" only works for names
+    if ast['returns'] and ast['returns']['id'] != function_return_type:
+        print("ast['returns'] = ", ast['returns'])
+        print("function_return_type = ", function_return_type)
+        raise MamlTypeError("annotated type does not match return type")
+
+    print("____declaring_type:", ast['name'])
+    env.declare_type(ast['name'], ftype(arg_types, function_return_type))
+
+    ast['s_type'] = 'None'
+    function_return_type = None
+    return
+
+
     argTypes = {}
     argNum = 0
     for elem in ast['args']['args']:
@@ -646,7 +671,13 @@ def _(ast, btc, env, top):
 
 @type_check('return')
 def _(ast, env):
-    ast['s_type'] = "TODO:return"
+    global function_return_type
+    check_types(ast['value'], env)
+    s_type = ast['value']['s_type']
+    if function_return_type and function_return_type != s_type:
+        raise MamlTypeError("returning multiple types from function, found: '{}' previously: '{}'".format(s_type, function_return_type))
+
+    ast['s_type'] = function_return_type = s_type
 
 @ast_check('return')
 def _(ast):
