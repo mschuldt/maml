@@ -746,6 +746,33 @@ def check_types(ast, env):
 
 
 ###############################################################################
+last_fields = ['s_type', 'lineno', 'col_offset']
+indent = "    "
+def print_ast(ast, level=0):
+    if type(ast) is list:
+        print(indent * level, "[")
+        level += 1
+        for a in ast:
+            print_ast(a, level)
+            print(indent * level, ',')
+        level -= 1
+        print(indent * level, "]")
+        return
+    def print_fields(fields, exclude):
+        for field in fields:
+            if field not in exclude:
+                print(indent * level, field + ":", end="")
+                v = ast.get(field)
+                if type(v) not in [dict, list]:
+                    print(" ", v)
+                    continue
+
+                print("")
+                print_ast(v, level+1)
+    print_fields(ast.keys(), last_fields)
+    print_fields(last_fields, [])
+
+###############################################################################
 
 
 def compile_str(code: str) -> list:
@@ -794,11 +821,17 @@ if __name__ == '__main__':
     #      call compile_ast with desktop_p
     desktop_p=True; #tmp
 
-    if len(argv) != 2:
+    l = len(argv)
+    if l < 2 or l > 3 or (l == 3 and argv[1] != "--print-ast"):
         print('Usage:')
-        print('  ./maml-compile.py <filename>.py')
+        print('  ./maml-compile.py [--print-ast] <filename>.py')
         exit(1)
-    filename = argv[1]
+    if argv[1] == "--print-ast":
+        show_ast = True
+        filename = argv[2]
+    else:
+        show_ast = False
+        filename = argv[1]
     try:
         f = open(filename, 'r')
     except IOError:
@@ -811,6 +844,8 @@ if __name__ == '__main__':
 
     _blocks = {}
     _funcs = {}
+    _block_ast = {}
+    _func_ast = {}
     _env = make_new_env()
     def compile_blocks(code):
         """
@@ -830,9 +865,12 @@ if __name__ == '__main__':
                             if len(args) != 1:
                                 continue
                             if args[0]['id'] in _block_decorator_types:
-                                _blocks[ast['name']] = compile_ast(ast['body'], desktop_p, _env)
+                                a = ast['body']
+                                _block_ast[ast['name']] = a
+                                _blocks[ast['name']] = compile_ast(a, desktop_p, _env)
                     elif 'id' in decorator:
                         if decorator['id'] == _function_decorator:
+                            _func_ast[ast['name']] = ast
                             _funcs[ast['name']] = compile_function(ast, desktop_p, _env)
 
     # print(compile_str(f.read()))
@@ -843,6 +881,14 @@ if __name__ == '__main__':
     for f in _funcs:
         print("function: '{}'".format(f))
         print("   ", _funcs[f])
-    # TODO: compile/print functions
+
+    if show_ast:
+        for k in _block_ast:
+            print("block AST: '{}'".format(k))
+            print("   ", print_ast(_block_ast[k]))
+        for f in _func_ast:
+            print("function AST: '{}'".format(f))
+            print("   ", print_ast(_func_ast[f]))
+
 
     exit(0)
