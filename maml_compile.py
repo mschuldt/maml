@@ -5,7 +5,7 @@
 #       block execution.
 
 
-type_checking = False        # enable static type checking
+type_checking = True        # enable static type checking
 auto_var_types = True       # auto detect variable type
                             # (x = 1 becomes equivalent to x <- int; x = 1)
 allow_type_reassign = True  # enable re-declaring variable type
