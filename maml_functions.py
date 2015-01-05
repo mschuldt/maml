@@ -30,8 +30,11 @@ def gen_call_code(name, nargs, ast, btc, env, top):
         if top:
             btc.append(OP_POP)
     else:
-        raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
-                                      .format(ast['func']['id']))
+        #TODO: test this
+        globalp, index = env.get_load_index(name, ast)
+        op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
+        btc.extend([SOP_INT, index, op])
+        btc.append(OP_CALL)
 
 @compile('print', [['int', 'float', 'str', '[int]', '(int)']], 'none')
 
