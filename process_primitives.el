@@ -17,13 +17,16 @@
       py_out "_prim.py"
       function_re "^[ \t]*_DEFUN_[ \t]*(\\(.*\\))[ \t\n]*[a-zA-Z0-9\*_ ]+[ \t\n]+\\([a-zA-Z0-9\*_]+\\)[ \n\t]*("
       declaration_re "^[ \t]*_DECL_(\\([A-Za-z][A-Za-z0-9]*\\),?\\(.*\\))[ \t]*$"
-      valid_types '("int" "float" "str" "list" "array") ;;TODO: others
+      valid_types '("int" "float" "str" "list" "any") ;;TODO: others
       )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun extract-type (str)
   ;;TODO: fix: this should not be valid: "]arg["
+  (dolist (x '(":" "->"))
+    (if (string-match x str)
+        (setq str (s-trim (car (last (split-string str x)))))))
   (let ((start 0)
         (end (1- (length str)))
         (s ?\[)
@@ -45,14 +48,11 @@
                             (setq ok t))
                         nil)))
           (setq done t)))
-    (if (and ok (string-match "[\[(]*\\([a-zA-Z]+\\)[\])]*" str))
-        (progn
-          (setq ok (match-string 1 str))))
-    (if ok
-        ok
+    (if ok str
       (message "SyntaxError: invalid parameter type")
       ;;(kill-emacs 1)
       )))
+
 
 (defsubst return-type-p (str)
   (string-match "->" str))
