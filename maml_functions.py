@@ -15,6 +15,8 @@ def gen_call_code(name, ast, btc, env, top):
     index = primitives.get(name, None)
     if index:
         btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
+        if top:
+            btc.append(OP_POP)
     else:
         raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
                                       .format(ast['func']['id']))
