@@ -19,11 +19,13 @@ from maml_functions import function_compiler_arg_types
 from functools import reduce
 from operator import add
 from sys import argv
-from _prim import desktop_primitives, arduino_primitives
 from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
 from maml_env import env, ftype
+from maml_config import config
+
+primitives = config['primitives']
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
@@ -820,9 +822,7 @@ def compile_str(code: str) -> list:
 
 
 # TODO: instead of handling errors like gcc, just terminate after the first one
-def compile_ast(ast, desktop_p, env=None):
-    global primitives
-    primitives = (desktop_primitives if desktop_p else arduino_primitives)
+def compile_ast(ast, env=None):
     env = env or make_new_env()
     bytecode = []
     for a in ast:
@@ -836,9 +836,7 @@ def compile_ast(ast, desktop_p, env=None):
     # COMPILE
     return bytecode
 
-def compile_function(ast, desktop_p, env=None):
-    global primitives
-    primitives = (desktop_primitives if desktop_p else arduino_primitives)
+def compile_function(ast, env=None):
     env = env or make_new_env()
     bytecode = []
     if type_checking:
@@ -849,8 +847,6 @@ def compile_function(ast, desktop_p, env=None):
 if __name__ == '__main__':
     #TODO: this needs to be updated to read the -[a|d] arg and
     #      call compile_ast with desktop_p
-    desktop_p=True; #tmp
-
     l = len(argv)
     if l < 2 or l > 3 or (l == 3 and argv[1] != "--print-ast"):
         print('Usage:')
@@ -897,11 +893,11 @@ if __name__ == '__main__':
                             if args[0]['id'] in _block_decorator_types:
                                 a = ast['body']
                                 _block_ast[ast['name']] = a
-                                _blocks[ast['name']] = compile_ast(a, desktop_p, _env)
+                                _blocks[ast['name']] = compile_ast(a,  _env)
                     elif 'id' in decorator:
                         if decorator['id'] == _function_decorator:
                             _func_ast[ast['name']] = ast
-                            _funcs[ast['name']] = compile_function(ast, desktop_p, _env)
+                            _funcs[ast['name']] = compile_function(ast,  _env)
 
     # print(compile_str(f.read()))
     compile_blocks(f.read())

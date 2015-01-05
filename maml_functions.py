@@ -4,15 +4,14 @@ from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
 from maml_env import ftype
-from _prim import desktop_primitives, arduino_primitives
+
 from maml_opcodes import *
+from maml_config import config
 
 function_compiler_functions = {}
 function_compiler_arg_types = {}
 
-desktop_p = True #TODO: fix
-
-primitives = (desktop_primitives if desktop_p else arduino_primitives)
+primitives = config['primitives']
 
 def compile(name, args=None, ret='none'):
     def decorator(fn):
@@ -37,7 +36,6 @@ def gen_call_code(name, nargs, ast, btc, env, top):
         btc.append(OP_CALL)
 
 @compile('print', [['int', 'float', 'str', '[int]', '(int)']], 'none')
-
 def _(ast, btc, env, top):
     s_type = ast['args'][0]['s_type']
     if s_type == 'int':
@@ -55,6 +53,5 @@ def _(ast, btc, env, top):
 
 
 @compile('cast')
-
 def _(ast, nargs, btc, env, top):
     pass #TODO

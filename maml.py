@@ -1,10 +1,37 @@
 #!/usr/bin/env python3
 
+from maml_config import config
+from _prim import desktop_primitives, arduino_primitives
+from sys import argv
+
+if __name__ == '__main__':
+    err = False
+    if len(argv) != 3:
+        err = True
+    else:
+        target = argv[1]
+        if target != "-a" and target != "-d":
+            err = True
+        else:
+            desktop_p = (target == '-d')
+            config['desktop_p'] = desktop_p
+            if desktop_p:
+                config['primitives'] = desktop_primitives
+            else:
+                config['primitives'] = arduino_primitives
+        filename = argv[2]
+        sp = filename.split(".")
+        if len(sp) < 2 or sp[-1] != 'maml':
+            err = True
+    if err:
+        print('Usage:')
+        print('  ./maml.py -[a|d] <filename>.maml')
+        exit(1)
+
 from maml_compile import compile_ast, compile_function
 from maml_ast import make_ast
 from operator import add
 from functools import reduce
-from sys import argv
 from maml_serial import Maml_serial
 from maml_env import env
 from maml_opcodes import *
@@ -344,33 +371,15 @@ def update_compiled_code(code):
                         if len(args) != 1:
                             continue
                         if args[0]['id'] in _block_decorator_types:
-                            _compiled_code[ast['name']] = compile_ast(ast['body'], desktop_p, _arduino.env)
+                            _compiled_code[ast['name']] = compile_ast(ast['body'],  _arduino.env)
                             #TODO: should have function 'compile_block'
                             #      similar to 'compile_function'
                 elif 'id' in decorator:
                     if decorator['id'] == _function_decorator:
-                        _compiled_code[ast['name']] = compile_function(ast, desktop_p, _arduino.env)
+                        _compiled_code[ast['name']] = compile_function(ast, _arduino.env)
 
 
 if __name__ == '__main__':
-    err = False
-    if len(argv) != 3:
-        err = True
-    else:
-        target = argv[1]
-        if target != "-a" and target != "-d":
-            err = True
-        else:
-            desktop_p = (target == '-d')
-        filename = argv[2]
-        sp = filename.split(".")
-        if len(sp) < 2 or sp[-1] != 'maml':
-            err = True
-    if err:
-        print('Usage:')
-        print('  ./maml.py -[a|d] <filename>.maml')
-        exit(1)
-
     try:
         f = open(filename, 'r')
     except IOError:
