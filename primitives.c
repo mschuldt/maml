@@ -6,7 +6,7 @@
 //     use that to check for errors while compiling
 
 
-_DEFUN_
+_DEFUN_(int, -> int)
 int print_i(int n){
 #if ARDUINO
   maml_serial.print(n, DEC);
@@ -16,7 +16,7 @@ int print_i(int n){
 #endif
 }
 
-_DEFUN_
+_DEFUN_(str, -> None)
 void print_s(struct string* str){
 #if ARDUINO
   maml_serial.print(str->s);
@@ -29,7 +29,7 @@ void print_s(struct string* str){
 #if INCLUDE_LISTS //TODO: need to let the preprocessor know not to create
                   //      entries for these functions, it currently
                   //      does not recognize conditional includes
-_DEFUN_
+_DEFUN_(list, ->None)
 void print_l(struct node *list) {
   struct node *n = list;
   while(n) {
@@ -45,7 +45,7 @@ void print_l(struct node *list) {
 }
 #endif
 
-_DEFUN_
+_DEFUN_(array, ->none)
 void print_a(struct array* a) {
   void** d = a->data;
   for(int i = 0; i < a->len; i++) {
@@ -61,7 +61,7 @@ void print_a(struct array* a) {
 
 
 //TODO: way of defining function from standard lib as primitives
-_DEFUN_
+_DEFUN_(int, -> int)
 int die(int code){
 #if !ARDUINO
   remove(lockfile);
