@@ -828,6 +828,8 @@ def compile_function(ast, desktop_p, env=None):
     primitives = (desktop_primitives if desktop_p else arduino_primitives)
     env = env or make_new_env()
     bytecode = []
+    if type_checking:
+        check_types(ast, env)
     compile_function_node(ast, bytecode, env, True)
     return bytecode
 
