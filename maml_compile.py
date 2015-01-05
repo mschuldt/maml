@@ -638,6 +638,13 @@ def _(ast, env):
         new_env.declare_type(name, typ)
         arg_types.append(typ)
 
+    #declare this functions type in its own environment so that
+    #it can be called recursively. At this point we don't know
+    #the return value, so recursively called functions must
+    #have a return value type annotation.
+    if ast['returns']:
+        new_env.declare_type(ast['name'], ftype(arg_types, ast['returns']['id']))
+
     #check body and return type
     function_return_type = None
     for a in ast['body']:
