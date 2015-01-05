@@ -3,9 +3,16 @@
 from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
+from maml_env import ftype
+from _prim import desktop_primitives, arduino_primitives
+from maml_opcodes import *
 
 function_compiler_functions = {}
+function_compiler_arg_types = {}
 
+desktop_p = True #TODO: fix
+
+primitives = (desktop_primitives if desktop_p else arduino_primitives)
 
 def compile(name, args=None, ret='none'):
     def decorator(fn):
@@ -13,13 +20,13 @@ def compile(name, args=None, ret='none'):
         function_compiler_functions[name] = fn
     return decorator
 
-def gen_call_code(name, ast, btc, env, top):
+def gen_call_code(name, nargs, ast, btc, env, top):
     """
     generate a call to function NAME
     """
     index = primitives.get(name, None)
     if index:
-        btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
+        btc.extend([SOP_INT, index.index, SOP_INT, nargs, SOP_PRIM_CALL])
         if top:
             btc.append(OP_POP)
     else:

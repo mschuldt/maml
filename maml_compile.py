@@ -416,7 +416,7 @@ def _(ast, btc, env, top):
         if top:
             btc.append(OP_POP)
     elif transform_fn:
-        transform_fn(ast, nargs, btc, env, top)
+        transform_fn(ast, btc, env, top)
     else:  # Calling a user defined function
         gen_bytecode(ast['func'], btc, env, False)#False because we want the result
         btc.append(OP_CALL)
