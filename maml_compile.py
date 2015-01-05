@@ -401,6 +401,8 @@ def _(ast, btc, env, top):
         gen_bytecode(arg, btc, env, False)
     name = ast['func']['id']
     index = primitives.get(name, None)
+    if index:
+        index = index.index
     transform_fn = function_compiler_functions.get(name)
     if index is not None:  # Calling a primative
         # We have to use SOP_INT here so that the bytecode expansion
