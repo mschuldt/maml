@@ -28,18 +28,19 @@ def gen_call_code(name, ast, btc, env, top):
 
 @compile('print')
 def _(ast, nargs, btc, env, top):
-    if ast['s_type'] == 'int':
-        gen_call_code('print_i', 1, ast, btc, env, top)
-    elif ast['s_type'] == 'float':
-        gen_call_code('print_i', 1, ast, btc, env, top)
-    elif ast['s_type'] == 'str':
-        gen_call_code('print_s', 1, ast, btc, env, top)
-    elif ast['s_type'] == 'list':
-        gen_call_code('print_l', 1, ast, btc, env, top)
-    elif ast['s_type'] == 'tuple':
-        gen_call_code('print_a', 1, ast, btc, env, top)
+    s_type = ast['s_type']
+    if s_type == 'int':
+        gen_call_code('print_i', ast, btc, env, top)
+    elif s_type == 'float':
+        gen_call_code('print_i', ast, btc, env, top)
+    elif s_type == 'str':
+        gen_call_code('print_s', ast, btc, env, top)
+    elif s_type == '[int]':
+        gen_call_code('print_l', ast, btc, env, top)
+    elif s_type == '(int)':
+        gen_call_code('print_a', ast, btc, env, top)
     else:
-        pass  # other
+        raise MamlTypeError("function print: invalid type: '{}'".format(s_type))
 
 
 @compile('cast')
