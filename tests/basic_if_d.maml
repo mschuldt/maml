@@ -2,36 +2,36 @@ arduino = Arduino(desktop=True)
 
 @block(once)
 def test():
-    if 1: print_i(111)
-    else: print_i(222)
+    if 1: print(111)
+    else: print(222)
         
-    if 0: print_i(111)
-    else: print_i(222)
+    if 0: print(111)
+    else: print(222)
 
     false = 0
     true = 1
     
-    if true: print_i(true) 
-    else: print_i(false)
+    if true: print(true) 
+    else: print(false)
     
-    if false: print_i(true)
-    else: print_i(false)
+    if false: print(true)
+    else: print(false)
     
     if true:
-        print_i(3)
+        print(3)
     else:
-        print_i(5)
+        print(5)
 
     if true:
-        print_i(300)
+        print(300)
         
     if false:
-        print_i(300)
+        print(300)
         
     if false:
-        print_i(500)
+        print(500)
     elif true:
-        print_i(100)
+        print(100)
 
     if false:
         pass
@@ -40,24 +40,24 @@ def test():
     elif false:
         pass
     elif true:
-        print_i(888)
+        print(888)
     else:
-        print_i(11111)
+        print(11111)
         
     if 1+1+1:
-        print_i(91)
+        print(91)
         
     if test_add(1, 2):
-        print_i(92)
+        print(92)
 
     if test_print(0):
-        print_i(93)
+        print(93)
 
     if test_print(11):
-        print_i(94)
+        print(94)
 
     if test_print(test_print(12)+1):
-        print_i(95)
+        print(95)
         
     die()
 

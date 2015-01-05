@@ -2,27 +2,27 @@ arduino = Arduino(desktop=True)
 
 @function
 def a(x:int):
-    print_s("a")
-    print_i(x)
+    print("a")
+    print(x)
     return x + 1
 
 @function
 def b(x:int):
-    print_s("b")
-    print_i(x)
+    print("b")
+    print(x)
     return x + 2
     
 @function
 def c(x:int):
-    print_s("c")
-    print_i(x)
+    print("c")
+    print(x)
     return x + 3
 
 @function
 def ftest(a:int,b:int,c:int):
-    print_i(a)
-    print_i(b)
-    print_i(c)
+    print(a)
+    print(b)
+    print(c)
     return "ok"
 
 @function
@@ -32,20 +32,20 @@ def f(x:int):
 @function
 def ff():
     n = 1
-    print_i(n)
+    print(n)
 
 @block(once)
 def test():
-    print_s(ftest(a(1), b(2), c(3)))
+    print(ftest(a(1), b(2), c(3)))
     x = 0
     while x < 50:
         x = f(x)
-    print_s("x = ")
-    print_i(x)
+    print("x = ")
+    print(x)
     n = 0
-    print_i(n)
+    print(n)
     ff()
-    print_i(n)
+    print(n)
     die(0)
 
 arduino.send(a)

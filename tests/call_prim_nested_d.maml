@@ -2,10 +2,11 @@ arduino = Arduino(desktop=True)
 
 @block(once)
 def func():
-    print_i(test_add(test_add(1,2), test_add(3,4)))
-    print_i(test_add(test_add(test_add(test_add(1,2), test_add(3,4)),2),
-                     test_add(test_add(test_add(1,2), test_add(3,4)),4)))
-    print_i(test_add(test_add(test_add(test_add(test_add(test_add(test_add(test_add(1,2), test_add(3,4)),2),
+    print(test_add(test_add(1,2), test_add(3,4)))
+    print(test_add(test_add(test_add(test_add(1,2), test_add(3,4)),2),
+                   test_add(test_add(test_add(1,2), test_add(3,4)),4)))
+
+    print(test_add(test_add(test_add(test_add(test_add(test_add(test_add(test_add(1,2), test_add(3,4)),2),
                                                          test_add(test_add(test_add(1,2), test_add(3,4)),4)),2), test_add(3,4)),2),
                      test_add(test_add(test_add(1,2), test_add(3,4)),4)))
     die(0)

@@ -6,19 +6,19 @@ arduino = Arduino(desktop=True)
 
 @block(once)
 def b1():
-    print_i(11)
+    print(11)
 #    delay(100)
 @block(once)    
 def b2():
-    print_i(22)
+    print(22)
 #    delay(100)
 @block(once)    
 def b3():
-    print_i(33)
+    print(33)
 #    delay(100)
 @block(once)    
 def b4():
-    print_i(44)
+    print(44)
     die(0)
 
 

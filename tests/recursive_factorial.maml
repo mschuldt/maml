@@ -10,7 +10,7 @@ def factorial(n:int)->int:
 def test():
     k = 1
     while k < 10:
-        print_i(factorial(k))
+        print(factorial(k))
         k = k + 1
     die(0)
     

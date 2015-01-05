@@ -3,7 +3,7 @@ arduino = Arduino(desktop=True)
 @block(once)
 def test():
     x = "test string"
-    print_s(x)
+    print(x)
     die(1)
     
 arduino.send(test)

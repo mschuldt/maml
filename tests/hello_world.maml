@@ -1,6 +1,6 @@
 arduino = Arduino(desktop=True)
 @block(once)
 def hello_world():
-    print_s("Hello, world!")
+    print("Hello, world!")
     die(1)
 arduino.send(hello_world)

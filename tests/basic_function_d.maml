@@ -2,14 +2,14 @@ arduino = Arduino(desktop=True)
 
 @function
 def ftest():
-    print_i(123)
-    print_s("test ok!")
+    print(123)
+    print("test ok!")
 
 @block(once)
 def test():
-    print_s("calling ftest:")
+    print("calling ftest:")
     ftest()
-    print_s("Done.")
+    print("Done.")
     die(0)
     
 arduino.send(ftest)

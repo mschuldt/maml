@@ -2,17 +2,17 @@ arduino = Arduino(desktop=True)
 
 @function
 def ftest(a:int,b:int):
-    print_i(a)
-    print_i(b)
+    print(a)
+    print(b)
     return a+b
 
 @block(once)
 def test():
-    print_s("calling ftest:")
+    print("calling ftest:")
     x = 3
     n = ftest(1, x)
-    print_s("returned:")
-    print_i(n)
+    print("returned:")
+    print(n)
     die(0)
 
     

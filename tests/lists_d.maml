@@ -7,9 +7,9 @@ def fib():
     x = cons(6, cons(7, cons(8, x)))
     y = x
     while y:
-        print_i(car(y))
+        print(car(y))
         y = cdr(y)
-    print_i(car(x))
+    print(car(x))
     die(1)
 
 arduino.send(fib)

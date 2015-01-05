@@ -7,10 +7,10 @@ def test():
 		x = 2
 		while x > 0:
 			x-=1
-			print_i(x)
+			print(x)
 			if i == 2:
 				continue
-			print_i(i)
+			print(i)
 		i-=1
 	die()
 
