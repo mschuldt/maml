@@ -90,9 +90,9 @@ class env:
             exit(1)
         self.types[name] = typ
 
-    def get_type(self, name):
+    def get_type(self, name, no_error=False):
         """
-        Returns the type of varaible NAME
+        Returns the type of variable NAME
         """
 
         if self.parent and name in self.global_names:
@@ -101,8 +101,11 @@ class env:
         if _type:
             return _type
         # TODO: pass ast node so that line/col numbers can be printed
-        print("Error: name '{}' is not declared".format(name))
-        exit(1)
+        if no_error:
+            return None
+        else:
+            print("Error: (type) name '{}' is not declared".format(name))
+            exit(1)
 
     def is_declared(self, name):
         """
