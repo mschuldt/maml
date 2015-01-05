@@ -25,20 +25,20 @@ def gen_call_code(name, ast, btc, env, top):
         raise MamlNotImplementedError("Not implemented: calling non-primitives ('{}')"
                                       .format(ast['func']['id']))
 
+@compile('print', [['int', 'float', 'str', '[int]', '(int)']], 'none')
 
-@compile('print')
-def _(ast, nargs, btc, env, top):
-    s_type = ast['s_type']
+def _(ast, btc, env, top):
+    s_type = ast['args'][0]['s_type']
     if s_type == 'int':
-        gen_call_code('print_i', ast, btc, env, top)
+        gen_call_code('print_i', 1, ast, btc, env, top)
     elif s_type == 'float':
-        gen_call_code('print_i', ast, btc, env, top)
+        gen_call_code('print_i', 1, ast, btc, env, top)
     elif s_type == 'str':
-        gen_call_code('print_s', ast, btc, env, top)
+        gen_call_code('print_s', 1, ast, btc, env, top)
     elif s_type == '[int]':
-        gen_call_code('print_l', ast, btc, env, top)
+        gen_call_code('print_l', 1, ast, btc, env, top)
     elif s_type == '(int)':
-        gen_call_code('print_a', ast, btc, env, top)
+        gen_call_code('print_a', 1, ast, btc, env, top)
     else:
         raise MamlTypeError("function print: invalid type: '{}'".format(s_type))
 
