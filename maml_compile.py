@@ -629,9 +629,14 @@ def _(ast, env):
     new_env = make_new_env(env)
     for arg in ast['args']['args']:
         name = arg['arg']
-        typ = arg['argType']['id']##TODO: fix for other types
+        if arg['argType']:
+            typ = arg['argType']['id']##TODO: fix for other types
+        else:
+            print("Warning: undeclared parameter type in '{}'".format(ast['name']))
+            typ = 'any'
         new_env.declare_type(name, typ)
         arg_types.append(typ)
+
     #check body and return type
     function_return_type = None
     for a in ast['body']:
