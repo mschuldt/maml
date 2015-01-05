@@ -427,10 +427,18 @@ def _(ast, btc, env, top):
 def _(ast, env):
     name = ast['func']['id']
     print("calling function:", name)
-    func_type = env.get_type(name)
-    n_args = len(func_type.args)
-    if type(func_type) is not ftype:
+    func_type = env.get_type(name, True)
+    err = False
+    if not func_type:
+        #check if we are calling a primitive
+        func_type = primitives.get(name)
+        if not func_type:
+            err = True
+    elif type(func_type) is not ftype:
+        err = True
+    if err:
         raise MamlTypeError("attempting to call non-function")
+    n_args = len(func_type.args)
     for arg_type, a, nth in zip(func_type.args, ast['args'], range(n_args)):
         check_types(a, env)
         if arg_type != a['s_type']:
