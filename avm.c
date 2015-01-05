@@ -813,7 +813,7 @@ void byte_in(unsigned char c){
           serial_out("Error: invalid index for primitives array\n");
 #else
           printf("Error: invalid index for primitives array. max: %d, got %d\n",
-                 index, n_primitives);
+                 n_primitives, index);
           exit(1);
 #endif
         }
