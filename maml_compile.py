@@ -5,7 +5,7 @@
 #       block execution.
 
 
-type_checking = False        # enable static type checking
+type_checking = True        # enable static type checking
 auto_var_types = True       # auto detect variable type
                             # (x = 1 becomes equivalent to x <- int; x = 1)
 allow_type_reassign = True  # enable re-declaring variable type
@@ -22,7 +22,7 @@ from _prim import desktop_primitives, arduino_primitives
 from maml_syntaxError import *
 from maml_typeError import *
 from maml_notimpError import *
-from maml_env import env
+from maml_env import env, ftype
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
@@ -285,6 +285,7 @@ def _(ast):
 def _(ast, env):
     # TODO: This currently only works for assignment to variables
     check_types(ast['value'], env)
+
     val_type = ast['value']['s_type']
 
     for target in ast['targets']:
@@ -400,6 +401,8 @@ def _(ast, btc, env, top):
         gen_bytecode(arg, btc, env, False)
     name = ast['func']['id']
     index = primitives.get(name, None)
+    if index:
+        index = index.index
     transform_fn = function_compiler_functions.get(name)
     if index is not None:  # Calling a primative
         # We have to use SOP_INT here so that the bytecode expansion
@@ -419,12 +422,31 @@ def _(ast, btc, env, top):
         if top:
             btc.append(OP_POP)
 
+def type_cmp(a, b):
+    return a == b or a == 'any' or b == 'any'
 
 @type_check('call')
 def _(ast, env):
-    # TODO:
-    ast['s_type'] = "TODO"
+    name = ast['func']['id']
 
+    func_type = env.get_type(name, True)
+    err = False
+    if not func_type:
+        #check if we are calling a primitive
+        func_type = primitives.get(name)
+        if not func_type:
+            err = True
+    elif type(func_type) is not ftype:
+        err = True
+    if err:
+        raise MamlTypeError("attempting to call non-function")
+    n_args = len(func_type.args)
+    for arg_type, a, nth in zip(func_type.args, ast['args'], range(n_args)):
+        check_types(a, env)
+        if not type_cmp(arg_type, a['s_type']):
+            raise MamlTypeError("call to '{}'. arg {}. Expected '{}'. got '{}'"
+                                .format(name, nth, arg_type, a['s_type']))
+    ast['s_type'] = func_type.ret
 
 @ast_check('call')
 def _(ast):
@@ -436,21 +458,6 @@ def _(ast):
     if ast['kwargs']:
         raise MamlSyntaxError("kwargs args are not supported")
 
-
-@type_check('call')
-def _(ast, env):
-    ast['s_type'] = "TODO:call"
-    return
-    functionArgs = env.funcTypes[ast['func']['id']]
-    argNum = 0
-    for elem in ast['args']:
-        check_types(elem, env)
-        if elem['s_type'] != functionArgs.argTypes[argNum]:
-            raise MamlTypeError("argument type {} does not match received "
-                                + "argument type {}"
-                                .format(functionArgs.argTypes[argNum], elem['s_type']))
-        argNum += 1
-    ast['s_type'] = functionArgs.returnType
 
 ###############################################################################
 # if
@@ -610,13 +617,51 @@ def compile_function_node(ast, btc, env, top):
     #TODO: len(body) is not the actual length of the function body
     n_locals = len(new_env.names)
     btc.extend([SOP_INT, n_args, SOP_INT, n_locals, SOP_INT, len(body), SOP_START_FUNCTION] + body + [SOP_INT, index, SOP_END])
-    OP_GLOBAL_STORE
 
+
+function_return_type = None
 
 @type_check('function')
 def _(ast, env):
-    ast['s_type'] = "TODO:function"
-    return #TODO
+    #TODO: support recursive function calls
+    global function_return_type
+    #get arg annotations
+    arg_types = []
+    new_env = make_new_env(env)
+    for arg in ast['args']['args']:
+        name = arg['arg']
+        if arg['argType']:
+            typ = arg['argType']['id']##TODO: fix for other types
+        else:
+            raise MamlTypeError("undeclared parameter type in '{}'".format(ast['name']))
+        new_env.declare_type(name, typ)
+        arg_types.append(typ)
+
+    #declare this functions type in its own environment so that
+    #it can be called recursively. At this point we don't know
+    #the return value, so recursively called functions must
+    #have a return value type annotation.
+    if ast['returns']:
+        new_env.declare_type(ast['name'], ftype(arg_types, ast['returns']['id']))
+
+    #check body and return type
+    function_return_type = None
+    for a in ast['body']:
+        check_types(a, new_env)
+
+    assert function_return_type, "cannot find function return type"
+    #TODO: "ast['returns']['id']" only works for names
+    if ast['returns'] and ast['returns']['id'] != function_return_type:
+        raise MamlTypeError("annotated type does not match return type")
+
+    print("____declaring_type:", ast['name'])
+    env.declare_type(ast['name'], ftype(arg_types, function_return_type))
+
+    ast['s_type'] = 'None'
+    function_return_type = None
+    return
+
+
     argTypes = {}
     argNum = 0
     for elem in ast['args']['args']:
@@ -646,7 +691,13 @@ def _(ast, btc, env, top):
 
 @type_check('return')
 def _(ast, env):
-    ast['s_type'] = "TODO:return"
+    global function_return_type
+    check_types(ast['value'], env)
+    s_type = ast['value']['s_type']
+    if function_return_type and function_return_type != s_type:
+        raise MamlTypeError("returning multiple types from function, found: '{}' previously: '{}'".format(s_type, function_return_type))
+
+    ast['s_type'] = function_return_type = s_type
 
 @ast_check('return')
 def _(ast):
@@ -715,6 +766,33 @@ def check_types(ast, env):
 
 
 ###############################################################################
+last_fields = ['s_type', 'lineno', 'col_offset']
+indent = "    "
+def print_ast(ast, level=0):
+    if type(ast) is list:
+        print(indent * level, "[")
+        level += 1
+        for a in ast:
+            print_ast(a, level)
+            print(indent * level, ',')
+        level -= 1
+        print(indent * level, "]")
+        return
+    def print_fields(fields, exclude):
+        for field in fields:
+            if field not in exclude:
+                print(indent * level, field + ":", end="")
+                v = ast.get(field)
+                if type(v) not in [dict, list]:
+                    print(" ", v)
+                    continue
+
+                print("")
+                print_ast(v, level+1)
+    print_fields(ast.keys(), last_fields)
+    print_fields(last_fields, [])
+
+###############################################################################
 
 
 def compile_str(code: str) -> list:
@@ -755,6 +833,8 @@ def compile_function(ast, desktop_p, env=None):
     primitives = (desktop_primitives if desktop_p else arduino_primitives)
     env = env or make_new_env()
     bytecode = []
+    if type_checking:
+        check_types(ast, env)
     compile_function_node(ast, bytecode, env, True)
     return bytecode
 
@@ -763,11 +843,17 @@ if __name__ == '__main__':
     #      call compile_ast with desktop_p
     desktop_p=True; #tmp
 
-    if len(argv) != 2:
+    l = len(argv)
+    if l < 2 or l > 3 or (l == 3 and argv[1] != "--print-ast"):
         print('Usage:')
-        print('  ./maml-compile.py <filename>.py')
+        print('  ./maml-compile.py [--print-ast] <filename>.py')
         exit(1)
-    filename = argv[1]
+    if argv[1] == "--print-ast":
+        show_ast = True
+        filename = argv[2]
+    else:
+        show_ast = False
+        filename = argv[1]
     try:
         f = open(filename, 'r')
     except IOError:
@@ -780,6 +866,8 @@ if __name__ == '__main__':
 
     _blocks = {}
     _funcs = {}
+    _block_ast = {}
+    _func_ast = {}
     _env = make_new_env()
     def compile_blocks(code):
         """
@@ -799,9 +887,12 @@ if __name__ == '__main__':
                             if len(args) != 1:
                                 continue
                             if args[0]['id'] in _block_decorator_types:
-                                _blocks[ast['name']] = compile_ast(ast['body'], desktop_p, _env)
+                                a = ast['body']
+                                _block_ast[ast['name']] = a
+                                _blocks[ast['name']] = compile_ast(a, desktop_p, _env)
                     elif 'id' in decorator:
                         if decorator['id'] == _function_decorator:
+                            _func_ast[ast['name']] = ast
                             _funcs[ast['name']] = compile_function(ast, desktop_p, _env)
 
     # print(compile_str(f.read()))
@@ -812,6 +903,14 @@ if __name__ == '__main__':
     for f in _funcs:
         print("function: '{}'".format(f))
         print("   ", _funcs[f])
-    # TODO: compile/print functions
+
+    if show_ast:
+        for k in _block_ast:
+            print("block AST: '{}'".format(k))
+            print("   ", print_ast(_block_ast[k]))
+        for f in _func_ast:
+            print("function AST: '{}'".format(f))
+            print("   ", print_ast(_func_ast[f]))
+
 
     exit(0)

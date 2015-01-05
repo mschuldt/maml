@@ -1,7 +1,7 @@
 arduino = Arduino(desktop=True)
 
 @function
-def ftest(a,b):
+def ftest(a:int,b:int):
     print_i(a)
     print_i(b)
     return a+b

@@ -28,6 +28,7 @@
       currently to to True because tests fail otherwise
 - [ ] check types of comparisons like '>' in @type_check('compare')
 - [X] need to have proper exception classes TypeError and SyntaxError
+- [ ] transform all function definitions before the blocks
 * VM
 - [ ] Need some way of growing the stack -> have a function or opcode to do that
 - [ ] Separate function that wraps malloc and check if mem is available

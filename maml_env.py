@@ -4,7 +4,7 @@ class env:
         self.names = {}
         self.parent = parent
         self.global_names = set()
-        self.types = built_in_types
+        self.types = dict(built_in_types)
         self.n_names = 0
         self.label_counter = -1
         self.funcTypes = {}
@@ -90,19 +90,24 @@ class env:
             exit(1)
         self.types[name] = typ
 
-    def get_type(self, name):
+    def get_type(self, name, no_error=False):
         """
-        Returns the type of varaible NAME
+        Returns the type of variable NAME
         """
 
         if self.parent and name in self.global_names:
-            return self.parent.get_type(name)
+            return self.parent.get_type(name, no_error)
         _type = self.types.get(name, None)
         if _type:
             return _type
+        if self.parent:
+            return self.parent.get_type(name, no_error)
         # TODO: pass ast node so that line/col numbers can be printed
-        print("Error: name '{}' is not declared".format(name))
-        exit(1)
+        if no_error:
+            return None
+        else:
+            print("Error: (type) name '{}' is not declared".format(name))
+            exit(1)
 
     def is_declared(self, name):
         """
@@ -139,6 +144,12 @@ class env:
             self.argTypes = argTypes
             self.returnType = returnType
 
+class ftype:
+    def __init__(self, a, r):
+        self.args = a
+        self.ret = r
+
 built_in_types = {'true': 'int',
                   'false': 'int',
-                  'none': 'int'}
+                  'none': 'any',
+                  'None': 'any'}
