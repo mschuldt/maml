@@ -422,11 +422,13 @@ def _(ast, btc, env, top):
         if top:
             btc.append(OP_POP)
 
+def type_cmp(a, b):
+    return a == b or a == 'any' or b == 'any'
 
 @type_check('call')
 def _(ast, env):
     name = ast['func']['id']
-    print("calling function:", name)
+
     func_type = env.get_type(name, True)
     err = False
     if not func_type:
@@ -441,7 +443,7 @@ def _(ast, env):
     n_args = len(func_type.args)
     for arg_type, a, nth in zip(func_type.args, ast['args'], range(n_args)):
         check_types(a, env)
-        if arg_type != a['s_type']:
+        if not type_cmp(arg_type, a['s_type']):
             raise MamlTypeError("call to '{}'. arg {}. Expected '{}'. got '{}'"
                                 .format(name, nth, arg_type, a['s_type']))
     ast['s_type'] = func_type.ret
