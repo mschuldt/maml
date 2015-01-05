@@ -29,7 +29,7 @@ void print_s(struct string* str){
 #if INCLUDE_LISTS //TODO: need to let the preprocessor know not to create
                   //      entries for these functions, it currently
                   //      does not recognize conditional includes
-_DEFUN_(list, ->None)
+_DEFUN_([int], ->None)
 void print_l(struct node *list) {
   struct node *n = list;
   while(n) {
@@ -45,7 +45,7 @@ void print_l(struct node *list) {
 }
 #endif
 
-_DEFUN_(array, ->none)
+_DEFUN_((int), ->none)
 void print_a(struct array* a) {
   void** d = a->data;
   for(int i = 0; i < a->len; i++) {

@@ -178,18 +178,18 @@ struct node{
   struct node* next;
 };
 
-_DEFUN_(any, list, -> list)
+_DEFUN_(any, [int], -> [int])
 struct node* cons(void* d, struct node* list){
   struct node* _new = (struct node*)malloc(sizeof(struct node));
   _new->data = d;
   _new->next = list;
   return _new;
 }
-_DEFUN_(list, -> any)
+_DEFUN_([int], -> int)
 void* car(struct node* list){
   return list->data;
 }
-_DEFUN_(list, -> list)
+_DEFUN_([int], -> [int])
 struct node* cdr(struct node* list){
   return list->next;
 }
