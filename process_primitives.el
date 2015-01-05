@@ -84,7 +84,7 @@ return format: (list-of-arg-types . return-type)
                 )
             (setq ret type))
         (setq arg-types (cons type arg-types))))
-    (cons (to-py-list arg-types) (py-str (or ret "none")))))
+    (cons (to-py-list (reverse arg-types)) (py-str (or ret "none")))))
 
 (defun py-str (x)
   (format "'%s'" x))
