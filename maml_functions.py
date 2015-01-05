@@ -1,5 +1,9 @@
 # compilation and transformations for specific function calls
 
+from maml_syntaxError import *
+from maml_typeError import *
+from maml_notimpError import *
+
 function_compiler_functions = {}
 
 
