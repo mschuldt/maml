@@ -1,32 +1,32 @@
 arduino = Arduino(desktop=True)
 
 @function
-def a(x):
+def a(x:int):
     print_s("a")
     print_i(x)
     return x + 1
 
 @function
-def b(x):
+def b(x:int):
     print_s("b")
     print_i(x)
     return x + 2
     
 @function
-def c(x):
+def c(x:int):
     print_s("c")
     print_i(x)
     return x + 3
 
 @function
-def ftest(a,b,c):
+def ftest(a:int,b:int,c:int):
     print_i(a)
     print_i(b)
     print_i(c)
     return "ok"
 
 @function
-def f(x):
+def f(x:int):
     return x + 1
 
 @function
