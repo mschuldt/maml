@@ -96,10 +96,12 @@ class env:
         """
 
         if self.parent and name in self.global_names:
-            return self.parent.get_type(name)
+            return self.parent.get_type(name, no_error)
         _type = self.types.get(name, None)
         if _type:
             return _type
+        if self.parent:
+            return self.parent.get_type(name, no_error)
         # TODO: pass ast node so that line/col numbers can be printed
         if no_error:
             return None
