@@ -151,4 +151,5 @@ class ftype:
 
 built_in_types = {'true': 'int',
                   'false': 'int',
-                  'none': 'int'}
+                  'none': 'any',
+                  'None': 'any'}

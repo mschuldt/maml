@@ -617,7 +617,6 @@ def compile_function_node(ast, btc, env, top):
     #TODO: len(body) is not the actual length of the function body
     n_locals = len(new_env.names)
     btc.extend([SOP_INT, n_args, SOP_INT, n_locals, SOP_INT, len(body), SOP_START_FUNCTION] + body + [SOP_INT, index, SOP_END])
-    OP_GLOBAL_STORE
 
 
 function_return_type = None
@@ -653,8 +652,6 @@ def _(ast, env):
     assert function_return_type, "cannot find function return type"
     #TODO: "ast['returns']['id']" only works for names
     if ast['returns'] and ast['returns']['id'] != function_return_type:
-        print("ast['returns'] = ", ast['returns'])
-        print("function_return_type = ", function_return_type)
         raise MamlTypeError("annotated type does not match return type")
 
     print("____declaring_type:", ast['name'])
