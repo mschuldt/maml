@@ -15,6 +15,7 @@ compile_decorator = 'arduino'
 from maml_ast import make_ast
 from maml_opcodes import *
 from maml_functions import function_compiler_functions
+from maml_functions import function_compiler_arg_types
 from functools import reduce
 from operator import add
 from sys import argv
@@ -228,6 +229,8 @@ def _(ast, btc, env, top):
     if name == 'None' or name == 'False':
         btc.append(SOP_NULL)
     else:
+        #NOTE: if this changes, similar logic in 'gen_call_code' in
+        #maml_functions.py should also be modified
         globalp, index = env.get_load_index(name, ast)
         op = OP_GLOBAL_LOAD if globalp else OP_LOCAL_LOAD
         btc.extend([SOP_INT, index, op])
@@ -423,6 +426,8 @@ def _(ast, btc, env, top):
             btc.append(OP_POP)
 
 def type_cmp(a, b):
+    if type(a) is list:
+        return (b in a) or b == 'any'
     return a == b or a == 'any' or b == 'any'
 
 @type_check('call')
@@ -439,7 +444,10 @@ def _(ast, env):
     elif type(func_type) is not ftype:
         err = True
     if err:
-        raise MamlTypeError("attempting to call non-function")
+        if name in function_compiler_arg_types:
+            func_type = function_compiler_arg_types[name]
+        else:
+            raise MamlTypeError("attempting to call non-function")
     n_args = len(func_type.args)
     for arg_type, a, nth in zip(func_type.args, ast['args'], range(n_args)):
         check_types(a, env)

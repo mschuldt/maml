@@ -7,8 +7,9 @@ from maml_notimpError import *
 function_compiler_functions = {}
 
 
-def compile(name):
+def compile(name, args=None, ret='none'):
     def decorator(fn):
+        function_compiler_arg_types[name] = ftype(args, ret)
         function_compiler_functions[name] = fn
     return decorator
 
