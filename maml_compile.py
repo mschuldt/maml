@@ -634,8 +634,7 @@ def _(ast, env):
         if arg['argType']:
             typ = arg['argType']['id']##TODO: fix for other types
         else:
-            print("Warning: undeclared parameter type in '{}'".format(ast['name']))
-            typ = 'any'
+            raise MamlTypeError("undeclared parameter type in '{}'".format(ast['name']))
         new_env.declare_type(name, typ)
         arg_types.append(typ)
 
