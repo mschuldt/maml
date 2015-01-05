@@ -35,19 +35,21 @@ def gen_call_code(name, nargs, ast, btc, env, top):
         btc.extend([SOP_INT, index, op])
         btc.append(OP_CALL)
 
+################################################################################
+# print
+
+print_function = {'int': 'print_i',
+                  'float': 'print_i',
+                  'str': 'print_s',
+                  '[int]': 'print_l', #TODO: fix list and array types
+                  '(int)': 'print_a'}
+
 @compile('print', [['int', 'float', 'str', '[int]', '(int)']], 'none')
 def _(ast, btc, env, top):
     s_type = ast['args'][0]['s_type']
-    if s_type == 'int':
-        gen_call_code('print_i', 1, ast, btc, env, top)
-    elif s_type == 'float':
-        gen_call_code('print_i', 1, ast, btc, env, top)
-    elif s_type == 'str':
-        gen_call_code('print_s', 1, ast, btc, env, top)
-    elif s_type == '[int]':
-        gen_call_code('print_l', 1, ast, btc, env, top)
-    elif s_type == '(int)':
-        gen_call_code('print_a', 1, ast, btc, env, top)
+    func = print_function.get(s_type)
+    if func:
+        gen_call_code(func, 1, ast, btc, env, top)
     else:
         raise MamlTypeError("function print: invalid type: '{}'".format(s_type))
 
