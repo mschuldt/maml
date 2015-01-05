@@ -4,7 +4,7 @@ class env:
         self.names = {}
         self.parent = parent
         self.global_names = set()
-        self.types = built_in_types
+        self.types = dict(built_in_types)
         self.n_names = 0
         self.label_counter = -1
         self.funcTypes = {}
