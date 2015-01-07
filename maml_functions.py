@@ -7,11 +7,50 @@ from maml_env import ftype
 
 from maml_opcodes import *
 from maml_config import config
+from functools import reduce
+from operator import mul
 
 function_compiler_functions = {}
 function_compiler_arg_types = {}
 
 primitives = config['primitives']
+primitive_dispatch = config['primitive_dispatch']
+possible_arg_types = config['possible_arg_types']
+
+def define_dispatch(name :str, arg_types :(str,), primitive :str):
+    """
+    dispatch: NAME(ARG_TYPES) ==> PRIMITIVE(...)
+    """
+    if primitive in primitives:
+        arg_types = [[]]
+        for a in primitives[primitive].args:
+            if type(a) is set:
+                new_args = []
+                for old_args in arg_types:
+                    for x in a:
+                        l = list(old_args)
+                        l.append(x)
+                        new_args.append(l)
+                arg_types = new_args
+            elif type(a) is str:
+                for args in arg_types:
+                    args.append(a)
+            else:
+                print("Error -- define_dispatch: invalid arg type"); exit(1)
+        prim = primitives[primitive]
+        for arg_type in arg_types:
+            primitive_dispatch[(name, tuple(arg_type))] = prim
+    else:
+        print("Error: cannot define a dispatch on a function that does not exist")
+        exit(1)
+
+#initialize dispatches to that primitive function names dispatch to themselves
+def initialize_primitive_dispatch():
+    for name in primitives:
+        define_dispatch(name, primitives[name].args, name)
+
+initialize_primitive_dispatch()
+#print("PRIMITIVE_DISPATCH:\n", primitive_dispatch)
 
 def compile(name, args=None, ret='none'):
     def decorator(fn):

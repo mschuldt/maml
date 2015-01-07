@@ -26,6 +26,7 @@ from maml_env import env, ftype
 from maml_config import config
 
 primitives = config['primitives']
+primitive_dispatch = config['primitive_dispatch']
 
 # for the AST node with type X:
 #   * node['type'] == 'X'
@@ -152,7 +153,7 @@ def _(ast, env):
                 raise MamlTypeError("List has multiple types. {} and {}"
                                     .format(prev_type, e['s_type']))
         prev_type = e['s_type']
-    ast['s_type'] = '[' + prev_type + ']'
+    ast['s_type'] = ('[' + prev_type + ']') if prev_type else 'None'
 
 ###############################################################################
 # subscript
@@ -400,18 +401,22 @@ def _(ast, btc, env, top):
     where:
     func_index = index of function_pointer in the array 'primitives'
     """
-
     nargs = len(ast['args'])
     for arg in ast['args']:
         gen_bytecode(arg, btc, env, False)
     name = ast['func']['id']
-    index = primitives.get(name, None)
-    if index:
-        index = index.index
+    #print("'call' code gen for '{}'".format(name))
+    arg_types = []
+    for arg in ast['args']:
+        arg_types.append(arg['s_type'])
+    #print("arg_types = ", arg_types)
+    #print("primative dispatch = ", primitive_dispatch)
+    prim = primitive_dispatch.get((name, tuple(arg_types)))
     transform_fn = function_compiler_functions.get(name)
-    if index is not None:  # Calling a primative
+    if prim is not None:  # Calling a primative
         # We have to use SOP_INT here so that the bytecode expansion
         # can expand the numbers
+        index = prim.index
         if transform_fn:
             raise MamlSyntaxError("conflicting types: function '{}' has tranform function and primitive definition".format(name))
         btc.extend([SOP_INT, index, SOP_INT, nargs, SOP_PRIM_CALL])
@@ -435,27 +440,31 @@ def type_cmp(a, b):
 @type_check('call')
 def _(ast, env):
     name = ast['func']['id']
+    #check argument types
+    arg_types = []
+    for a in ast['args']:
+        check_types(a, env)
+        arg_types.append(a['s_type'])
 
-    func_type = env.get_type(name, True)
-    err = False
+    #check if we are calling a primitive
+    func_type = primitive_dispatch.get((name, tuple(arg_types)))
     if not func_type:
-        #check if we are calling a primitive
-        func_type = primitives.get(name)
-        if not func_type:
-            err = True
-    elif type(func_type) is not ftype:
-        err = True
-    if err:
+        #check if we are calling a transform function
         if name in function_compiler_arg_types:
             func_type = function_compiler_arg_types[name]
-        else:
-            raise MamlTypeError("attempting to call non-function")
-    n_args = len(func_type.args)
-    for arg_type, a, nth in zip(func_type.args, ast['args'], range(n_args)):
-        check_types(a, env)
-        if not type_cmp(arg_type, a['s_type']):
-            raise MamlTypeError("call to '{}'. arg {}. Expected '{}'. got '{}'"
-                                .format(name, nth, arg_type, a['s_type']))
+    if not func_type:
+        #check if we are calling a user defined function:
+        func_type = env.get_type(name, True)
+
+    #TODO: check if the types of the args are subtypes of the func parameters
+    #      (currently the arg types must be the same)
+
+    if not func_type:
+        raise MamlTypeError("invalid function: {}({})".format(name, ", ".join(arg_types)))
+
+    #TODO: check that we are calling a function
+    #      (currently assuming that we are calling a name)
+
     ast['s_type'] = func_type.ret
 
 @ast_check('call')

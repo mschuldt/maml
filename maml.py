@@ -4,6 +4,11 @@ from maml_config import config
 from _prim import desktop_primitives, arduino_primitives
 from sys import argv
 
+primitive_dispatch = config['primitive_dispatch'] = {}
+function_dispatch = config['function_dispatch'] = {}
+
+config['possible_arg_types'] = ('int', 'str', '[int]', '(int)', 'None')
+
 if __name__ == '__main__':
     err = False
     if len(argv) != 3:
@@ -28,6 +33,8 @@ if __name__ == '__main__':
         print('  ./maml.py -[a|d] <filename>.maml')
         exit(1)
 
+#'maml_compile' must be imported after config['primitives'] has been assigned
+#so that config['primitive_dispatch'] can be initialized
 from maml_compile import compile_ast, compile_function
 from maml_ast import make_ast
 from operator import add
