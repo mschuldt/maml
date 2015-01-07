@@ -84,13 +84,14 @@ return format: (list-of-arg-types . return-type)
                 )
             (setq ret type))
         (setq arg-types (cons type arg-types))))
-    (cons (to-py-list (reverse arg-types)) (py-str (or ret "none")))))
+    (cons (to-py-tuple (reverse arg-types)) (py-str (or ret "none")))))
 
 (defun py-str (x)
   (format "'%s'" x))
 
-(defun to-py-list (lst)
-  (format "[%s]" (mapconcat (lambda (x) (py-str x)) lst ", ")))
+(defun to-py-tuple (lst)
+  (format "(%s%s)" (mapconcat (lambda (x) (py-str x)) lst ", ")
+          (if (= (length lst) 1) "," "")))
 
 (defun process_primitives (file)
   (let (names name)
