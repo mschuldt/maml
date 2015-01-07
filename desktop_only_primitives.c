@@ -12,7 +12,7 @@ void delay(int ms){
   usleep(ms*1000);
 }
 
-_DEFUN_(str, any)
+_DEFUN_(str, {int | float | str})
 void print1(struct string *fmt, void *arg){
   char *fmt_str = fmt->s;
   char *c = fmt_str;

@@ -178,7 +178,7 @@ struct node{
   struct node* next;
 };
 
-_DEFUN_(any, [int], -> [int])
+_DEFUN_({int | str | [int] | (str)}, {[int] | None}, -> [int])
 struct node* cons(void* d, struct node* list){
   struct node* _new = (struct node*)malloc(sizeof(struct node));
   _new->data = d;
