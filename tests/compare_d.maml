@@ -7,6 +7,6 @@ def test():
     print(2 < x)
     print(1 < 2)
     print(2 < 1)
-    die()
+    die(1)
 
 arduino.send(test)

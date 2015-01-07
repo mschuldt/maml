@@ -30,7 +30,7 @@ def test():
     else:
         print(5)
 
-    die()
+    die(1)
 
 arduino.send(test)
 

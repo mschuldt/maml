@@ -10,6 +10,6 @@ def test():
     print(x) # 5
     x *= -6
     print(x) # -30
-    die()
+    die(1)
 
 arduino.send(test)

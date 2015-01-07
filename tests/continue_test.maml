@@ -12,6 +12,6 @@ def test():
 				continue
 			print(i)
 		i-=1
-	die()
+	die(1)
 
 arduino.send(test)

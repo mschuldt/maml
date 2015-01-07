@@ -31,6 +31,6 @@ def test():
     print(0 / 4) # 0
 
     print(-1 + 2) # 1
-    die()
+    die(1)
 
 arduino.send(test)

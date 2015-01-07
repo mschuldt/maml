@@ -14,6 +14,6 @@ def test():
     print(f) # 2
     print(g) # 12
     print(h) # 2
-    die()
+    die(1)
 
 arduino.send(test)
