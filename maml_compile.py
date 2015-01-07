@@ -405,12 +405,9 @@ def _(ast, btc, env, top):
     for arg in ast['args']:
         gen_bytecode(arg, btc, env, False)
     name = ast['func']['id']
-    #print("'call' code gen for '{}'".format(name))
     arg_types = []
     for arg in ast['args']:
         arg_types.append(arg['s_type'])
-    #print("arg_types = ", arg_types)
-    #print("primative dispatch = ", primitive_dispatch)
     prim = primitive_dispatch.get((name, tuple(arg_types)))
     transform_fn = function_compiler_functions.get(name)
     if prim is not None:  # Calling a primative
@@ -634,6 +631,7 @@ def compile_function_node(ast, btc, env, top):
     for a in ast['body']:
         gen_bytecode(a, body, new_env, True)
     #TODO: len(body) is not the actual length of the function body
+
     n_locals = len(new_env.names)
     btc.extend([SOP_INT, n_args, SOP_INT, n_locals, SOP_INT, len(body), SOP_START_FUNCTION] + body + [SOP_INT, index, SOP_END])
 

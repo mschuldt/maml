@@ -77,22 +77,29 @@ def gen_call_code(name, nargs, ast, btc, env, top):
 ################################################################################
 # print
 
-print_function = {'int': 'print_i',
-                  'float': 'print_i',
-                  'str': 'print_s',
-                  '[int]': 'print_l', #TODO: fix list and array types
-                  '(int)': 'print_a'}
+define_dispatch('print', ('int',), 'print_i')
+define_dispatch('print', ('str',), 'print_s')
+define_dispatch('print', ('(int)',), 'print_a')
+define_dispatch('print', ('[int]',), 'print_l')
 
-@compile('print', [['int', 'float', 'str', '[int]', '(int)']], 'none')
-def _(ast, btc, env, top):
-    s_type = ast['args'][0]['s_type']
-    func = print_function.get(s_type)
-    if func:
-        gen_call_code(func, 1, ast, btc, env, top)
-    else:
-        raise MamlTypeError("function print: invalid type: '{}'".format(s_type))
+# # For an example, instead of using 'define_dispatch', we could have made
+# # a transformation using the @compile decorator:
+# print_function = {'int': 'print_i',
+#                   'float': 'print_i',
+#                   'str': 'print_s',
+#                   '[int]': 'print_l', #TODO: fix list and array types
+#                   '(int)': 'print_a'}
+#
+# @compile('print', [['int', 'float', 'str', '[int]', '(int)']], 'none')
+# def _(ast, btc, env, top):
+#     s_type = ast['args'][0]['s_type']
+#     func = print_function.get(s_type)
+#     if func:
+#         gen_call_code(func, 1, ast, btc, env, top)
+#     else:
+#         raise MamlTypeError("function print: invalid type: '{}'".format(s_type))
 
-
+################################################################################
 @compile('cast')
 def _(ast, nargs, btc, env, top):
     pass #TODO
