@@ -52,23 +52,23 @@ _DEFUN_(int, int, int, int, int, int)
 void test_add6(int a, int b, int c, int d, int e, int f){
   print_i(a + b + c + d + e + f);
 }
-_DEFUN_(int, int, int, int, int, int, int, -> int)
+_DEFUN_(int, int, -> int)
 int test_print_args2(int a, int b){
   printf("args=> %d, %d\n", a, b);
 }
-_DEFUN_(int, int, int, int, int, int, int, int, -> int)
+_DEFUN_(int, int, int, -> int)
 int test_print_args3(int a, int b, int c){
   printf("args=> %d, %d, %d\n",a,b,c);
 }
-_DEFUN_(int, int, int, int, int, int, int, int, int, -> int)
+_DEFUN_(int, int, int, int, -> int)
 int test_print_args4(int a, int b, int c, int d){
   printf("args=> %d, %d, %d, %d\n",a,b,c,d);
 }
-_DEFUN_(int, int, int, int, int, int, int, int, int, int, -> int)
+_DEFUN_(int, int, int, int, int, -> int)
 int test_print_args5(int a, int b, int c, int d, int e){
   printf("args=> %d, %d, %d, %d, %d\n",a,b,c,d,e);
 }
-_DEFUN_(int, int, int, int, int, int, int, int, int, int, int, -> int)
+_DEFUN_(int, int, int, int, int, int, -> int)
 int test_print_args6(int a, int b, int c, int d, int e, int f){
   printf("args=> %d, %d, %d, %d, %d, %d\n",a,b,c,d,e,f);
 }
