@@ -5,6 +5,10 @@
 //TODO have the preprocesser extra the number and type of args
 //     use that to check for errors while compiling
 
+_DEFUN_(->int)
+inline int stack_size(){
+  return (stack - stack_base);
+}
 
 _DEFUN_(int, -> int)
 int print_i(int n){

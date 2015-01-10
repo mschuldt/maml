@@ -1,0 +1,25 @@
+arduino = Arduino(desktop=True)
+
+@function
+def testf(a:int,b:int,c:int):
+    print(stack_size())
+    print(a)
+    print(b)
+    print(c)
+
+@function
+def a(x:int)->int:
+    print(stack_size())
+    return x
+
+@block(once)
+def test():
+    print(stack_size())
+    testf(a(11), a(22), a(33))
+    print(stack_size())
+    die(0)
+
+arduino.send(testf)
+arduino.send(a)
+arduino.send(test)
+
