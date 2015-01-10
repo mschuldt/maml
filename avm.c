@@ -223,14 +223,6 @@ int max_frames = 5;
 void** primitives; //this is filled by auto-generated code in _prim.c
 int n_primitives;
 
-
-#include "primitives.c"
-#if ARDUINO
-#include "arduino_only_primitives.c"
-#else
-#include "desktop_only_primitives.c"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //variables used by 'byte_in' to build input
 
@@ -276,6 +268,13 @@ struct i_array* in_int_array_struct;
 //the main program stack
 void** stack; //points to top of the stack
 void** stack_base;
+
+#include "primitives.c"
+#if ARDUINO
+#include "arduino_only_primitives.c"
+#else
+#include "desktop_only_primitives.c"
+#endif
 
 void setup(void){
 #include "_prim.c"
