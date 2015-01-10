@@ -268,6 +268,7 @@ struct i_array* in_int_array_struct;
 //the main program stack
 void** stack; //points to top of the stack
 void** stack_base;
+int stack_max = 10;
 
 #include "primitives.c"
 #if ARDUINO
@@ -286,8 +287,8 @@ void setup(void){
   labels =  (void**)malloc(sizeof(void*)*max_labels);
   in_integer = (char*) malloc(sizeof(char)*10); //TODO: this is dumb
   input_stack = (void**)malloc(sizeof(void*)*5);//?
-  stack_base = (void**)malloc(sizeof(void*)*10);//?
-  stack  = stack_base - 1;
+  stack_base = (void**)malloc(sizeof(void*)*stack_max);
+  stack = stack_base - 1;
 #if LL_CALL_STACK
   current_frame = (struct frame*)malloc(sizeof(struct frame));
   current_frame->next = current_frame->prev = NULL;

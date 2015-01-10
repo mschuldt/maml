@@ -10,6 +10,19 @@ inline int stack_size(){
   return (stack - stack_base);
 }
 
+_DEFUN_(int)
+void check_stack(int n){
+  //make sure there is at least N free stack slots
+  int s = stack_size();
+  if (stack_max < s + n){
+    stack_max = s + n;
+    if (! (stack_base = (void**)realloc(stack_base, sizeof(void*)*stack_max))){
+      //TODO: errror
+    }
+    stack = stack_base + s;
+  }
+}
+
 _DEFUN_(int, -> int)
 int print_i(int n){
 #if ARDUINO
